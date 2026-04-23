@@ -2,6 +2,18 @@ import nodemailer from 'nodemailer';
 
 class MailerService{
     async execute(to: string, subject: string, text: string){
+        const isMailerMockEnabled = process.env.MAILER_MOCK === 'true';
+
+        if (isMailerMockEnabled) {
+            console.log('[MAILER_MOCK] Email sending skipped.');
+            console.log({ to, subject, text });
+            return;
+        }
+
+        if (!process.env.MAILER_USER || !process.env.MAILER_PASSWORD) {
+            throw new Error('Mailer credentials are missing. Set MAILER_USER/MAILER_PASSWORD or enable MAILER_MOCK=true.');
+        }
+
         const transporter = nodemailer.createTransport({
             host: 'smtp.gmail.com',
             port: 587,

@@ -1,4 +1,5 @@
 import { UserController } from '../controllers/UserController';
+import { UserInviteService } from '../services/UserInviteService';
 import connection from './connection';
 /* eslint-disable */
 const MockExpressRequest = require('mock-express-request');
@@ -17,12 +18,18 @@ beforeEach(async () => {
     await connection.clear();
 });
 
+const getInviteToken = () => new UserInviteService().generateUserInvite();
+
 describe('Create new user', ()=>{
     it('should be able to create new user', async ()=>{
+        const inviteToken = getInviteToken();
         const req = new MockExpressRequest({
             method:'POST',
             headers: {
                 'Content-Type':'application/json',
+            },
+            params: {
+                inviteToken,
             },
             body:{
                 'name': 'Test',
@@ -37,10 +44,14 @@ describe('Create new user', ()=>{
         
     });
     it('should not be able to create duplicate user', async ()=>{
+        const inviteToken = getInviteToken();
         const req = new MockExpressRequest({
             method:'POST',
             headers: {
                 'Content-Type':'application/json',
+            },
+            params: {
+                inviteToken,
             },
             body:{
                 'name': 'Test',
@@ -56,10 +67,14 @@ describe('Create new user', ()=>{
     });
     it('should not be able to create new user without email', async ()=>{
         const userController = new UserController();
+        const inviteToken = getInviteToken();
         const req = new MockExpressRequest({
             method:'POST',
             headers: {
                 'Content-Type':'application/json',
+            },
+            params: {
+                inviteToken,
             },
             body:{
                 'name': 'Test',
@@ -71,10 +86,14 @@ describe('Create new user', ()=>{
     });
     it('should not be able to create new user without password', async ()=>{
         const userController = new UserController();
+        const inviteToken = getInviteToken();
         const req = new MockExpressRequest({
             method:'POST',
             headers: {
                 'Content-Type':'application/json',
+            },
+            params: {
+                inviteToken,
             },
             body:{
                 'name': 'Test',
@@ -86,10 +105,14 @@ describe('Create new user', ()=>{
     });
     it('should not be able to create new user without name', async ()=>{
         const userController = new UserController();
+        const inviteToken = getInviteToken();
         const req = new MockExpressRequest({
             method:'POST',
             headers: {
                 'Content-Type':'application/json',
+            },
+            params: {
+                inviteToken,
             },
             body:{
                 'email': 'test@gmail.com',
@@ -101,10 +124,14 @@ describe('Create new user', ()=>{
     });
     it('should not be able to create new user with empty body', async ()=>{
         const userController = new UserController();
+        const inviteToken = getInviteToken();
         const req = new MockExpressRequest({
             method:'POST',
             headers: {
                 'Content-Type':'application/json',
+            },
+            params: {
+                inviteToken,
             },
             body:{}
         });

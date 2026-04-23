@@ -1,6 +1,14 @@
 import { UserController } from '../controllers/UserController';
 import { AuthController } from '../controllers/AuthController';
+import { UserInviteService } from '../services/UserInviteService';
 import connection from './connection';
+
+jest.mock('../middlewares/Mailer', () => ({
+    __esModule: true,
+    default: {
+        execute: jest.fn().mockResolvedValue(undefined),
+    },
+}));
 /* eslint-disable */
 const MockExpressRequest = require('mock-express-request');
 const MockExpressResponse = require('mock-express-response');
@@ -14,11 +22,15 @@ afterAll(async ()=>{
     await connection.close();
 });
 beforeEach(async() => {
+    const inviteToken = new UserInviteService().generateUserInvite();
     const userController = new UserController();
     const req = new MockExpressRequest({
         method:'POST',
         headers: {
             'Content-Type':'application/json',
+        },
+        params: {
+            inviteToken,
         },
         body:{
             'name': 'Test',

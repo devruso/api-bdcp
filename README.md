@@ -14,6 +14,15 @@ Make sure to create a `.env` in the root level on your local machine beforehand.
 ## Postgresql
 Run `npm run postgres:create` to create and run a docker image for a Postgres server.
 
+If you use `docker compose`, the local PostgreSQL port exposed by this project is `15432` to avoid conflicts with a host PostgreSQL already running on `5432`.
+
+## Test Database
+Make sure `DB_TEST_NAME` exists before running tests. With Docker Compose, you can create it with:
+
+```sh
+docker exec api-bdcp-postgres-1 psql -U admin -d postgres -c "CREATE DATABASE testdatabase;"
+```
+
 ## Migrations
 ### Running migrations
 Run `npm run migration:run` in order to execute the migrations locally. Although is worth mentioning that `npm run dev` will run the migrations too.

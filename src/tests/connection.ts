@@ -22,13 +22,14 @@ const connection = {
     },
 
     async clear(){
-    // Fetch all the entities
         const entities = getConnection().entityMetadatas;
+        const tableNames = entities.map(entity => `"${entity.tableName}"`).join(', ');
 
-        for (const entity of entities) {
-            const repository = getConnection().getRepository(entity.name); // Get repository
-            await repository.delete({});// Clear each entity table's content
+        if (!tableNames) {
+            return;
         }
+
+        await getConnection().query(`TRUNCATE ${tableNames} RESTART IDENTITY CASCADE;`);
     },
 };
 export default connection;

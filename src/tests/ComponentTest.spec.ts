@@ -1,8 +1,9 @@
 import supertest from 'supertest';
 import { UserController } from '../controllers/UserController';
+import { UserInviteService } from '../services/UserInviteService';
 import connection from './connection';
 /* eslint-disable */
-const app = require('../app');
+const app = require('../app').app;
 const MockExpressRequest = require('mock-express-request');
 const MockExpressResponse = require('mock-express-response');
 /* eslint-enable */
@@ -18,11 +19,15 @@ afterAll(async ()=>{
 });
 
 beforeEach(async() => {
+    const inviteToken = new UserInviteService().generateUserInvite();
     const userController = new UserController();
     const req = new MockExpressRequest({
         method:'POST',
         headers: {
             'Content-Type':'application/json',
+        },
+        params: {
+            inviteToken,
         },
         body:{
             'name': 'Test',
