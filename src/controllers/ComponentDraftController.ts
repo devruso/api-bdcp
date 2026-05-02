@@ -1,18 +1,23 @@
 import { Request, Response } from 'express';
 import { paginate } from '../helpers/paginate';
 import { ComponentDraftService } from '../services/ComponentDraftService';
+import { DocumentImportService } from '../services/DocumentImportService';
 
 class ComponentDraftController {
     async getDrafts(request: Request, response: Response) {
         const draftService = new ComponentDraftService();
 
-        const filter = request.query.filter as string;
+        const search = String(request.query.search ?? request.query.filter ?? '').trim() || undefined;
+        const sortBy = String(request.query.sortBy ?? '').trim() || undefined;
+        const sortOrder = String(request.query.sortOrder ?? 'DESC').toUpperCase() === 'ASC'
+            ? 'ASC'
+            : 'DESC';
         const page = parseInt(String(request.query.page)) || 0;
         const limit = parseInt(String(request.query.limit)) || 10;
 
-        const components = await draftService.getDrafts(filter);
+        const components = await draftService.getDrafts({ search, sortBy, sortOrder });
 
-        return response.status(200).json(paginate(components, { page, limit }));
+        return response.status(200).json(paginate(components, { page, limit, search, sortBy, sortOrder }));
     }
 
     async getDraftByCode(request: Request, response: Response) {
@@ -62,6 +67,15 @@ class ComponentDraftController {
         const component = await draftService.approve(id, request.body, authenticatedUserId);
 
         return response.status(200).json(component);
+    }
+
+    async importPreview(request: Request, response: Response) {
+        const documentImportService = new DocumentImportService();
+        const preview = await documentImportService.generatePreview(
+            request.file as Express.Multer.File
+        );
+
+        return response.status(200).json(preview);
     }
 
 }

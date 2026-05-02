@@ -12,15 +12,22 @@ class UserController {
 
         const userService = new UserService();
 
-        // const search = request.query.search as string;
+        const search = String(request.query.search ?? '').trim() || undefined;
+        const sortBy = String(request.query.sortBy ?? '').trim() || undefined;
+        const sortOrder = String(request.query.sortOrder ?? 'DESC').toUpperCase() === 'ASC'
+            ? 'ASC'
+            : 'DESC';
         const page = parseInt(String(request.query.page)) || 0;
         const limit = parseInt(String(request.query.limit)) || 10;
 
-        const users = await userService.getUsers();
+        const users = await userService.getUsers({
+            search,
+            sortBy,
+            sortOrder,
+            excludeUserId: authenticatedUserId,
+        });
 
-        const filteredUsers = users.filter(user => user.id !== authenticatedUserId);
-
-        return response.status(200).json(paginate(filteredUsers, { page, limit }));
+        return response.status(200).json(paginate(users, { page, limit, search, sortBy, sortOrder }));
     }
 
     async getUserById(request: Request, response: Response) {

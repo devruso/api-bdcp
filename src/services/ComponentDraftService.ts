@@ -1,4 +1,4 @@
-import { getCustomRepository, Repository, getConnection, Raw } from 'typeorm';
+import { Brackets, getCustomRepository, Repository, getConnection, Raw } from 'typeorm';
 import { ComponentDraftRepository } from '../repositories/ComponentDraftRepository';
 import { AppError } from '../errors/AppError';
 import { WorkloadService } from './WorkloadService';
@@ -28,15 +28,36 @@ export class ComponentDraftService {
         this.workloadService = new WorkloadService();
     }
 
-    async getDrafts(filter = '') {
-        const drafts = await this.componentDraftRepository.find({
-            where: [
-                { code: Raw((alias) => `LOWER(${alias}) LIKE :code`, { code: `%${ filter.toLowerCase() }%` }) },
-                { name: Raw((alias) => `LOWER(${alias}) LIKE :code`, { code: `%${ filter.toLowerCase() }%` }) }
-            ],
-            order: { updatedAt: 'DESC' },
-            relations: [ 'workload' ],
-        });
+    async getDrafts(options?: {
+        search?: string;
+        sortBy?: string;
+        sortOrder?: 'ASC' | 'DESC';
+    }) {
+        const search = options?.search?.trim().toLowerCase();
+        const sortMap: Record<string, string> = {
+            code: 'drafts.code',
+            name: 'drafts.name',
+            department: 'drafts.department',
+            semester: 'drafts.semester',
+            createdAt: 'drafts.createdAt',
+            updatedAt: 'drafts.updatedAt',
+        };
+        const sortBy = sortMap[options?.sortBy ?? ''] ?? 'drafts.updatedAt';
+        const sortOrder = options?.sortOrder ?? 'DESC';
+
+        const query = this.componentDraftRepository
+            .createQueryBuilder('drafts')
+            .leftJoinAndSelect('drafts.workload', 'workload');
+
+        if (search) {
+            query.where(new Brackets((subQuery) => {
+                subQuery
+                    .where('LOWER(drafts.code) LIKE :search', { search: `%${search}%` })
+                    .orWhere('LOWER(drafts.name) LIKE :search', { search: `%${search}%` });
+            }));
+        }
+
+        const drafts = await query.orderBy(sortBy, sortOrder).getMany();
 
         return drafts;
     }

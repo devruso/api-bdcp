@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { ComponentDraftController } from '../controllers/ComponentDraftController';
 import { ApproveDraftRequestDto, CreateDraftRequestDto, UpdateComponentRequestDto } from '../dtos/component';
 import { ensureAuthenticated } from '../middlewares/EnsureAuthenticated';
+import { uploadDraftImport } from '../middlewares/Upload';
 import { makeValidateBody } from '../middlewares/Validator';
 
 const componentDraftRouter = Router();
@@ -306,6 +307,13 @@ const componentDraftController = new ComponentDraftController();
 *         description: Internal Server Error
 */
 componentDraftRouter.get('/', componentDraftController.getDrafts);
+
+componentDraftRouter.post(
+	'/import-preview',
+	ensureAuthenticated,
+	uploadDraftImport.single('file'),
+	componentDraftController.importPreview
+);
 
 /**
  * @swagger

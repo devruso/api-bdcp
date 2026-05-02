@@ -1,4 +1,4 @@
-import { getCustomRepository, ILike, In, Raw, Repository } from 'typeorm';
+import { Brackets, getCustomRepository, Raw, Repository } from 'typeorm';
 import puppeteer from 'puppeteer';
 import { generateHtml } from '../helpers/templates/component';
 import { Component } from '../entities/Component';
@@ -33,34 +33,49 @@ export class ComponentService {
         this.workloadService = new WorkloadService();
     }
 
-    async getComponents(search = '', showDraft = false) {
-        const components = await this.componentRepository
+    async getComponents(options?: {
+        search?: string;
+        showDraft?: boolean;
+        sortBy?: string;
+        sortOrder?: 'ASC' | 'DESC';
+    }) {
+        const search = options?.search?.trim().toLowerCase();
+        const sortMap: Record<string, string> = {
+            code: 'components.code',
+            name: 'components.name',
+            department: 'components.department',
+            semester: 'components.semester',
+            createdAt: 'components.createdAt',
+            updatedAt: 'components.updatedAt',
+        };
+        const sortBy = sortMap[options?.sortBy ?? ''] ?? 'components.code';
+        const sortOrder = options?.sortOrder ?? 'ASC';
+        const allowedStatuses = [ ComponentStatus.PUBLISHED ];
+
+        if (options?.showDraft) {
+            allowedStatuses.push(ComponentStatus.DRAFT);
+        }
+
+        const query = this.componentRepository
             .createQueryBuilder('components')
             .leftJoinAndSelect('components.draft', 'draft')
             .leftJoinAndSelect('components.logs', 'logs')
             .leftJoinAndSelect('components.workload', 'workload')
             .leftJoinAndSelect('draft.workload', 'draft_workload')
             .leftJoinAndSelect('logs.user', 'logs_user')
-            .where([
-                {
-                    code: ILike(`%${search}%`),
-                    status: In([
-                        ComponentStatus.PUBLISHED,
-                        showDraft ? ComponentStatus.DRAFT : undefined,
-                    ]),
-                },
-                {
-                    name: ILike(`%${search}%`),
-                    status: In([
-                        ComponentStatus.PUBLISHED,
-                        showDraft ? ComponentStatus.DRAFT : undefined,
-                    ]),
-                },
-            ])
-            .orderBy({
-                'components.code': 'ASC',
-                'logs.createdAt': 'DESC',
-            })
+            .where('components.status IN (:...allowedStatuses)', { allowedStatuses });
+
+        if (search) {
+            query.andWhere(new Brackets((subQuery) => {
+                subQuery
+                    .where('LOWER(components.code) LIKE :search', { search: `%${search}%` })
+                    .orWhere('LOWER(components.name) LIKE :search', { search: `%${search}%` });
+            }));
+        }
+
+        const components = await query
+            .orderBy(sortBy, sortOrder)
+            .addOrderBy('logs.createdAt', 'DESC')
             .getMany();
 
         return components;
@@ -260,6 +275,7 @@ export class ComponentService {
         const component = await this.componentRepository
             .createQueryBuilder('components')
             .leftJoinAndSelect('components.workload', 'workload')
+            .leftJoinAndSelect('components.logs', 'logs')
             .where({ id })
             .getOne();
 
@@ -267,10 +283,19 @@ export class ComponentService {
             throw new AppError('Component not found.', 404);
         }
 
-        const { workload } = component;
+        const { workload, logs } = component;
+        const latestApprovalLog = logs
+            ?.filter((log) => log.type === ComponentLogType.APPROVAL)
+            .sort((left, right) => right.createdAt.getTime() - left.createdAt.getTime())[0];
 
         const data = {
             ...component,
+            approval: latestApprovalLog
+                ? {
+                    agreementNumber: latestApprovalLog.agreementNumber,
+                    agreementDate: latestApprovalLog.agreementDate,
+                }
+                : undefined,
             workload: workload
                 ? {
                     student: {

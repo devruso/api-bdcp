@@ -47,7 +47,11 @@ class ComponentController {
     async getComponents(request: Request, response: Response) {
         const componentService = new ComponentService();
 
-        const search = request.query.search as string;
+        const search = String(request.query.search ?? request.query.filter ?? '').trim() || undefined;
+        const sortBy = String(request.query.sortBy ?? '').trim() || undefined;
+        const sortOrder = String(request.query.sortOrder ?? 'ASC').toUpperCase() === 'DESC'
+            ? 'DESC'
+            : 'ASC';
         const page = parseInt(String(request.query.page)) || 0;
         const limit = parseInt(String(request.query.limit)) || 10;
 
@@ -55,12 +59,14 @@ class ComponentController {
             request.headers.authorization
         );
 
-        const components = await componentService.getComponents(
+        const components = await componentService.getComponents({
             search,
-            isAuthenticated
-        );
+            showDraft: isAuthenticated,
+            sortBy,
+            sortOrder,
+        });
 
-        return response.status(200).json(paginate(components, { page, limit }));
+        return response.status(200).json(paginate(components, { page, limit, search, sortBy, sortOrder }));
     }
 
     async getComponentByCode(request: Request, response: Response) {
@@ -81,15 +87,19 @@ class ComponentController {
         const page = parseInt(String(request.query.page)) || 0;
         const limit = parseInt(String(request.query.limit)) || 10;
         const type = request.query.type as string;
+        const sortBy = String(request.query.sortBy ?? '').trim() || undefined;
+        const sortOrder = String(request.query.sortOrder ?? 'DESC').toUpperCase() === 'ASC'
+            ? 'ASC'
+            : 'DESC';
 
         const componentLogs = await componentLogService.getComponentLogs(
             componentId,
-            type
+            { type, sortBy, sortOrder }
         );
 
         return response
             .status(200)
-            .json(paginate(componentLogs, { page, limit }));
+            .json(paginate(componentLogs, { page, limit, sortBy, sortOrder, filters: { type } }));
     }
 
     async create(request: Request, response: Response) {

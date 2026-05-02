@@ -1,5 +1,5 @@
 import * as crypto from 'crypto';
-import { getCustomRepository, Repository } from 'typeorm';
+import { Brackets, getCustomRepository, Repository } from 'typeorm';
 
 import { User } from '../entities/User';
 import { UserRepository } from '../repositories/UserRepository';
@@ -13,8 +13,42 @@ class UserService {
         this.userRepository = getCustomRepository(UserRepository);
     }
 
-    async getUsers() {
-        const users = await this.userRepository.find({ where: { isDeleted: false } });
+    async getUsers(options?: {
+        search?: string;
+        sortBy?: string;
+        sortOrder?: 'ASC' | 'DESC';
+        excludeUserId?: string;
+    }) {
+        const search = options?.search?.trim().toLowerCase();
+        const sortMap: Record<string, string> = {
+            name: 'users.name',
+            email: 'users.email',
+            role: 'users.role',
+            createdAt: 'users.createdAt',
+            updatedAt: 'users.updatedAt',
+        };
+        const sortBy = sortMap[options?.sortBy ?? ''] ?? 'users.createdAt';
+        const sortOrder = options?.sortOrder ?? 'DESC';
+
+        const query = this.userRepository
+            .createQueryBuilder('users')
+            .where('users.isDeleted = false');
+
+        if (options?.excludeUserId) {
+            query.andWhere('users.id != :excludeUserId', {
+                excludeUserId: options.excludeUserId,
+            });
+        }
+
+        if (search) {
+            query.andWhere(new Brackets((subQuery) => {
+                subQuery
+                    .where('LOWER(users.name) LIKE :search', { search: `%${search}%` })
+                    .orWhere('LOWER(users.email) LIKE :search', { search: `%${search}%` });
+            }));
+        }
+
+        const users = await query.orderBy(sortBy, sortOrder).getMany();
 
         if (users.length === 0) return [];
 

@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 import 'express-async-errors';
 import cors from 'cors';
+import multer from 'multer';
 import express, { Request, Response, NextFunction }  from 'express';
 import swaggerUi from 'swagger-ui-express';
 import swaggerJsDoc from 'swagger-jsdoc';
@@ -21,6 +22,15 @@ app.use((err: Error, request: Request, response: Response, _next: NextFunction) 
     if(err instanceof AppError){
         return response.status(err.statusCode).json({ message: err.message });
     }
+
+    if (err instanceof multer.MulterError) {
+        const message = err.code === 'LIMIT_FILE_SIZE'
+            ? 'O arquivo excede o limite de 10MB para importacao.'
+            : err.message;
+
+        return response.status(400).json({ message });
+    }
+
     console.log(err);
     return response.status(500).json({
         type: 'Generic Error',
