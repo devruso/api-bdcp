@@ -178,5 +178,17 @@ describe('Component document flow', () => {
         expect(Buffer.isBuffer(exportResponse.body)).toBe(true);
         expect(exportResponse.body.length).toBeGreaterThan(0);
         expect((exportResponse.body as Buffer).subarray(0, 5).toString('utf8')).toBe('%PDF-');
+
+        const docExportResponse = await supertest(app)
+            .get(`/api/components/${componentResponse.body.id}/export?format=doc`)
+            .buffer(true)
+            .parse(binaryParser as never)
+            .set('Authorization', `Bearer ${token}`);
+
+        expect(docExportResponse.statusCode).toBe(200);
+        expect(docExportResponse.headers['content-type']).toContain('application/msword');
+        expect(docExportResponse.headers['content-disposition']).toContain('TEST123.doc');
+        expect(Buffer.isBuffer(docExportResponse.body)).toBe(true);
+        expect((docExportResponse.body as Buffer).toString('utf8')).toContain('PLANO DE ENSINO-APRENDIZAGEM');
     });
 });

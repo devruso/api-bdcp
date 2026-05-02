@@ -271,7 +271,7 @@ export class ComponentService {
         }
     }
 
-    async export(id: string) {
+    async export(id: string, format: 'pdf' | 'doc' = 'pdf') {
         const component = await this.componentRepository
             .createQueryBuilder('components')
             .leftJoinAndSelect('components.workload', 'workload')
@@ -327,6 +327,14 @@ export class ComponentService {
 
         const html = generateHtml(data);
 
+        if (format === 'doc') {
+            return {
+                buffer: Buffer.from(html, 'utf8'),
+                contentType: 'application/msword; charset=utf-8',
+                fileName: `${component.code}.doc`,
+            };
+        }
+
         const browser = await puppeteer.launch({
             headless: true,
             args: [
@@ -347,6 +355,10 @@ export class ComponentService {
 
         await browser.close();
 
-        return pdf;
+        return {
+            buffer: pdf,
+            contentType: 'application/pdf',
+            fileName: `${component.code}.pdf`,
+        };
     }
 }

@@ -143,10 +143,16 @@ class ComponentController {
 
     async export(request: Request, response: Response) {
         const { id } = request.params;
+        const format = String(request.query.format ?? 'pdf').toLowerCase() === 'doc'
+            ? 'doc'
+            : 'pdf';
         const componentService = new ComponentService();
-        const buffer = await componentService.export(id);
-        response.set({ 'Content-Type': 'application/pdf' });
-        return response.status(200).send(buffer);
+        const exportedFile = await componentService.export(id, format);
+        response.set({
+            'Content-Type': exportedFile.contentType,
+            'Content-Disposition': `attachment; filename="${exportedFile.fileName}"`,
+        });
+        return response.status(200).send(exportedFile.buffer);
     }
 }
 
