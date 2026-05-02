@@ -15,12 +15,15 @@ class AuthService {
     }
 
     async login(email: string, password: string) {
-        if(email == undefined || password == undefined){
+        const normalizedEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
+
+        if (!normalizedEmail || password == undefined) {
             throw new AppError('Username or password missing. Please try again!', 400);
         }
+
         const user = await this.userRepository.findOne({
             where: {
-                email,
+                email: normalizedEmail,
                 password: crypto.createHmac('sha256', password).digest('hex')
             },
         });
@@ -46,7 +49,8 @@ class AuthService {
 
 
     async resetPassword(email: string) {
-        const user = await this.userRepository.findOne({ email });
+        const normalizedEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
+        const user = await this.userRepository.findOne({ email: normalizedEmail });
 
         if (!user) {
             throw new AppError('User does not exists!', 400);
@@ -56,8 +60,8 @@ class AuthService {
             const generatedHash = Math.random().toString(36).substring(2);
             const generatedPassword = crypto.createHmac('sha256', generatedHash).digest('hex');
 
-            await this.userRepository.createQueryBuilder().update(User).set({ password: generatedPassword }).where('email = :email', { email }).execute();
-            await Mailer.execute(email, 'Nova Senha - BDCP', `Prezado(a),\nUse "${generatedHash}" como sua nova senha para acessar o BDCP.`);
+            await this.userRepository.createQueryBuilder().update(User).set({ password: generatedPassword }).where('email = :email', { email: normalizedEmail }).execute();
+            await Mailer.execute(normalizedEmail, 'Nova Senha - BDCP', `Prezado(a),\nUse "${generatedHash}" como sua nova senha para acessar o BDCP.`);
         }
         catch (err) {
             console.log(err);
