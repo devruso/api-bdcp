@@ -101,7 +101,7 @@ describe('Component document flow', () => {
     });
 
     it('should be able to preview a draft import from docx', async () => {
-        const fixturePath = path.resolve(__dirname, '../../..', 'IC045.docx');
+        const fixturePath = path.resolve(__dirname, '../..', 'UFBA_TEMPLATE.docx');
 
         const response = await supertest(app)
             .post('/api/component-drafts/import-preview')
@@ -111,12 +111,124 @@ describe('Component document flow', () => {
             });
 
         expect(response.statusCode).toBe(200);
-        expect(response.body.fileName).toBe('IC045.docx');
+        expect(response.body.fileName).toBe('UFBA_TEMPLATE.docx');
         expect(response.body.mimeType).toBe(DOCX_MIME_TYPE);
         expect(response.body.suggestedDraft.code).toBe('IC045');
         expect(response.body.suggestedDraft.name).toContain('Tópicos');
         expect(response.body.rawText).toContain('PLANO DE ENSINO-APRENDIZAGEM');
         expect(Array.isArray(response.body.warnings)).toBe(true);
+    });
+
+    it('should be able to get component details by code without authentication', async () => {
+        const createResponse = await supertest(app)
+            .post('/api/components')
+            .set('Content-Type', 'application/json')
+            .set('Authorization', `Bearer ${token}`)
+            .send({
+                code: 'PUB123',
+                name: 'Disciplina Publica',
+                department: 'Departamento Publico',
+                program: 'Programa Publico',
+                semester: '2026.1',
+                prerequeriments: 'Nenhum',
+                methodology: 'Aulas expositivas',
+                objective: 'Disponibilizar acesso publico ao detalhe',
+                syllabus: 'Ementa publica',
+                bibliography: 'Bibliografia publica',
+                modality: 'Presencial',
+                learningAssessment: 'Provas',
+            });
+
+        expect(createResponse.statusCode).toBe(201);
+
+        const componentResponse = await supertest(app)
+            .get('/api/components/PUB123');
+
+        expect(componentResponse.statusCode).toBe(200);
+        expect(componentResponse.body.code).toBe('PUB123');
+    });
+
+    it('should be able to search published disciplines without accent marks', async () => {
+        const createResponse = await supertest(app)
+            .post('/api/components')
+            .set('Content-Type', 'application/json')
+            .set('Authorization', `Bearer ${token}`)
+            .send({
+                code: 'ACC101',
+                name: 'Metodologia e Expressão Técnica',
+                department: 'Departamento de Testes',
+                program: 'Programa de Teste',
+                semester: '2026.1',
+                prerequeriments: 'Nenhum',
+                methodology: 'Aulas expositivas',
+                objective: 'Validar busca sem acento',
+                syllabus: 'Ementa de teste',
+                bibliography: 'Bibliografia de teste',
+                modality: 'Presencial',
+                learningAssessment: 'Provas',
+            });
+
+        expect(createResponse.statusCode).toBe(201);
+
+        const searchResponse = await supertest(app)
+            .get('/api/components')
+            .query({ search: 'expressao' });
+
+        expect(searchResponse.statusCode).toBe(200);
+        expect(searchResponse.body.results.some((component: { code: string }) => component.code === 'ACC101'))
+            .toBe(true);
+    });
+
+    it('should return the exact draft by code even when there are similar codes', async () => {
+        const similarDraftResponse = await supertest(app)
+            .post('/api/component-drafts')
+            .set('Content-Type', 'application/json')
+            .set('Authorization', `Bearer ${token}`)
+            .send({
+                code: 'IIC045',
+                name: 'Disciplina Similar',
+                department: 'Departamento Similar',
+                semester: '2026.1',
+                modality: 'Presencial',
+                program: 'Programa Similar',
+                objective: 'Objetivo Similar',
+                syllabus: 'Ementa Similar',
+                methodology: 'Metodologia Similar',
+                learningAssessment: 'Avaliacao Similar',
+                bibliography: 'Bibliografia Similar',
+                prerequeriments: 'Nenhum',
+            });
+
+        expect(similarDraftResponse.statusCode).toBe(201);
+
+        const targetDraftResponse = await supertest(app)
+            .post('/api/component-drafts')
+            .set('Content-Type', 'application/json')
+            .set('Authorization', `Bearer ${token}`)
+            .send({
+                code: 'IC045',
+                name: 'Disciplina Alvo',
+                department: 'Departamento Alvo',
+                semester: '2026.1',
+                modality: 'Presencial',
+                program: 'Programa Alvo',
+                objective: 'Objetivo Alvo',
+                syllabus: 'Ementa Alvo',
+                methodology: 'Metodologia Alvo',
+                learningAssessment: 'Avaliacao Alvo',
+                bibliography: 'Bibliografia Alvo',
+                prerequeriments: 'Nenhum',
+            });
+
+        expect(targetDraftResponse.statusCode).toBe(201);
+
+        const getByCodeResponse = await supertest(app)
+            .get('/api/component-drafts/ic045')
+            .set('Authorization', `Bearer ${token}`);
+
+        expect(getByCodeResponse.statusCode).toBe(200);
+        expect(getByCodeResponse.body.code).toBe('IC045');
+        expect(getByCodeResponse.body.name).toBe('Disciplina Alvo');
     });
 
     it('should be able to export component pdf with approval metadata when available', async () => {
@@ -148,6 +260,18 @@ describe('Component document flow', () => {
         expect(componentResponse.statusCode).toBe(200);
         expect(componentResponse.body.draft?.id).toBeDefined();
 
+        const updateDraftResponse = await supertest(app)
+            .put(`/api/component-drafts/${componentResponse.body.draft.id}`)
+            .set('Authorization', `Bearer ${token}`)
+            .send({
+                program: 'Programa Teste Atualizado',
+                workload: {
+                    studentTheory: 60,
+                },
+            });
+
+        expect(updateDraftResponse.statusCode).toBe(200);
+
         const approveResponse = await supertest(app)
             .post(`/api/component-drafts/${componentResponse.body.draft.id}/approve`)
             .set('Authorization', `Bearer ${token}`)
@@ -165,8 +289,30 @@ describe('Component document flow', () => {
         expect(approvedComponentResponse.statusCode).toBe(200);
         expect(
             approvedComponentResponse.body.logs.some(
-                (log: { type: string; agreementNumber?: string }) =>
-                    log.type === 'approval' && log.agreementNumber === '12345'
+                (log: {
+                    type: string;
+                    agreementNumber?: string;
+                    versionCode?: string;
+                    officialProgram?: string;
+                    description?: string;
+                }) =>
+                    log.type === 'approval'
+                    && log.agreementNumber === '12345'
+                    && log.versionCode === '0105202612345'
+                    && log.officialProgram === 'Programa Teste Atualizado'
+            )
+        ).toBe(true);
+
+        expect(
+            approvedComponentResponse.body.logs.some(
+                (log: {
+                    type: string;
+                    description?: string;
+                }) =>
+                    log.type === 'draft_update'
+                    && log.description?.includes('program: "Programa Teste" -> "Programa Teste Atualizado"')
+                    && log.description?.includes('workload.studentTheory')
+                    && log.description?.includes('workload.studentTheory: 0 -> 60')
             )
         ).toBe(true);
 

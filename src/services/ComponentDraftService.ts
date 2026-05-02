@@ -28,6 +28,20 @@ export class ComponentDraftService {
         this.workloadService = new WorkloadService();
     }
 
+    private buildApprovalVersionCode(agreementDate: Date | string, agreementNumber: string) {
+        const referenceDate = new Date(agreementDate);
+
+        if (Number.isNaN(referenceDate.getTime())) {
+            return agreementNumber;
+        }
+
+        const day = String(referenceDate.getUTCDate()).padStart(2, '0');
+        const month = String(referenceDate.getUTCMonth() + 1).padStart(2, '0');
+        const year = String(referenceDate.getUTCFullYear());
+
+        return `${day}${month}${year}${agreementNumber}`;
+    }
+
     private extractPrerequerimentCodes(value?: string) {
         if (!value) {
             return [];
@@ -59,6 +73,75 @@ export class ComponentDraftService {
         }
 
         return codes.join(', ');
+    }
+
+    private buildDraftUpdateDescription(
+        draft: ComponentDraft,
+        requestDto: UpdateComponentRequestDto,
+        workloadPatch?: UpdateComponentRequestDto['workload']
+    ) {
+        const changedFields: string[] = [];
+        const criticalChanges: string[] = [];
+
+        const scalarFields: Array<keyof UpdateComponentRequestDto> = [
+            'code',
+            'name',
+            'department',
+            'semester',
+            'modality',
+            'program',
+            'objective',
+            'syllabus',
+            'methodology',
+            'learningAssessment',
+            'bibliography',
+            'prerequeriments',
+        ];
+
+        scalarFields.forEach((field) => {
+            const nextValue = requestDto[field];
+
+            if (nextValue === undefined) {
+                return;
+            }
+
+            const previousValue = draft[field as keyof ComponentDraft];
+
+            if (previousValue !== nextValue) {
+                changedFields.push(String(field));
+
+                if (field === 'program') {
+                    criticalChanges.push(`program: "${String(previousValue ?? '')}" -> "${String(nextValue)}"`);
+                }
+            }
+        });
+
+        if (workloadPatch) {
+            const currentWorkload = draft.workload ?? {};
+
+            Object.entries(workloadPatch).forEach(([key, nextValue]) => {
+                if (nextValue === undefined) {
+                    return;
+                }
+
+                const previousValue = (currentWorkload as Record<string, unknown>)[key];
+
+                if (previousValue !== nextValue) {
+                    changedFields.push(`workload.${key}`);
+                    criticalChanges.push(`workload.${key}: ${String(previousValue ?? 0)} -> ${String(nextValue)}`);
+                }
+            });
+        }
+
+        if (changedFields.length === 0) {
+            return 'Rascunho alterado';
+        }
+
+        if (criticalChanges.length === 0) {
+            return `Rascunho alterado: ${changedFields.join(', ')}`;
+        }
+
+        return `Rascunho alterado: ${changedFields.join(', ')} | detalhes: ${criticalChanges.join('; ')}`;
     }
 
     async getDrafts(options?: {
@@ -96,9 +179,11 @@ export class ComponentDraftService {
     }
 
     async getDraftByCode(code: string) {
+        const normalizedCode = code.trim().toLowerCase();
+
         const draft = await this.componentDraftRepository.findOne({
             where: {
-                code: Raw((alias) => `LOWER(${alias}) LIKE :code`, { code: `%${ code.toLowerCase() }%` })
+                code: Raw((alias) => `LOWER(${alias}) = :code`, { code: normalizedCode })
             },
             relations: [ 'workload', 'logs' ],
         });
@@ -172,7 +257,8 @@ export class ComponentDraftService {
         const connection = getConnection();
         const queryRunner = connection.createQueryRunner();
         const draftExists = await this.componentDraftRepository.findOne({
-            where: { id: draftId }
+            where: { id: draftId },
+            relations: [ 'workload' ],
         });
         if(!draftExists){
             throw new AppError('Draft not found.', 404);
@@ -187,6 +273,10 @@ export class ComponentDraftService {
         }
 
         try {
+            const workloadPatch = requestDto.workload == null
+                ? undefined
+                : { ...requestDto.workload };
+
             if (nextCode) {
                 requestDto.code = nextCode;
             }
@@ -200,7 +290,7 @@ export class ComponentDraftService {
 
             if(requestDto.workload != null) {
                 const workloadData = {
-                    ...requestDto.workload,
+                    ...workloadPatch,
                     id: requestDto.workloadId ?? draftExists.workloadId as string,
                 };
                 const workload = await this.workloadService.upsert(workloadData);
@@ -220,10 +310,17 @@ export class ComponentDraftService {
                 ),
                 queryRunner.manager.save(
                     ComponentLog,
-                    draftExists.generateDraftLog(
-                        ComponentLogType.DRAFT_UPDATE,
-                        userId
-                    )
+                    {
+                        ...draftExists.generateDraftLog(
+                            ComponentLogType.DRAFT_UPDATE,
+                            userId
+                        ),
+                        description: this.buildDraftUpdateDescription(
+                            draftExists,
+                            requestDto,
+                            workloadPatch
+                        ),
+                    }
                 ),
             ]); 
 
@@ -275,13 +372,20 @@ export class ComponentDraftService {
             ]) as [ Component, ComponentWorkload ];
 
             const component = currentPublishedComponent.publishDraft(draftExists);
+            const versionCode = this.buildApprovalVersionCode(
+                approvalDto.agreementDate,
+                approvalDto.agreementNumber
+            );
 
             const approvalLog = component.generateLog(
                 userId,
                 ComponentLogType.APPROVAL,
-                undefined,
+                `Versao oficial ${versionCode} publicada por aprovacao formal.`,
                 approvalDto.agreementNumber,
                 approvalDto.agreementDate,
+                versionCode,
+                component.program,
+                component.syllabus,
             );
 
             await queryRunner.startTransaction();
