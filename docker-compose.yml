@@ -11,6 +11,7 @@ services:
         depends_on:
             - postgres
     app:
+        image: ementas-app
         build:
             context: ../ementas-app
             args:
