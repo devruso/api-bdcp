@@ -11,8 +11,17 @@ npm install
 ## Enviroments
 Make sure to create a `.env` in the root level on your local machine beforehand. Check the existing variables at `./.env.example`
 
-## MySQL
-Run `npm run mysql:create` to create and run a docker image for a MySQL server.
+## Postgresql
+Run `npm run postgres:create` to create and run a docker image for a Postgres server.
+
+If you use `docker compose`, the local PostgreSQL port exposed by this project is `15432` to avoid conflicts with a host PostgreSQL already running on `5432`.
+
+## Test Database
+Make sure `DB_TEST_NAME` exists before running tests. With Docker Compose, you can create it with:
+
+```sh
+docker exec api-bdcp-postgres-1 psql -U admin -d postgres -c "CREATE DATABASE testdatabase;"
+```
 
 ## Migrations
 ### Running migrations
@@ -23,6 +32,49 @@ Run `npm run migration:revert` to revert all migrations.
 Run `npm run migration:generate migration_name` to generate a new migration based in changes made on entities. Make sure to run `migration:run` before that to keep the migration in order and avoid issues.
 ### Create migration
 Run `npm run migration:create migration_name` in order to manually create migrations. This will create a template migration file that can be used to make changes in the database that doesn't require a change in the entities, for example: inserting data, installing plugins, create new users etc.
+
+## DOCX template for export
+
+- The API uses a generic DOCX template to generate exported documents.
+- Default file name: `UFBA_TEMPLATE.docx` in the API root folder.
+- Optional override: set `DOCX_TEMPLATE_PATH` in `.env` with an absolute path or a path relative to the API root.
+- Legacy compatibility: if `UFBA_TEMPLATE.docx` is not found, the API still attempts `IC045.docx`.
+
+### Recommended placeholders for higher fidelity
+
+To preserve UFBA crest, fonts and layout, edit only text placeholders in the DOCX template and keep style definitions untouched:
+
+- `{{COMPONENT_CODE}}`
+- `{{COMPONENT_NAME}}`
+- `{{DEPARTMENT}}`
+- `{{SEMESTER}}`
+- `{{PREREQUERIMENTS}}`
+- `{{SYLLABUS}}`
+- `{{OBJECTIVE}}`
+- `{{PROGRAM}}`
+- `{{METHODOLOGY}}`
+- `{{LEARNING_ASSESSMENT}}`
+- `{{BIBLIOGRAPHY}}`
+
+Backend field mapping used in export:
+
+- `component.code -> {{COMPONENT_CODE}}`
+- `component.name -> {{COMPONENT_NAME}}`
+- `component.department -> {{DEPARTMENT}}`
+- `component.semester -> {{SEMESTER}}`
+- `component.prerequeriments -> {{PREREQUERIMENTS}}`
+- `component.syllabus -> {{SYLLABUS}}`
+- `component.objective -> {{OBJECTIVE}}`
+- `component.program -> {{PROGRAM}}`
+- `component.methodology -> {{METHODOLOGY}}`
+- `component.learningAssessment -> {{LEARNING_ASSESSMENT}}`
+- `component.bibliography -> {{BIBLIOGRAPHY}}`
+
+## PDF export runtime
+
+- Preferred conversion: LibreOffice (headless) when available in the host/container.
+- Fallback conversion: Puppeteer + Chromium.
+- In Docker image, Chromium is installed and exposed via `PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser`.
 
 ## Run lint
 ```sh

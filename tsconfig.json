@@ -9,9 +9,14 @@
         "skipLibCheck": true,
         "sourceMap": true,
         "outDir": "dist",
+        "jsx": "react",
         "strictNullChecks": true,
         // linhas requeridas pelo TypeORM
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
-    }
+    },
+    "include": [
+        "**/*.ts",
+        "**/*.tsx"
+    ]
 }

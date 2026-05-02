@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Request, Response, NextFunction } from 'express';
 
 export function logHandler(req: Request, res: Response, next: NextFunction): void {

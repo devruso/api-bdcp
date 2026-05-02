@@ -1,5 +1,8 @@
 import { Router } from 'express';
 import { AuthController } from '../controllers/AuthController';
+import { LoginRequestDto, ResetPasswordRequestDto } from '../dtos/auth';
+import { ensureAuthenticated } from '../middlewares/EnsureAuthenticated';
+import { makeValidateBody } from '../middlewares/Validator';
 
 const authRouter = Router();
 const authController = new AuthController();
@@ -31,6 +34,7 @@ const authController = new AuthController();
 *         token: emhlcnNvbkBn4ODIsImV4cCI6MTY0NzQ1ODQ4Mn0.Vhasas113131212asasasasaasafojkojosmR8-avh8VWN-ZSrjCytfw11GDGYySzYXCPuHw62c
 */
 
+authRouter.get('/user', ensureAuthenticated, authController.getCurrentUser);
 /**
 * @swagger
 * /api/auth/login:
@@ -64,7 +68,7 @@ const authController = new AuthController();
 *       500:
 *         description: Internal Server Error
 */
-authRouter.post('/login', authController.login);
+authRouter.post('/login', makeValidateBody(LoginRequestDto), authController.login);
 
 /**
 * @swagger
@@ -89,6 +93,6 @@ authRouter.post('/login', authController.login);
 *       500:
 *         description: Internal Server Error
 */
-authRouter.post('/reset-password', authController.resetPassword);
+authRouter.post('/reset-password', makeValidateBody(ResetPasswordRequestDto), authController.resetPassword);
 
 export { authRouter };

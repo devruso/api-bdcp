@@ -1,5 +1,5 @@
 import * as crypto from 'crypto';
-import { getCustomRepository, Repository } from 'typeorm';
+import { Brackets, getCustomRepository, Repository } from 'typeorm';
 
 import { User } from '../entities/User';
 import { UserRepository } from '../repositories/UserRepository';
@@ -13,8 +13,42 @@ class UserService {
         this.userRepository = getCustomRepository(UserRepository);
     }
 
-    async getUsers() {
-        const users = await this.userRepository.find();
+    async getUsers(options?: {
+        search?: string;
+        sortBy?: string;
+        sortOrder?: 'ASC' | 'DESC';
+        excludeUserId?: string;
+    }) {
+        const search = options?.search?.trim().toLowerCase();
+        const sortMap: Record<string, string> = {
+            name: 'users.name',
+            email: 'users.email',
+            role: 'users.role',
+            createdAt: 'users.createdAt',
+            updatedAt: 'users.updatedAt',
+        };
+        const sortBy = sortMap[options?.sortBy ?? ''] ?? 'users.createdAt';
+        const sortOrder = options?.sortOrder ?? 'DESC';
+
+        const query = this.userRepository
+            .createQueryBuilder('users')
+            .where('users.isDeleted = false');
+
+        if (options?.excludeUserId) {
+            query.andWhere('users.id != :excludeUserId', {
+                excludeUserId: options.excludeUserId,
+            });
+        }
+
+        if (search) {
+            query.andWhere(new Brackets((subQuery) => {
+                subQuery
+                    .where('LOWER(users.name) LIKE :search', { search: `%${search}%` })
+                    .orWhere('LOWER(users.email) LIKE :search', { search: `%${search}%` });
+            }));
+        }
+
+        const users = await query.orderBy(sortBy, sortOrder).getMany();
 
         if (users.length === 0) return [];
 
@@ -37,7 +71,7 @@ class UserService {
         });
 
         if (userExists) {
-            throw new AppError('This email is already using.', 400);
+            throw new AppError('User already exists.', 400);
         }
 
         try {
@@ -54,7 +88,7 @@ class UserService {
         }
     }
 
-    async update(id: string, email: string, password: string){
+    async updatePassword(id: string, password: string){
         const userExists = await this.userRepository.findOne({
             where: { id }
         });
@@ -66,7 +100,28 @@ class UserService {
         try {
             const passwordHashed = crypto.createHmac('sha256', password).digest('hex');
 
-            await this.userRepository.createQueryBuilder().update(User).set({ email, password: passwordHashed }).where('id = :id', { id }).execute();
+            await this.userRepository.createQueryBuilder().update(User).set({ password: passwordHashed }).where('id = :id', { id }).execute();
+
+            return await this.userRepository.findOne({
+                where: { id }
+            });
+        }
+        catch (err) {
+            throw new AppError('An error has been occurred.', 400);
+        }
+    }
+
+    async updateEmail(id: string, email: string){
+        const userExists = await this.userRepository.findOne({
+            where: { id }
+        });
+
+        if(!userExists){
+            throw new AppError('User not found.', 404);
+        }
+
+        try {
+            await this.userRepository.createQueryBuilder().update(User).set({ email }).where('id = :id', { id }).execute();
 
             return await this.userRepository.findOne({
                 where: { id }
@@ -86,7 +141,12 @@ class UserService {
             throw new AppError('User not found.', 404);
         }
 
-        await this.userRepository.createQueryBuilder().delete().from(User).where('id = :id', { id }).execute();
+        await this.userRepository
+            .createQueryBuilder()
+            .update(User)
+            .set({ isDeleted: true })
+            .where('id = :id', { id })
+            .execute();
     }
 
 }

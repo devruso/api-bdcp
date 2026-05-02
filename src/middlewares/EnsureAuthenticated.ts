@@ -1,28 +1,68 @@
 import { Request, Response, NextFunction } from 'express';
-import { JwtPayload, verify } from 'jsonwebtoken';
+import { getAuthToken } from '../helpers/getAuthToken';
+import { verifyAuthToken } from '../helpers/verifyAuthToken';
+import { UserService } from '../services/UserService';
 
-function ensureAuthenticated(request: Request, response: Response, next: NextFunction) {
-    const splitToken = request.headers.authorization?.split('Bearer ');
-    const authToken = splitToken?.[1];
+function ensureAuthenticated(
+    request: Request,
+    response: Response,
+    next: NextFunction
+) {
+    const authToken = getAuthToken(request.headers.authorization);
 
-    if (!splitToken || splitToken.length < 2 || !authToken) {
+    if (!authToken) {
         return response.status(401).json({
             message: 'No token provided.',
         });
     }
 
     try {
-        const authenticatedUser = verify(authToken, String(process.env.JWT_SECRET)) as JwtPayload;
+        const authenticatedUser = verifyAuthToken(authToken);
         request.headers.authenticatedUserId = authenticatedUser.id;
 
         return next();
-    }
-    catch (err) {
+    } catch (err) {
         return response.status(401).json({
             message: 'Token expired.',
         });
     }
-
 }
 
-export { ensureAuthenticated };
+async function ensureAdminAuthenticated(
+    request: Request,
+    response: Response,
+    next: NextFunction
+) {
+    try {
+        const userId = request.headers.authenticatedUserId as string;
+
+        if (!userId) {
+            return response.status(401).json({
+                message: 'No userId provided.',
+            });
+        }
+
+        const userService = new UserService();
+        const user = await userService.getUserByID(userId);
+
+        if (!user) {
+            return response.status(401).json({
+                message: 'User not found.',
+            });
+        }
+
+        if (!user.role || user.role !== 'admin') {
+            return response.status(401).json({
+                message: 'User is not an admin.',
+            });
+        }
+
+        return next();
+    } catch (err) {
+        return response.status(500).json({
+            message: 'Internal Server Error',
+        });
+    }
+}
+
+export { ensureAuthenticated, ensureAdminAuthenticated };

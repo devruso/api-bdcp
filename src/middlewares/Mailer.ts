@@ -1,35 +1,40 @@
-import nodemailer, { Transporter } from 'nodemailer';
+import nodemailer from 'nodemailer';
 
 class MailerService{
-
-    private client: Transporter;
-
-    constructor(){
-        nodemailer.createTestAccount().then(account => {
-            const transporter = nodemailer.createTransport({
-                host: account.smtp.host,
-                port: account.smtp.port,
-                secure: account.smtp.secure,
-                auth: {
-                    user: account.user,
-                    pass: account.pass
-                }
-            });
-
-            this.client = transporter;
-        });
-    }
-
     async execute(to: string, subject: string, text: string){
-        const message = await this.client.sendMail({
+        const isMailerMockEnabled = process.env.MAILER_MOCK === 'true';
+
+        if (isMailerMockEnabled) {
+            console.log('[MAILER_MOCK] Email sending skipped.');
+            console.log({ to, subject, text });
+            return;
+        }
+
+        if (!process.env.MAILER_USER || !process.env.MAILER_PASSWORD) {
+            throw new Error('Mailer credentials are missing. Set MAILER_USER/MAILER_PASSWORD or enable MAILER_MOCK=true.');
+        }
+
+        const transporter = nodemailer.createTransport({
+            host: 'smtp.gmail.com',
+            port: 587,
+            secure: false,
+            auth: {
+                user: process.env.MAILER_USER,
+                pass: process.env.MAILER_PASSWORD,
+            },
+            tls: {
+                rejectUnauthorized: false,
+            }
+        });
+
+        const mailSent = await transporter.sendMail({
             to,
             subject,
             text,
-            from: 'BDCP <noreply@bdcp.com>'
+            from: 'BDCP-IC-UFBA <bdcpicufba@gmail.com>',
         });
 
-        console.log('Message sent: %s', message.messageId);
-        console.log('Preview URL: %s', nodemailer.getTestMessageUrl(message));
+        console.log('Password Reset was requested. Message ID: ', mailSent.messageId);
     }
 
 }

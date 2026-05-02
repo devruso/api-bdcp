@@ -1,16 +1,29 @@
-version: "3.9"
-
 services:
     api:
         build: .
         ports:
-            - 3000:3000
+            - 3333:3333
         env_file:
             - ./.env
+        environment:
+            DB_HOST: postgres
+            DB_PORT: 5432
         depends_on:
-            - db
-    db:
+            - postgres
+    app:
+        image: ementas-app
+        build:
+            context: ../ementas-app
+            args:
+                API_URL: http://localhost:3333/api
+        ports:
+            - 3000:8080
+        depends_on:
+            - api
+    postgres:
         image: postgres:latest
+        ports:
+            - 15432:5432
         environment:
             POSTGRES_PASSWORD: supersecret
             POSTGRES_USER: admin
