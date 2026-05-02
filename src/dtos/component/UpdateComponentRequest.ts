@@ -9,7 +9,7 @@ implements Partial<Omit<Component, 'id' | 'userId' | 'status' | 'logs' | 'user' 
 
     @IsOptional()
     @CustomIsString()
-    @CustomMatches(/^[A-Z]{3,4}[0-9]{2,4}$/)
+    @CustomMatches(/^[A-Z]{2,4}[0-9]{2,4}$/)
     public code?: string;
 
     @IsOptional()

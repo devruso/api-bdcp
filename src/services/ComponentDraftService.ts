@@ -28,6 +28,39 @@ export class ComponentDraftService {
         this.workloadService = new WorkloadService();
     }
 
+    private extractPrerequerimentCodes(value?: string) {
+        if (!value) {
+            return [];
+        }
+
+        return Array.from(new Set(value.toUpperCase().match(/\b[A-Z]{2,4}[0-9]{2,4}\b/g) ?? []));
+    }
+
+    private async normalizeAndValidatePrerequeriments(
+        value: string | undefined,
+        currentCode?: string
+    ) {
+        const rawValue = (value ?? '').trim();
+
+        if (!rawValue || /^(n[aã]o\s+se\s+aplica|nenhum(a)?|n\/a|NAO_SE_APLICA)$/i.test(rawValue)) {
+            return '';
+        }
+
+        const codes = this.extractPrerequerimentCodes(rawValue);
+
+        if (codes.length === 0) {
+            return rawValue;
+        }
+
+        const normalizedCurrentCode = currentCode?.toUpperCase();
+
+        if (normalizedCurrentCode && codes.includes(normalizedCurrentCode)) {
+            throw new AppError('Uma disciplina não pode ter a si mesma como pré-requisito.', 400);
+        }
+
+        return codes.join(', ');
+    }
+
     async getDrafts(options?: {
         search?: string;
         sortBy?: string;
@@ -79,8 +112,9 @@ export class ComponentDraftService {
         userId: string,
         requestDto: CreateDraftRequestDto
     ){
+        const normalizedCode = requestDto.code.trim().toUpperCase();
         const draftExists = await this.componentDraftRepository.findOne({
-            where: { code: requestDto.code },
+            where: { code: normalizedCode },
         });
 
         if (draftExists) {
@@ -88,7 +122,15 @@ export class ComponentDraftService {
         }
 
         try {
-            const draftDto = { ...requestDto, userId: userId };
+            const draftDto = {
+                ...requestDto,
+                code: normalizedCode,
+                prerequeriments: await this.normalizeAndValidatePrerequeriments(
+                    requestDto.prerequeriments,
+                    normalizedCode
+                ),
+                userId: userId,
+            };
 
             const [ draftWorkload, componentWorkload ] = await Promise.all([
                 this.workloadService.create(draftDto.workload ?? {}),
@@ -136,14 +178,26 @@ export class ComponentDraftService {
             throw new AppError('Draft not found.', 404);
         }
 
-        const codeDraft = requestDto?.code !== draftExists.code
-            ? await this.componentDraftRepository.findOne({ where: { code: requestDto.code } })
+        const nextCode = requestDto.code?.trim().toUpperCase();
+        const codeDraft = nextCode && nextCode !== draftExists.code
+            ? await this.componentDraftRepository.findOne({ where: { code: nextCode } })
             : null;
         if(codeDraft) {
             throw new AppError('Invalid code', 400);
         }
 
         try {
+            if (nextCode) {
+                requestDto.code = nextCode;
+            }
+
+            if (requestDto.prerequeriments !== undefined) {
+                requestDto.prerequeriments = await this.normalizeAndValidatePrerequeriments(
+                    requestDto.prerequeriments,
+                    nextCode ?? draftExists.code
+                );
+            }
+
             if(requestDto.workload != null) {
                 const workloadData = {
                     ...requestDto.workload,

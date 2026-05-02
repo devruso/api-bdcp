@@ -153,4 +153,52 @@ describe('Create new Component', ()=>{
             .send({});
         expect(res.statusCode).toBe(400);
     });
+
+    it('should be able to create new Component with pending prerequeriment code', async ()=>{
+        const res = await supertest(app)
+            .post('/api/components')
+            .set('Content-Type', 'application/json')
+            .set('Authorization', `Bearer ${token}`)
+            .send({
+                'userId': 1,
+                'code': 'PEND123',
+                'name': 'pending prereq component',
+                'department': 'test',
+                'program':'test',
+                'semester':'test',
+                'prerequeriments':'MAT999',
+                'methodology':'test',
+                'objective':'test',
+                'syllabus':'test',
+                'bibliography':'test',
+                'modality':'test',
+                'learningAssessment':'test',
+            });
+
+        expect(res.statusCode).toBe(201);
+    });
+
+    it('should not be able to create new Component with self prerequeriment code', async ()=>{
+        const res = await supertest(app)
+            .post('/api/components')
+            .set('Content-Type', 'application/json')
+            .set('Authorization', `Bearer ${token}`)
+            .send({
+                'userId': 1,
+                'code': 'SELF123',
+                'name': 'self prereq component',
+                'department': 'test',
+                'program':'test',
+                'semester':'test',
+                'prerequeriments':'SELF123',
+                'methodology':'test',
+                'objective':'test',
+                'syllabus':'test',
+                'bibliography':'test',
+                'modality':'test',
+                'learningAssessment':'test',
+            });
+
+        expect(res.statusCode).toBe(400);
+    });
 });

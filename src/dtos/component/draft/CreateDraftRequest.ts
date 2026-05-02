@@ -7,7 +7,7 @@ import { CreateComponentRequestDto } from '../CreateComponentRequest';
 export class CreateDraftRequestDto extends CreateComponentRequestDto {
     @IsDefined()
     @CustomIsString()
-    @CustomMatches(/^[A-Z]{3,4}[0-9]{2,4}$/)
+    @CustomMatches(/^[A-Z]{2,4}[0-9]{2,4}$/)
     declare public code: string;
 
     @IsOptional()

@@ -9,7 +9,7 @@ export class CreateComponentRequestDto
 implements Omit<Component, 'id' | 'userId' | 'status' | 'logs' | 'user' | 'generateLog' | 'workload' | 'createdAt' | 'updatedAt' | 'publishDraft'> {
     @CustomIsDefined()
     @CustomIsString()
-    @CustomMatches(/^[A-Z]{3,4}[0-9]{2,4}$/)
+    @CustomMatches(/^[A-Z]{2,4}[0-9]{2,4}$/)
     public code: string;
 
     @CustomIsDefined()

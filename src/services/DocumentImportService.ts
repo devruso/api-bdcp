@@ -194,15 +194,33 @@ export class DocumentImportService {
     }
 
     private extractPrerequeriments(rawText: string) {
-        const match = rawText.match(/PRÉ-REQUISITO \(POR CURSO\)\s*([\s\S]*?)\s*CARGA HORÁRIA \(DOCENTE\/TURMA\)/i);
+        const match = rawText.match(
+            /PR[ÉE]-?REQUISITO \(POR CURSO\)\s*([\s\S]*?)(?:\s*CARGA HOR[ÁA]RIA \(ESTUDANTE\)|\s*CARGA HOR[ÁA]RIA \(DOCENTE\/TURMA\)|\s*SEMESTRE DE IN[IÍ]CIO DA VIG[ÊE]NCIA|\s*EMENTA)/i
+        );
 
-        if (!match?.[1]) {
+        const prerequerimentsBlock = cleanText(match?.[1] ?? '');
+
+        if (!prerequerimentsBlock) {
             return '';
         }
 
-        return cleanText(match[1])
+        if (/n[aã]o\s+se\s+aplica/i.test(prerequerimentsBlock)) {
+            return '';
+        }
+
+        const disciplineCodes = Array.from(
+            new Set(prerequerimentsBlock.match(/\b[A-Z]{2,4}\d{2,4}\b/g) ?? [])
+        );
+
+        if (disciplineCodes.length > 0) {
+            return disciplineCodes.join(', ');
+        }
+
+        return prerequerimentsBlock
+            .replace(/Disciplina\s*Te[oó]rico\/Pr[aá]tica/gi, '')
             .replace(/\bT\b|\bT\/P\b|\bP\b|\bPP\b|\bEXT\b|\bE\b|\bTOTAL\b/gi, '')
-            .replace(/\b\d+\b/g, '')
+            .replace(/[;|]+/g, ', ')
+            .replace(/\s{2,}/g, ' ')
             .trim();
     }
 
