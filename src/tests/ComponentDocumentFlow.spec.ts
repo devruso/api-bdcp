@@ -179,6 +179,57 @@ describe('Component document flow', () => {
             .toBe(true);
     });
 
+    it('should return the exact published component by code even when there are similar codes', async () => {
+        const similarComponentResponse = await supertest(app)
+            .post('/api/components')
+            .set('Content-Type', 'application/json')
+            .set('Authorization', `Bearer ${token}`)
+            .send({
+                code: 'IIC045',
+                name: 'Disciplina Publicada Similar',
+                department: 'Departamento Similar',
+                program: 'Programa Similar',
+                semester: '2026.1',
+                prerequeriments: 'Nenhum',
+                methodology: 'Aulas expositivas',
+                objective: 'Validar busca exata em componente publicado',
+                syllabus: 'Ementa Similar',
+                bibliography: 'Bibliografia Similar',
+                modality: 'Presencial',
+                learningAssessment: 'Provas',
+            });
+
+        expect(similarComponentResponse.statusCode).toBe(201);
+
+        const targetComponentResponse = await supertest(app)
+            .post('/api/components')
+            .set('Content-Type', 'application/json')
+            .set('Authorization', `Bearer ${token}`)
+            .send({
+                code: 'IC045',
+                name: 'Disciplina Publicada Alvo',
+                department: 'Departamento Alvo',
+                program: 'Programa Alvo',
+                semester: '2026.1',
+                prerequeriments: 'Nenhum',
+                methodology: 'Aulas expositivas',
+                objective: 'Validar busca exata em componente publicado',
+                syllabus: 'Ementa Alvo',
+                bibliography: 'Bibliografia Alvo',
+                modality: 'Presencial',
+                learningAssessment: 'Provas',
+            });
+
+        expect(targetComponentResponse.statusCode).toBe(201);
+
+        const getByCodeResponse = await supertest(app)
+            .get('/api/components/ic045');
+
+        expect(getByCodeResponse.statusCode).toBe(200);
+        expect(getByCodeResponse.body.code).toBe('IC045');
+        expect(getByCodeResponse.body.name).toBe('Disciplina Publicada Alvo');
+    });
+
     it('should return the exact draft by code even when there are similar codes', async () => {
         const similarDraftResponse = await supertest(app)
             .post('/api/component-drafts')

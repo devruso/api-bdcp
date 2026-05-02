@@ -38,6 +38,34 @@ export class ComponentService {
         this.workloadService = new WorkloadService();
     }
 
+    private resolveDocxTemplatePath() {
+        const configuredTemplatePath = process.env.DOCX_TEMPLATE_PATH?.trim();
+        const configuredCandidates = configuredTemplatePath
+            ? [
+                path.isAbsolute(configuredTemplatePath)
+                    ? configuredTemplatePath
+                    : path.resolve(process.cwd(), configuredTemplatePath),
+                path.resolve(__dirname, configuredTemplatePath),
+            ]
+            : [];
+
+        const defaultCandidates = [
+            path.resolve(process.cwd(), 'UFBA_TEMPLATE.docx'),
+            path.resolve(process.cwd(), 'IC045.docx'),
+            path.resolve(__dirname, '../../UFBA_TEMPLATE.docx'),
+            path.resolve(__dirname, '../../IC045.docx'),
+            path.resolve(__dirname, '../../../UFBA_TEMPLATE.docx'),
+            path.resolve(__dirname, '../../../IC045.docx'),
+        ];
+
+        const uniqueCandidates = Array.from(new Set([
+            ...configuredCandidates,
+            ...defaultCandidates,
+        ]));
+
+        return uniqueCandidates.find((candidatePath) => fs.existsSync(candidatePath));
+    }
+
     private escapeXml(value: string) {
         return value
             .replace(/&/g, '&amp;')
@@ -71,6 +99,36 @@ export class ComponentService {
         );
     }
 
+    private replaceToken(xml: string, token: string, content: string) {
+        const escapedContent = this.escapeXml(content);
+
+        return xml.split(token).join(escapedContent);
+    }
+
+    private replaceByTokenOrPrefix(xml: string, token: string, fallbackPrefix: string, content: string) {
+        if (xml.includes(token)) {
+            return this.replaceToken(xml, token, content);
+        }
+
+        return this.replaceByPrefix(xml, fallbackPrefix, content);
+    }
+
+    private normalizeSearch(value?: string) {
+        if (!value) {
+            return undefined;
+        }
+
+        return value
+            .trim()
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '');
+    }
+
+    private accentInsensitiveSql(column: string) {
+        return `translate(LOWER(${column}), 'áàâãäåéèêëíìîïóòôõöúùûüçñ', 'aaaaaaeeeeiiiiooooouuuucn')`;
+    }
+
     private generateTemplateDocx(component: Component, data: {
         semester: string;
         department: string;
@@ -82,16 +140,24 @@ export class ComponentService {
         learningAssessment: string;
         bibliography: string;
     }) {
-        const templatePath = path.resolve(__dirname, '../../..', 'IC045.docx');
+        const templatePath = this.resolveDocxTemplatePath();
 
-        if (!fs.existsSync(templatePath)) {
-            throw new AppError('Template IC045.docx não encontrado para exportação.', 500);
+        if (!templatePath) {
+            throw new AppError(
+                'Template DOCX não encontrado para exportação. Configure DOCX_TEMPLATE_PATH ou adicione UFBA_TEMPLATE.docx na raiz da API.',
+                500
+            );
         }
 
         const zip = new AdmZip(templatePath);
         let xml = zip.readAsText('word/document.xml');
 
         const replacementMap: Array<[string, string]> = [
+            ['{{COMPONENT_CODE}}', component.code],
+            ['{{COMPONENT_NAME}}', this.normalizeTemplateText(component.name, 'Não informado')],
+            ['{{DEPARTMENT}}', this.normalizeTemplateText(data.department, 'Não informado')],
+            ['{{SEMESTER}}', this.normalizeTemplateText(data.semester, '____._')],
+            ['{{PREREQUERIMENTS}}', this.normalizeTemplateText(data.prerequeriments, 'Não se aplica')],
             ['IC045', component.code],
             ['Tópicos em Sistemas de Informação e Web I', this.normalizeTemplateText(component.name, 'Não informado')],
             ['CIÊNCIA DA COMPUTAÇÃO', this.normalizeTemplateText(data.department, 'Não informado')],
@@ -104,38 +170,44 @@ export class ComponentService {
             xml = xml.split(fromValue).join(this.escapeXml(toValue));
         });
 
-        xml = this.replaceByPrefix(
+        xml = this.replaceByTokenOrPrefix(
             xml,
+            '{{SYLLABUS}}',
             'Abordagens de temas atuais, circunstanciais e/ou inovadores de problemas relacionados à área de Web e Sistemas de Informação.',
             this.normalizeTemplateText(data.syllabus, 'Não informado')
         );
 
-        xml = this.replaceByPrefix(
+        xml = this.replaceByTokenOrPrefix(
             xml,
+            '{{OBJECTIVE}}',
             'OBJETIVO GERAL',
             this.normalizeTemplateText(data.objective, 'Não informado')
         );
 
-        xml = this.replaceByPrefix(
+        xml = this.replaceByTokenOrPrefix(
             xml,
+            '{{PROGRAM}}',
             '1\nApresentação da Disciplina',
             this.normalizeTemplateText(data.program, 'Não informado')
         );
 
-        xml = this.replaceByPrefix(
+        xml = this.replaceByTokenOrPrefix(
             xml,
+            '{{METHODOLOGY}}',
             'A metodologia de ensino adotada favorece o desenvolvimento da visão sistêmica do processo de desenvolvimento de aplicações web, que consiste em avaliar criticamente e sob diferentes aspectos todo o processo.',
             this.normalizeTemplateText(data.methodology, 'Não informado')
         );
 
-        xml = this.replaceByPrefix(
+        xml = this.replaceByTokenOrPrefix(
             xml,
+            '{{LEARNING_ASSESSMENT}}',
             'As avaliações ocorrerão de modo individual ou em grupo e poderão ser utilizados recursos/instrumentos apropriados como questionários, lista de exercícios, produção de textos colaborativos, resolução de problemas em grupo. As avaliações ocorrerão através da resolução de atividades assíncronas',
             this.normalizeTemplateText(data.learningAssessment, 'Não informado')
         );
 
-        xml = this.replaceByPrefix(
+        xml = this.replaceByTokenOrPrefix(
             xml,
+            '{{BIBLIOGRAPHY}}',
             'Desenvolvendo Aplicações Web com JSP, Servlets Edson Gonçalves, Ciencia Moderna, 2007.',
             this.normalizeTemplateText(data.bibliography, 'Não informado')
         );
@@ -215,7 +287,7 @@ export class ComponentService {
         sortBy?: string;
         sortOrder?: 'ASC' | 'DESC';
     }) {
-        const search = options?.search?.trim().toLowerCase();
+        const search = this.normalizeSearch(options?.search);
         const sortMap: Record<string, string> = {
             code: 'components.code',
             name: 'components.name',
@@ -244,8 +316,8 @@ export class ComponentService {
         if (search) {
             query.andWhere(new Brackets((subQuery) => {
                 subQuery
-                    .where('LOWER(components.code) LIKE :search', { search: `%${search}%` })
-                    .orWhere('LOWER(components.name) LIKE :search', { search: `%${search}%` });
+                    .where(`${this.accentInsensitiveSql('components.code')} LIKE :search`, { search: `%${search}%` })
+                    .orWhere(`${this.accentInsensitiveSql('components.name')} LIKE :search`, { search: `%${search}%` });
             }));
         }
 
@@ -258,6 +330,8 @@ export class ComponentService {
     }
 
     async getComponentByCode(code: string) {
+        const normalizedCode = code.trim().toLowerCase();
+
         const component = await this.componentRepository
             .createQueryBuilder('components')
             .leftJoinAndSelect('components.draft', 'draft')
@@ -266,8 +340,8 @@ export class ComponentService {
             .leftJoinAndSelect('draft.workload', 'draft_workload')
             .leftJoinAndSelect('logs.user', 'logs_user')
             .where({
-                code: Raw((alias) => `LOWER(${alias}) LIKE :code`, {
-                    code: `%${code.toLowerCase()}%`,
+                code: Raw((alias) => `LOWER(${alias}) = :code`, {
+                    code: normalizedCode,
                 }),
             })
             .orderBy({
@@ -556,8 +630,10 @@ export class ComponentService {
 
         const html = generateHtml(data);
 
+        const chromiumPath = process.env.PUPPETEER_EXECUTABLE_PATH;
         const browser = await puppeteer.launch({
             headless: true,
+            executablePath: chromiumPath || undefined,
             args: [
                 '--no-sandbox',
                 '--disable-setuid-sandbox',
