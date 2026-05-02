@@ -180,15 +180,17 @@ describe('Component document flow', () => {
         expect((exportResponse.body as Buffer).subarray(0, 5).toString('utf8')).toBe('%PDF-');
 
         const docExportResponse = await supertest(app)
-            .get(`/api/components/${componentResponse.body.id}/export?format=doc`)
+            .get(`/api/components/${componentResponse.body.id}/export?format=docx`)
             .buffer(true)
             .parse(binaryParser as never)
             .set('Authorization', `Bearer ${token}`);
 
         expect(docExportResponse.statusCode).toBe(200);
-        expect(docExportResponse.headers['content-type']).toContain('application/msword');
-        expect(docExportResponse.headers['content-disposition']).toContain('TEST123.doc');
+        expect(docExportResponse.headers['content-type']).toContain(
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        );
+        expect(docExportResponse.headers['content-disposition']).toContain('TEST123.docx');
         expect(Buffer.isBuffer(docExportResponse.body)).toBe(true);
-        expect((docExportResponse.body as Buffer).toString('utf8')).toContain('PLANO DE ENSINO-APRENDIZAGEM');
+        expect((docExportResponse.body as Buffer).subarray(0, 2).toString('utf8')).toBe('PK');
     });
 });

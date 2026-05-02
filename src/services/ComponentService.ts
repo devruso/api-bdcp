@@ -1,5 +1,6 @@
 import { Brackets, getCustomRepository, Raw, Repository } from 'typeorm';
 import puppeteer from 'puppeteer';
+const htmlToDocx = require('html-to-docx');
 import { generateHtml } from '../helpers/templates/component';
 import { Component } from '../entities/Component';
 import { ComponentRepository } from '../repositories/ComponentRepository';
@@ -271,7 +272,7 @@ export class ComponentService {
         }
     }
 
-    async export(id: string, format: 'pdf' | 'doc' = 'pdf') {
+    async export(id: string, format: 'pdf' | 'doc' | 'docx' = 'pdf') {
         const component = await this.componentRepository
             .createQueryBuilder('components')
             .leftJoinAndSelect('components.workload', 'workload')
@@ -327,11 +328,20 @@ export class ComponentService {
 
         const html = generateHtml(data);
 
-        if (format === 'doc') {
+        if (format === 'doc' || format === 'docx') {
+            const docxBuffer = await htmlToDocx(html, null, {
+                table: { row: { cantSplit: true } },
+                footer: false,
+                pageNumber: false,
+            });
+
             return {
-                buffer: Buffer.from(html, 'utf8'),
-                contentType: 'application/msword; charset=utf-8',
-                fileName: `${component.code}.doc`,
+                buffer: Buffer.isBuffer(docxBuffer)
+                    ? docxBuffer
+                    : Buffer.from(docxBuffer),
+                contentType:
+                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                fileName: `${component.code}.docx`,
             };
         }
 
