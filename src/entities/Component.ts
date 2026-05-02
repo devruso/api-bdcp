@@ -96,7 +96,10 @@ class Component {
         type: ComponentLogType,
         description?: string,
         agreementNumber?: string,
-        agreementDate?: Date
+        agreementDate?: Date,
+        versionCode?: string,
+        officialProgram?: string,
+        officialSyllabus?: string
     ): ComponentLog {
         const log = new ComponentLog();
         log.componentId = this.id;
@@ -104,6 +107,9 @@ class Component {
         log.type = type;
         log.agreementNumber = agreementNumber;
         log.agreementDate = agreementDate;
+        log.versionCode = versionCode;
+        log.officialProgram = officialProgram;
+        log.officialSyllabus = officialSyllabus;
         log.description = description;
 
         return log;

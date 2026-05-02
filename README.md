@@ -33,6 +33,49 @@ Run `npm run migration:generate migration_name` to generate a new migration base
 ### Create migration
 Run `npm run migration:create migration_name` in order to manually create migrations. This will create a template migration file that can be used to make changes in the database that doesn't require a change in the entities, for example: inserting data, installing plugins, create new users etc.
 
+## DOCX template for export
+
+- The API uses a generic DOCX template to generate exported documents.
+- Default file name: `UFBA_TEMPLATE.docx` in the API root folder.
+- Optional override: set `DOCX_TEMPLATE_PATH` in `.env` with an absolute path or a path relative to the API root.
+- Legacy compatibility: if `UFBA_TEMPLATE.docx` is not found, the API still attempts `IC045.docx`.
+
+### Recommended placeholders for higher fidelity
+
+To preserve UFBA crest, fonts and layout, edit only text placeholders in the DOCX template and keep style definitions untouched:
+
+- `{{COMPONENT_CODE}}`
+- `{{COMPONENT_NAME}}`
+- `{{DEPARTMENT}}`
+- `{{SEMESTER}}`
+- `{{PREREQUERIMENTS}}`
+- `{{SYLLABUS}}`
+- `{{OBJECTIVE}}`
+- `{{PROGRAM}}`
+- `{{METHODOLOGY}}`
+- `{{LEARNING_ASSESSMENT}}`
+- `{{BIBLIOGRAPHY}}`
+
+Backend field mapping used in export:
+
+- `component.code -> {{COMPONENT_CODE}}`
+- `component.name -> {{COMPONENT_NAME}}`
+- `component.department -> {{DEPARTMENT}}`
+- `component.semester -> {{SEMESTER}}`
+- `component.prerequeriments -> {{PREREQUERIMENTS}}`
+- `component.syllabus -> {{SYLLABUS}}`
+- `component.objective -> {{OBJECTIVE}}`
+- `component.program -> {{PROGRAM}}`
+- `component.methodology -> {{METHODOLOGY}}`
+- `component.learningAssessment -> {{LEARNING_ASSESSMENT}}`
+- `component.bibliography -> {{BIBLIOGRAPHY}}`
+
+## PDF export runtime
+
+- Preferred conversion: LibreOffice (headless) when available in the host/container.
+- Fallback conversion: Puppeteer + Chromium.
+- In Docker image, Chromium is installed and exposed via `PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser`.
+
 ## Run lint
 ```sh
 npm run lint:check

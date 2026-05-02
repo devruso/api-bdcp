@@ -328,7 +328,7 @@ componentRouter.get('/', componentController.getComponents);
  *       500:
  *         description: Internal Server Error
  */
-componentRouter.get('/:code', ensureAuthenticated, componentController.getComponentByCode);
+componentRouter.get('/:code', componentController.getComponentByCode);
 
 componentRouter.get('/:id/logs', ensureAuthenticated, componentController.getComponentLogs);
 

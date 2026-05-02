@@ -30,6 +30,37 @@ export class CrawlerService {
         this.workloadService = new WorkloadService();
     }
 
+    private normalizePrerequeriments(rawValue?: string) {
+        const text = rawValue?.trim();
+
+        if (!text) {
+            return 'NAO_SE_APLICA';
+        }
+
+        const codeMatches = Array.from(new Set(text.toUpperCase().match(/\b[A-Z]{2,4}[0-9]{2,4}\b/g) ?? []));
+
+        if (codeMatches.length) {
+            return codeMatches.join(', ');
+        }
+
+        if (/^(n[aã]o\s+se\s+aplica|nenhum(a)?|n\/a)$/i.test(text)) {
+            return 'NAO_SE_APLICA';
+        }
+
+        return text;
+    }
+
+    private extractPrerequerimentsFromLesson($lesson: cheerio.Cheerio<any>) {
+        const text = $lesson.text().replace(/\s+/g, ' ').trim();
+        const directMatch = text.match(/pré-?requisitos?\s*:?\s*([^|;]+)/i);
+
+        if (directMatch?.[1]) {
+            return this.normalizePrerequeriments(directMatch[1]);
+        }
+
+        return 'NAO_SE_APLICA';
+    }
+
     async createComponent(userId: string, data: IComponentInfoCrawler) {
         const componentExists = await this.componentRepository.findOne({
             where: { code: data.code },
@@ -62,7 +93,7 @@ export class CrawlerService {
                 syllabus: data.syllabus,
                 bibliography: data.bibliography,
                 status: ComponentStatus.PUBLISHED,
-                prerequeriments: 'Não há Pré-Requisitos cadastrados',
+                prerequeriments: this.normalizePrerequeriments(data.prerequeriments),
                 methodology: 'Não há Metodologia cadastrada',
                 modality: 'Não há Modalidade cadastrada',
                 learningAssessment: 'Não há Avaliação de Aprendizagem cadastrada'
@@ -91,10 +122,15 @@ export class CrawlerService {
     }
 
     async importComponentsFromSiac(userId: string, cdCurso: string, nuPerCursoInicial: string) {
-        'https://alunoweb.ufba.br/SiacWWW/ListaDisciplinasEmentaPublico.do?cdCurso=' + cdCurso + '&nuPerCursoInicial=' + nuPerCursoInicial;
+        const listUrl =
+            'https://alunoweb.ufba.br/SiacWWW/ListaDisciplinasEmentaPublico.do?cdCurso=' +
+            encodeURIComponent(cdCurso) +
+            '&nuPerCursoInicial=' +
+            encodeURIComponent(nuPerCursoInicial);
+
         const options1: AxiosRequestConfig = {
             method: 'get',
-            url: 'https://alunoweb.ufba.br/SiacWWW/ListaDisciplinasEmentaPublico.do?cdCurso=112140&nuPerCursoInicial=20132',
+            url: listUrl,
             responseType: 'arraybuffer',
             responseEncoding: 'binary',
             headers: {
@@ -115,11 +151,19 @@ export class CrawlerService {
             return $('table').eq(2).find('tr')
                 .map((_: any, lesson: any) => {
                     const $lesson = $(lesson);
-                    return 'https://alunoweb.ufba.br' + $lesson.find('td:nth-child(3) a').attr('href');
-                }).toArray();
+                    const href = $lesson.find('td:nth-child(3) a').attr('href');
+
+                    if (!href || !href.includes('ExibirEmentaPublico.do')) {
+                        return null;
+                    }
+
+                    return 'https://alunoweb.ufba.br' + href;
+                })
+                .toArray()
+                .filter(Boolean);
         }
 
-        function extractCourseInfo($: CheerioAPI): Array <IComponentInfoCrawler> {
+        const extractCourseInfo = ($: CheerioAPI): Array<IComponentInfoCrawler> => {
             return $('table').eq(1)
                 .map((_: any, lesson: any) => {
                     const $lesson = $(lesson);
@@ -127,9 +171,16 @@ export class CrawlerService {
                     const content = $lesson.find('.even').children();
                     const rows = content.map((_, a) => a.children[0]);
                     const rawData: string[] = rows.map((_, x) => $(x).text().trim()).toArray();
-                    console.log(rawData);
+
+                    if (!rawData.length || !rawData[0]) {
+                        return null;
+                    }
 
                     const [ code, componentName ] = rawData[0].split('-');
+
+                    if (!code || !componentName) {
+                        return null;
+                    }
 
                     return {
                         code: code.trim(),
@@ -141,7 +192,7 @@ export class CrawlerService {
                         syllabus: rawData[8],
                         bibliography: rawData[9],
                         status: ComponentStatus.PUBLISHED,
-                        prerequeriments: 'Não há Pré-requisitos cadastrados',
+                        prerequeriments: this.extractPrerequerimentsFromLesson($lesson),
                         methodology: 'Não há Metodologia cadastrada',
                         modality: 'Não há Modalidade cadastrada',
                         learningAssessment: 'Não há Avaliação de Aprendizagem cadastrada',
@@ -151,8 +202,10 @@ export class CrawlerService {
                             internship: Number(rawData[3]),
                         }
                     };
-                }).toArray();
-        }
+                })
+                .toArray()
+                .filter(Boolean) as Array<IComponentInfoCrawler>;
+            };
 
         const { data } = await axios(options1);
 
@@ -160,21 +213,25 @@ export class CrawlerService {
         const html = decoder.decode(data);
         const $ = cheerio.load(html);
         const urlList = getCourseUrls($);
-        urlList.splice(0, 2);
-        const lessonsArr: IComponentInfoCrawler[] = [];
-
-        const responses = await Promise.all(urlList.map(url => axios({ ...options2, url, })));
+        const responses = await Promise.all(urlList.map((url) => axios({ ...options2, url })));
 
         for (const response of responses) {
-            const decoder = new TextDecoder('ISO-8859-1');
-            const html = decoder.decode(response.data);
-            const $ = cheerio.load(html); // Initialize cheerio
+            const pageDecoder = new TextDecoder('ISO-8859-1');
+            const html = pageDecoder.decode(response.data);
+            const $ = cheerio.load(html);
             const courseInfo = extractCourseInfo($);
-            console.log(courseInfo);
-            lessonsArr.push(...courseInfo);
-            this.createComponent(userId, courseInfo[0]).catch((err) => {
-                console.log(err);
-            });
+
+            for (const componentData of courseInfo) {
+                try {
+                    await this.createComponent(userId, componentData);
+                } catch (err) {
+                    const appError = err as AppError;
+
+                    if (appError.message !== 'Component already exists.') {
+                        throw err;
+                    }
+                }
+            }
         }
     }
 

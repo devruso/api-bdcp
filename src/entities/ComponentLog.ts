@@ -26,6 +26,15 @@ class ComponentLog {
     @Column({ name: 'agreement_date', type: 'timestamptz',  nullable: true })
         agreementDate?: Date;
 
+    @Column({ name: 'version_code', nullable: true })
+        versionCode?: string;
+
+    @Column({ name: 'official_program', type: 'text', nullable: true })
+        officialProgram?: string;
+
+    @Column({ name: 'official_syllabus', type: 'text', nullable: true })
+        officialSyllabus?: string;
+
     @Column({ nullable: true })
         description?: string;
 
