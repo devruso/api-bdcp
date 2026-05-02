@@ -12,7 +12,7 @@ services:
             - postgres
     app:
         build:
-            context: ../app-bdcp
+            context: ../ementas-app
             args:
                 API_URL: http://localhost:3333/api
         ports:
