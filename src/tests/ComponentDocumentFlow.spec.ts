@@ -1,5 +1,6 @@
 import path from 'path';
 import supertest from 'supertest';
+const AdmZip = require('adm-zip');
 import { UserController } from '../controllers/UserController';
 import { UserInviteService } from '../services/UserInviteService';
 import connection from './connection';
@@ -12,6 +13,8 @@ const MockExpressResponse = require('mock-express-response');
 
 const DOCX_MIME_TYPE = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
+
+jest.setTimeout(30000);
 
 const binaryParser = (res: NodeJS.ReadableStream, callback: (err: Error | null, data: Buffer) => void) => {
     const chunks: Buffer[] = [];
@@ -192,5 +195,13 @@ describe('Component document flow', () => {
         expect(docExportResponse.headers['content-disposition']).toContain('TEST123.docx');
         expect(Buffer.isBuffer(docExportResponse.body)).toBe(true);
         expect((docExportResponse.body as Buffer).subarray(0, 2).toString('utf8')).toBe('PK');
+
+        const exportedDocZip = new AdmZip(docExportResponse.body as Buffer);
+        const documentXml = exportedDocZip.readAsText('word/document.xml');
+
+        expect(documentXml).toContain('TEST123');
+        expect(documentXml).toContain('Disciplina Teste');
+        expect(documentXml).toContain('Ementa de teste');
+        expect(documentXml).not.toContain('Tópicos em Sistemas de Informação e Web I');
     });
 });

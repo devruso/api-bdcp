@@ -30,7 +30,9 @@
   "homepage": "https://github.com/MATE85-Grupo4-20221/api-bdcp#readme",
   "dependencies": {
     "@sinonjs/fake-timers": "^6.0.1",
+    "@types/adm-zip": "^0.5.8",
     "@types/sinonjs__fake-timers": "^6.0.4",
+    "adm-zip": "^0.5.17",
     "axios": "^1.15.2",
     "cheerio": "^1.0.0-rc.10",
     "class-transformer": "^0.5.1",

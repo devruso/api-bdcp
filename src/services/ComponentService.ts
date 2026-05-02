@@ -1,6 +1,10 @@
 import { Brackets, getCustomRepository, Raw, Repository } from 'typeorm';
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
+import { spawnSync } from 'child_process';
 import puppeteer from 'puppeteer';
-const htmlToDocx = require('html-to-docx');
+const AdmZip = require('adm-zip');
 import { generateHtml } from '../helpers/templates/component';
 import { Component } from '../entities/Component';
 import { ComponentRepository } from '../repositories/ComponentRepository';
@@ -32,6 +36,144 @@ export class ComponentService {
             ComponentDraftRepository
         );
         this.workloadService = new WorkloadService();
+    }
+
+    private escapeXml(value: string) {
+        return value
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&apos;');
+    }
+
+    private normalizeTemplateText(value: string | undefined, emptyText = 'Não se aplica') {
+        const normalized = value?.trim();
+
+        if (!normalized) {
+            return emptyText;
+        }
+
+        if (/^(n[aã]o\s+se\s+aplica|n\/a|NAO_SE_APLICA)$/i.test(normalized)) {
+            return 'Não se aplica';
+        }
+
+        return normalized;
+    }
+
+    private replaceByPrefix(xml: string, prefix: string, content: string) {
+        const escapedPrefix = prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const pattern = new RegExp(`<w:t(?: xml:space="preserve")?>${escapedPrefix}[\\s\\S]*?<\\/w:t>`);
+
+        return xml.replace(
+            pattern,
+            `<w:t xml:space="preserve">${this.escapeXml(content)}</w:t>`
+        );
+    }
+
+    private generateTemplateDocx(component: Component, data: {
+        semester: string;
+        department: string;
+        prerequeriments: string;
+        syllabus: string;
+        objective: string;
+        program: string;
+        methodology: string;
+        learningAssessment: string;
+        bibliography: string;
+    }) {
+        const templatePath = path.resolve(__dirname, '../../..', 'IC045.docx');
+
+        if (!fs.existsSync(templatePath)) {
+            throw new AppError('Template IC045.docx não encontrado para exportação.', 500);
+        }
+
+        const zip = new AdmZip(templatePath);
+        let xml = zip.readAsText('word/document.xml');
+
+        const replacementMap: Array<[string, string]> = [
+            ['IC045', component.code],
+            ['Tópicos em Sistemas de Informação e Web I', this.normalizeTemplateText(component.name, 'Não informado')],
+            ['CIÊNCIA DA COMPUTAÇÃO', this.normalizeTemplateText(data.department, 'Não informado')],
+            ['Semestre 2024.2', `Semestre ${this.normalizeTemplateText(data.semester, '____._')}`],
+            ['Semestre 2024.1', `Semestre ${this.normalizeTemplateText(data.semester, '____._')}`],
+            ['Não se aplica', this.normalizeTemplateText(data.prerequeriments, 'Não se aplica')],
+        ];
+
+        replacementMap.forEach(([fromValue, toValue]) => {
+            xml = xml.split(fromValue).join(this.escapeXml(toValue));
+        });
+
+        xml = this.replaceByPrefix(
+            xml,
+            'Abordagens de temas atuais, circunstanciais e/ou inovadores de problemas relacionados à área de Web e Sistemas de Informação.',
+            this.normalizeTemplateText(data.syllabus, 'Não informado')
+        );
+
+        xml = this.replaceByPrefix(
+            xml,
+            'OBJETIVO GERAL',
+            this.normalizeTemplateText(data.objective, 'Não informado')
+        );
+
+        xml = this.replaceByPrefix(
+            xml,
+            '1\nApresentação da Disciplina',
+            this.normalizeTemplateText(data.program, 'Não informado')
+        );
+
+        xml = this.replaceByPrefix(
+            xml,
+            'A metodologia de ensino adotada favorece o desenvolvimento da visão sistêmica do processo de desenvolvimento de aplicações web, que consiste em avaliar criticamente e sob diferentes aspectos todo o processo.',
+            this.normalizeTemplateText(data.methodology, 'Não informado')
+        );
+
+        xml = this.replaceByPrefix(
+            xml,
+            'As avaliações ocorrerão de modo individual ou em grupo e poderão ser utilizados recursos/instrumentos apropriados como questionários, lista de exercícios, produção de textos colaborativos, resolução de problemas em grupo. As avaliações ocorrerão através da resolução de atividades assíncronas',
+            this.normalizeTemplateText(data.learningAssessment, 'Não informado')
+        );
+
+        xml = this.replaceByPrefix(
+            xml,
+            'Desenvolvendo Aplicações Web com JSP, Servlets Edson Gonçalves, Ciencia Moderna, 2007.',
+            this.normalizeTemplateText(data.bibliography, 'Não informado')
+        );
+
+        zip.updateFile('word/document.xml', Buffer.from(xml, 'utf8'));
+
+        return zip.toBuffer();
+    }
+
+    private convertDocxToPdf(docxBuffer: Buffer, fileBaseName: string) {
+        const tempDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'bdcp-export-'));
+        const docxPath = path.join(tempDirectory, `${fileBaseName}.docx`);
+        const pdfPath = path.join(tempDirectory, `${fileBaseName}.pdf`);
+
+        fs.writeFileSync(docxPath, docxBuffer);
+
+        const converters = [
+            'C:\\Program Files\\LibreOffice\\program\\soffice.exe',
+            'C:\\Program Files (x86)\\LibreOffice\\program\\soffice.exe',
+            'soffice',
+            'libreoffice',
+        ];
+
+        for (const converter of converters) {
+            const command = converter;
+            const args = ['--headless', '--convert-to', 'pdf', '--outdir', tempDirectory, docxPath];
+            const result = spawnSync(command, args, { stdio: 'ignore' });
+
+            if (result.status === 0 && fs.existsSync(pdfPath)) {
+                const pdfBuffer = fs.readFileSync(pdfPath);
+                fs.rmSync(tempDirectory, { recursive: true, force: true });
+
+                return pdfBuffer;
+            }
+        }
+
+        fs.rmSync(tempDirectory, { recursive: true, force: true });
+        return null;
     }
 
     private extractPrerequerimentCodes(value?: string) {
@@ -381,24 +523,38 @@ export class ComponentService {
                 : undefined,
         };
 
-        const html = generateHtml(data);
+        const templateDocx = this.generateTemplateDocx(component, {
+            semester: component.semester,
+            department: component.department,
+            prerequeriments: component.prerequeriments,
+            syllabus: component.syllabus,
+            objective: component.objective,
+            program: component.program,
+            methodology: component.methodology,
+            learningAssessment: component.learningAssessment,
+            bibliography: component.bibliography,
+        });
 
         if (format === 'doc' || format === 'docx') {
-            const docxBuffer = await htmlToDocx(html, null, {
-                table: { row: { cantSplit: true } },
-                footer: false,
-                pageNumber: false,
-            });
-
             return {
-                buffer: Buffer.isBuffer(docxBuffer)
-                    ? docxBuffer
-                    : Buffer.from(docxBuffer),
+                buffer: templateDocx,
                 contentType:
                     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
                 fileName: `${component.code}.docx`,
             };
         }
+
+        const convertedPdf = this.convertDocxToPdf(templateDocx, component.code);
+
+        if (convertedPdf) {
+            return {
+                buffer: convertedPdf,
+                contentType: 'application/pdf',
+                fileName: `${component.code}.pdf`,
+            };
+        }
+
+        const html = generateHtml(data);
 
         const browser = await puppeteer.launch({
             headless: true,
