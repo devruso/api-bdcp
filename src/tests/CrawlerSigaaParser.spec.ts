@@ -247,4 +247,83 @@ describe('CrawlerService SIGAA parser', () => {
           })
         );
       });
+
+      it('should parse detail fields from table layout', () => {
+        const html = `
+          <html>
+            <body>
+              <table>
+                <tr><th>Pré-Requisitos</th><td>MAT101; MAT102</td></tr>
+                <tr><th>Co-Requisitos</th><td>FIS201/FIS202</td></tr>
+                <tr><th>Equivalências</th><td>MATX11, MATX12</td></tr>
+                <tr><th>Ementa</th><td>Estruturas e algoritmos avançados.</td></tr>
+                <tr><th>Objetivos</th><td>Aprofundar modelagem e desempenho.</td></tr>
+                <tr><th>Metodologia</th><td>Aulas expositivas e laboratório guiado.</td></tr>
+                <tr><th>Avaliação da Aprendizagem</th><td>Projeto, provas e seminário.</td></tr>
+              </table>
+              <p>Teórica: 60h</p>
+              <p>Prática: 0h</p>
+              <p>Estágio: 0h</p>
+            </body>
+          </html>
+        `;
+
+        const $ = cheerio.load(html);
+        const result = (service as any).parseSigaaComponentDetailPage($);
+
+        expect(result).toEqual(
+          expect.objectContaining({
+            prerequeriments: 'MAT101, MAT102',
+            coRequisites: ['FIS201', 'FIS202'],
+            equivalences: ['MATX11', 'MATX12'],
+            syllabus: 'Estruturas e algoritmos avançados.',
+            objective: 'Aprofundar modelagem e desempenho.',
+            methodology: 'Aulas expositivas e laboratório guiado.',
+            learningAssessment: 'Projeto, provas e seminário.',
+          })
+        );
+      });
+
+      it('should parse detail fields from hybrid blocks with multiple delimiters', () => {
+        const html = `
+          <html>
+            <body>
+              <div>Pré Requisitos: MAT301 | MAT302</div>
+              <div>Co-Requisito - FIS301 e FIS302</div>
+              <div>Equivalente(s): MATA01 / MATA02</div>
+              <dl>
+                <dt>Ementa</dt><dd>Computação distribuída e tolerância a falhas.</dd>
+                <dt>Objetivo</dt><dd>Construir sistemas resilientes.</dd>
+                <dt>Metodologia</dt><dd>Estudo de casos e práticas.</dd>
+                <dt>Avaliacao</dt><dd>Trabalho final aplicado.</dd>
+              </dl>
+              <span>Teórica: 45h</span>
+              <span>Prática: 15h</span>
+              <span>Estágio: 0h</span>
+              <span>Extensão: 8h</span>
+            </body>
+          </html>
+        `;
+
+        const $ = cheerio.load(html);
+        const result = (service as any).parseSigaaComponentDetailPage($);
+
+        expect(result).toEqual(
+          expect.objectContaining({
+            prerequeriments: 'MAT301, MAT302',
+            coRequisites: ['FIS301', 'FIS302'],
+            equivalences: ['MATA01', 'MATA02'],
+            syllabus: 'Computação distribuída e tolerância a falhas.',
+            objective: 'Construir sistemas resilientes.',
+            methodology: 'Estudo de casos e práticas.',
+            learningAssessment: 'Trabalho final aplicado.',
+            workload: {
+              theoretical: 45,
+              practice: 15,
+              internship: 0,
+              extension: 8,
+            },
+          })
+        );
+      });
 });
