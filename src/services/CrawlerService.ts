@@ -51,6 +51,26 @@ type SigaaJsfFormContext = {
     hiddenInputs: Record<string, string>;
 };
 
+type SigaaDetailRawFields = {
+    prerequeriments?: string;
+    coReqRaw?: string;
+    equivalencesRaw?: string;
+    syllabus?: string;
+    objective?: string;
+    methodology?: string;
+    learningAssessment?: string;
+};
+
+const SIGAA_LABEL_MATCHERS = {
+    prerequeriments: /^(pre\s*requisit(?:o|os)|prerequisit(?:o|os))$/i,
+    coReqRaw: /^(co\s*requisit(?:o|os)|correquisit(?:o|os))$/i,
+    equivalencesRaw: /^(equivalenc(?:ia|ias)|equivalente(?:\(s\))?)$/i,
+    syllabus: /^ementa$/i,
+    objective: /^objetiv(?:o|os)$/i,
+    methodology: /^metodologia$/i,
+    learningAssessment: /^(avaliac(?:ao|ao\s+da\s+aprendizagem)|avaliacao\s+da\s+aprendizagem)$/i,
+};
+
 export class CrawlerService {
 
     private componentRepository : Repository<Component>;
@@ -386,8 +406,104 @@ export class CrawlerService {
         return match[1].replace(/\s+/g, ' ').trim();
     }
 
+    private normalizeSigaaLabel(rawLabel: string): string {
+        return rawLabel
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[:\-–—]+/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim()
+            .toLowerCase();
+    }
+
+    private assignSigaaDetailFieldByLabel(
+        target: SigaaDetailRawFields,
+        rawLabel: string,
+        rawValue: string
+    ) {
+        const label = this.normalizeSigaaLabel(rawLabel);
+        const value = String(rawValue || '').replace(/\s+/g, ' ').trim();
+
+        if (!label || !value) {
+            return;
+        }
+
+        if (!target.prerequeriments && SIGAA_LABEL_MATCHERS.prerequeriments.test(label)) {
+            target.prerequeriments = value;
+            return;
+        }
+        if (!target.coReqRaw && SIGAA_LABEL_MATCHERS.coReqRaw.test(label)) {
+            target.coReqRaw = value;
+            return;
+        }
+        if (!target.equivalencesRaw && SIGAA_LABEL_MATCHERS.equivalencesRaw.test(label)) {
+            target.equivalencesRaw = value;
+            return;
+        }
+        if (!target.syllabus && SIGAA_LABEL_MATCHERS.syllabus.test(label)) {
+            target.syllabus = value;
+            return;
+        }
+        if (!target.objective && SIGAA_LABEL_MATCHERS.objective.test(label)) {
+            target.objective = value;
+            return;
+        }
+        if (!target.methodology && SIGAA_LABEL_MATCHERS.methodology.test(label)) {
+            target.methodology = value;
+            return;
+        }
+        if (!target.learningAssessment && SIGAA_LABEL_MATCHERS.learningAssessment.test(label)) {
+            target.learningAssessment = value;
+        }
+    }
+
+    private extractSigaaStructuredDetailFields($: CheerioAPI): SigaaDetailRawFields {
+        const fields: SigaaDetailRawFields = {};
+
+        $('table tr').each((_, tr) => {
+            const $cells = $(tr).find('th, td');
+            if ($cells.length < 2) {
+                return;
+            }
+
+            const label = $($cells[0]).text();
+            const value = $($cells[1]).text();
+            this.assignSigaaDetailFieldByLabel(fields, label, value);
+        });
+
+        $('dl').each((_, dl) => {
+            const $dl = $(dl);
+            const terms = $dl.find('dt').toArray();
+
+            for (const term of terms) {
+                const $term = $(term);
+                const value = $term.next('dd').text();
+                this.assignSigaaDetailFieldByLabel(fields, $term.text(), value);
+            }
+        });
+
+        $('p, li, div').each((_, node) => {
+            const text = $(node).text().replace(/\s+/g, ' ').trim();
+
+            if (!text || text.length < 8) {
+                return;
+            }
+
+            const pair = text.match(/^([^:–—-]{3,80})\s*(?::|-|–|—)\s*(.+)$/);
+
+            if (!pair?.[1] || !pair?.[2]) {
+                return;
+            }
+
+            this.assignSigaaDetailFieldByLabel(fields, pair[1], pair[2]);
+        });
+
+        return fields;
+    }
+
     private parseSigaaComponentDetailPage($: CheerioAPI): SigaaComponentDetail {
         const pageText = $('body').text().replace(/\s+/g, ' ').trim();
+        const structuredFields = this.extractSigaaStructuredDetailFields($);
         const stopLabels = [
             'Pré-Requisitos',
             'Pre-Requisitos',
@@ -426,25 +542,25 @@ export class CrawlerService {
             'Extensao',
         ];
 
-        const prerequeriments = this.extractFieldFromDetailText(
+        const prerequeriments = structuredFields.prerequeriments || this.extractFieldFromDetailText(
             pageText,
             ['Pré-Requisitos', 'Pre-Requisitos', 'Pré Requisitos', 'Pre Requisitos', 'Pré-Requisito', 'Pre-Requisito'],
             stopLabels
         );
-        const coReqRaw = this.extractFieldFromDetailText(
+        const coReqRaw = structuredFields.coReqRaw || this.extractFieldFromDetailText(
             pageText,
             ['Co-Requisitos', 'Correquísitos', 'Co Requisitos', 'Correquisitos', 'Co-Requisito', 'Correquisito'],
             stopLabels
         );
-        const equivalencesRaw = this.extractFieldFromDetailText(
+        const equivalencesRaw = structuredFields.equivalencesRaw || this.extractFieldFromDetailText(
             pageText,
             ['Equivalências', 'Equivalencias', 'Equivalente(s)', 'Equivalente'],
             stopLabels
         );
-        const syllabus = this.extractFieldFromDetailText(pageText, ['Ementa'], stopLabels);
-        const objective = this.extractFieldFromDetailText(pageText, ['Objetivos', 'Objetivo'], stopLabels);
-        const methodology = this.extractFieldFromDetailText(pageText, ['Metodologia'], stopLabels);
-        const learningAssessment = this.extractFieldFromDetailText(
+        const syllabus = structuredFields.syllabus || this.extractFieldFromDetailText(pageText, ['Ementa'], stopLabels);
+        const objective = structuredFields.objective || this.extractFieldFromDetailText(pageText, ['Objetivos', 'Objetivo'], stopLabels);
+        const methodology = structuredFields.methodology || this.extractFieldFromDetailText(pageText, ['Metodologia'], stopLabels);
+        const learningAssessment = structuredFields.learningAssessment || this.extractFieldFromDetailText(
             pageText,
             ['Avaliação', 'Avaliacao', 'Avaliação da Aprendizagem', 'Avaliacao da Aprendizagem'],
             stopLabels
