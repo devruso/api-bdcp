@@ -1,0 +1,213 @@
+{
+  "generatedAt": "2026-05-05T17:18:08.512Z",
+  "execution": {
+    "totalUnitsScanned": 5,
+    "successfulUnits": 5,
+    "failedUnits": 0,
+    "totalComponentsExtracted": 29,
+    "concurrency": 2,
+    "limit": 5,
+    "enrichDetails": true,
+    "detailsConcurrency": 2
+  },
+  "grouped": {
+    "byAcademicBucket": {
+      "graduacao": 5,
+      "mestrado": 0,
+      "doutorado": 0,
+      "stricto_indefinido": 0
+    },
+    "byCategory": {
+      "department": 0,
+      "program": 0,
+      "institute": 0,
+      "other": 5
+    },
+    "byInstitute": {
+      "ICADS": {
+        "units": 1,
+        "components": 17,
+        "departments": [
+          "COLEGIADO DO CURSO DE ADMINISTRAÇÃO"
+        ]
+      },
+      "IHAC": {
+        "units": 3,
+        "components": 11,
+        "departments": [
+          "COLEGIADO DO CURSO DE BACHARELADO INTERDISCIPLINAR EM ARTES",
+          "COLEGIADO DO CURSO DE BACHARELADO INTERDISCIPLINAR EM HUMANIDADES"
+        ]
+      },
+      "ICTI": {
+        "units": 1,
+        "components": 1,
+        "departments": [
+          "COLEGIADO DO CURSO DE BACHARELADO INTERDISCIPLINAR EM CIÊNCIA, TECNOLOGIA E INOVAÇÃO"
+        ]
+      }
+    }
+  },
+  "units": [
+    {
+      "id": "1027",
+      "label": "COLEGIADO DO CURSO DE ADMINISTRAÇÃO/ICADS - BARREIRAS - 12.01.19.07",
+      "nivel": "G",
+      "category": "other",
+      "bucket": "graduacao",
+      "departmentName": "COLEGIADO DO CURSO DE ADMINISTRAÇÃO",
+      "instituteCode": "ICADS",
+      "sourceType": "department",
+      "requestedAcademicLevel": "graduacao",
+      "componentCount": 17,
+      "sampleCodes": [
+        "GDIPA120",
+        "GDIPA240",
+        "GDIPC120",
+        "GDIPC240",
+        "GDIPAC120",
+        "GDIPAC015",
+        "GDIPAC240",
+        "GDIPAC030",
+        "GDIPAC060",
+        "GDIPGA120"
+      ],
+      "richCoverage": {
+        "withDetailUrl": 0,
+        "withPrerequeriments": 0,
+        "withCoRequisites": 0,
+        "withEquivalences": 0,
+        "withSyllabus": 0,
+        "withWorkloadBreakdown": 17
+      }
+    },
+    {
+      "id": "2235",
+      "label": "COLEGIADO DO CURSO DE BACHARELADO INTERDISCIPLINAR EM ARTES - NOTURNO /IHAC - SALVADOR - 12.01.11.14",
+      "nivel": "G",
+      "category": "other",
+      "bucket": "graduacao",
+      "departmentName": "COLEGIADO DO CURSO DE BACHARELADO INTERDISCIPLINAR EM ARTES",
+      "instituteCode": "IHAC",
+      "sourceType": "department",
+      "requestedAcademicLevel": "graduacao",
+      "componentCount": 1,
+      "sampleCodes": [
+        "GHAC0012"
+      ],
+      "richCoverage": {
+        "withDetailUrl": 0,
+        "withPrerequeriments": 0,
+        "withCoRequisites": 0,
+        "withEquivalences": 0,
+        "withSyllabus": 0,
+        "withWorkloadBreakdown": 1
+      }
+    },
+    {
+      "id": "1796",
+      "label": "COLEGIADO DO CURSO DE BACHARELADO INTERDISCIPLINAR EM ARTES/IHAC - SALVADOR - 12.01.11.03",
+      "nivel": "G",
+      "category": "other",
+      "bucket": "graduacao",
+      "departmentName": "COLEGIADO DO CURSO DE BACHARELADO INTERDISCIPLINAR EM ARTES",
+      "instituteCode": "IHAC",
+      "sourceType": "department",
+      "requestedAcademicLevel": "graduacao",
+      "componentCount": 3,
+      "sampleCodes": [
+        "GHAC0020",
+        "GHAC0005",
+        "GHAC0006"
+      ],
+      "richCoverage": {
+        "withDetailUrl": 0,
+        "withPrerequeriments": 0,
+        "withCoRequisites": 0,
+        "withEquivalences": 0,
+        "withSyllabus": 0,
+        "withWorkloadBreakdown": 3
+      }
+    },
+    {
+      "id": "2294",
+      "label": "COLEGIADO DO CURSO DE BACHARELADO INTERDISCIPLINAR EM CIÊNCIA, TECNOLOGIA E INOVAÇÃO/ICTI - CAMAÇARI - 12.01.93.02",
+      "nivel": "G",
+      "category": "other",
+      "bucket": "graduacao",
+      "departmentName": "COLEGIADO DO CURSO DE BACHARELADO INTERDISCIPLINAR EM CIÊNCIA, TECNOLOGIA E INOVAÇÃO",
+      "instituteCode": "ICTI",
+      "sourceType": "department",
+      "requestedAcademicLevel": "graduacao",
+      "componentCount": 1,
+      "sampleCodes": [
+        "GCTI0010"
+      ],
+      "richCoverage": {
+        "withDetailUrl": 0,
+        "withPrerequeriments": 0,
+        "withCoRequisites": 0,
+        "withEquivalences": 0,
+        "withSyllabus": 0,
+        "withWorkloadBreakdown": 1
+      }
+    },
+    {
+      "id": "1797",
+      "label": "COLEGIADO DO CURSO DE BACHARELADO INTERDISCIPLINAR EM HUMANIDADES/IHAC - SALVADOR - 12.01.11.04",
+      "nivel": "G",
+      "category": "other",
+      "bucket": "graduacao",
+      "departmentName": "COLEGIADO DO CURSO DE BACHARELADO INTERDISCIPLINAR EM HUMANIDADES",
+      "instituteCode": "IHAC",
+      "sourceType": "department",
+      "requestedAcademicLevel": "graduacao",
+      "componentCount": 7,
+      "sampleCodes": [
+        "GHAC0019",
+        "GHAC0013",
+        "GHAC0014",
+        "GHAC0015",
+        "GHAC0016",
+        "GHAC0017",
+        "GHAC0018"
+      ],
+      "richCoverage": {
+        "withDetailUrl": 0,
+        "withPrerequeriments": 0,
+        "withCoRequisites": 0,
+        "withEquivalences": 0,
+        "withSyllabus": 0,
+        "withWorkloadBreakdown": 7
+      }
+    }
+  ],
+  "failures": [],
+  "instituteDepartmentModel": [
+    {
+      "instituteCode": "ICADS",
+      "departments": [
+        "COLEGIADO DO CURSO DE ADMINISTRAÇÃO"
+      ],
+      "unitCount": 1,
+      "componentCount": 17
+    },
+    {
+      "instituteCode": "IHAC",
+      "departments": [
+        "COLEGIADO DO CURSO DE BACHARELADO INTERDISCIPLINAR EM ARTES",
+        "COLEGIADO DO CURSO DE BACHARELADO INTERDISCIPLINAR EM HUMANIDADES"
+      ],
+      "unitCount": 3,
+      "componentCount": 11
+    },
+    {
+      "instituteCode": "ICTI",
+      "departments": [
+        "COLEGIADO DO CURSO DE BACHARELADO INTERDISCIPLINAR EM CIÊNCIA, TECNOLOGIA E INOVAÇÃO"
+      ],
+      "unitCount": 1,
+      "componentCount": 1
+    }
+  ]
+}

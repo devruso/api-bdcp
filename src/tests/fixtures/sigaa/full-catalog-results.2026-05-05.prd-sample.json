@@ -1,0 +1,760 @@
+{
+  "generatedAt": "2026-05-05T17:35:45.581Z",
+  "execution": {
+    "totalUnitsScanned": 20,
+    "successfulUnits": 20,
+    "failedUnits": 0,
+    "totalComponentsExtracted": 61,
+    "concurrency": 4,
+    "limit": 20,
+    "enrichDetails": true,
+    "detailsConcurrency": 4
+  },
+  "grouped": {
+    "byAcademicBucket": {
+      "graduacao": 20,
+      "mestrado": 0,
+      "doutorado": 0,
+      "stricto_indefinido": 0
+    },
+    "byCategory": {
+      "department": 0,
+      "program": 0,
+      "institute": 0,
+      "other": 20
+    },
+    "byInstitute": {
+      "ICADS": {
+        "units": 1,
+        "components": 17,
+        "departments": [
+          "COLEGIADO DO CURSO DE ADMINISTRAÇÃO"
+        ]
+      },
+      "IHAC": {
+        "units": 5,
+        "components": 13,
+        "departments": [
+          "COLEGIADO DO CURSO DE BACHARELADO INTERDISCIPLINAR EM ARTES",
+          "COLEGIADO DO CURSO DE BACHARELADO INTERDISCIPLINAR EM HUMANIDADES",
+          "COLEGIADO DO CURSO DE BACHARELADO INTERDISCIPLINAR EM SAÚDE"
+        ]
+      },
+      "ICTI": {
+        "units": 1,
+        "components": 1,
+        "departments": [
+          "COLEGIADO DO CURSO DE BACHARELADO INTERDISCIPLINAR EM CIÊNCIA, TECNOLOGIA E INOVAÇÃO"
+        ]
+      },
+      "EBA": {
+        "units": 1,
+        "components": 1,
+        "departments": [
+          "COLEGIADO DO CURSO DE GRADUAÇÃO DE LICENCIATURA EM DESENHO E PLÁSTICA"
+        ]
+      },
+      "FACED": {
+        "units": 1,
+        "components": 1,
+        "departments": [
+          "COLEGIADO DO CURSO DE GRADUAÇÃO DE LICENCIATURA EM EDUCAÇÃO FÍSICA"
+        ]
+      },
+      "EADM": {
+        "units": 2,
+        "components": 4,
+        "departments": [
+          "COLEGIADO DO CURSO DE GRADUAÇÃO EM ADMINISTRAÇÃO",
+          "COLEGIADO DO CURSO DE GRADUAÇÃO EM ADMINISTRAÇÃO PÚBLICA E GESTÃO SOCIAL"
+        ]
+      },
+      "FAUFBA": {
+        "units": 2,
+        "components": 5,
+        "departments": [
+          "COLEGIADO DO CURSO DE GRADUAÇÃO EM ARQUITETURA E URBANISMO",
+          "COLEGIADO DO CURSO DE GRADUAÇÃO EM ARQUITETURA E URBANISMO-NOTURNO"
+        ]
+      },
+      "ICI": {
+        "units": 3,
+        "components": 11,
+        "departments": [
+          "COLEGIADO DO CURSO DE GRADUAÇÃO EM ARQUIVOLOGIA",
+          "COLEGIADO DO CURSO DE GRADUAÇÃO EM ARQUIVOLOGIA-NOTURNO",
+          "COLEGIADO DO CURSO DE GRADUAÇÃO EM BIBLIOTECONOMIA E DOCUMENTAÇÃO"
+        ]
+      },
+      "ETE": {
+        "units": 1,
+        "components": 2,
+        "departments": [
+          "COLEGIADO DO CURSO DE GRADUAÇÃO EM ARTES CÊNICAS"
+        ]
+      },
+      "IMS": {
+        "units": 1,
+        "components": 1,
+        "departments": [
+          "COLEGIADO DO CURSO DE GRADUAÇÃO EM BIOTECNOLOGIA"
+        ]
+      },
+      "IC": {
+        "units": 1,
+        "components": 3,
+        "departments": [
+          "COLEGIADO DO CURSO DE GRADUAÇÃO EM CIÊNCIA DA COMPUTAÇÃO"
+        ]
+      },
+      "IBIO": {
+        "units": 1,
+        "components": 2,
+        "departments": [
+          "COLEGIADO DO CURSO DE GRADUAÇÃO EM CIÊNCIAS BIOLÓGICAS"
+        ]
+      }
+    }
+  },
+  "units": [
+    {
+      "id": "1027",
+      "label": "COLEGIADO DO CURSO DE ADMINISTRAÇÃO/ICADS - BARREIRAS - 12.01.19.07",
+      "nivel": "G",
+      "category": "other",
+      "bucket": "graduacao",
+      "departmentName": "COLEGIADO DO CURSO DE ADMINISTRAÇÃO",
+      "instituteCode": "ICADS",
+      "sourceType": "department",
+      "requestedAcademicLevel": "graduacao",
+      "componentCount": 17,
+      "sampleCodes": [
+        "GDIPA120",
+        "GDIPA240",
+        "GDIPC120",
+        "GDIPC240",
+        "GDIPAC120",
+        "GDIPAC015",
+        "GDIPAC240",
+        "GDIPAC030",
+        "GDIPAC060",
+        "GDIPGA120"
+      ],
+      "richCoverage": {
+        "withDetailUrl": 0,
+        "withDetailAction": 17,
+        "withDetailEndpoint": 17,
+        "withPrerequeriments": 0,
+        "withCoRequisites": 0,
+        "withEquivalences": 0,
+        "withSyllabus": 17,
+        "withWorkloadBreakdown": 17
+      }
+    },
+    {
+      "id": "2235",
+      "label": "COLEGIADO DO CURSO DE BACHARELADO INTERDISCIPLINAR EM ARTES - NOTURNO /IHAC - SALVADOR - 12.01.11.14",
+      "nivel": "G",
+      "category": "other",
+      "bucket": "graduacao",
+      "departmentName": "COLEGIADO DO CURSO DE BACHARELADO INTERDISCIPLINAR EM ARTES",
+      "instituteCode": "IHAC",
+      "sourceType": "department",
+      "requestedAcademicLevel": "graduacao",
+      "componentCount": 1,
+      "sampleCodes": [
+        "GHAC0012"
+      ],
+      "richCoverage": {
+        "withDetailUrl": 0,
+        "withDetailAction": 0,
+        "withDetailEndpoint": 0,
+        "withPrerequeriments": 0,
+        "withCoRequisites": 0,
+        "withEquivalences": 0,
+        "withSyllabus": 0,
+        "withWorkloadBreakdown": 1
+      }
+    },
+    {
+      "id": "1796",
+      "label": "COLEGIADO DO CURSO DE BACHARELADO INTERDISCIPLINAR EM ARTES/IHAC - SALVADOR - 12.01.11.03",
+      "nivel": "G",
+      "category": "other",
+      "bucket": "graduacao",
+      "departmentName": "COLEGIADO DO CURSO DE BACHARELADO INTERDISCIPLINAR EM ARTES",
+      "instituteCode": "IHAC",
+      "sourceType": "department",
+      "requestedAcademicLevel": "graduacao",
+      "componentCount": 3,
+      "sampleCodes": [
+        "GHAC0020",
+        "GHAC0005",
+        "GHAC0006"
+      ],
+      "richCoverage": {
+        "withDetailUrl": 0,
+        "withDetailAction": 2,
+        "withDetailEndpoint": 2,
+        "withPrerequeriments": 0,
+        "withCoRequisites": 0,
+        "withEquivalences": 0,
+        "withSyllabus": 2,
+        "withWorkloadBreakdown": 3
+      }
+    },
+    {
+      "id": "2294",
+      "label": "COLEGIADO DO CURSO DE BACHARELADO INTERDISCIPLINAR EM CIÊNCIA, TECNOLOGIA E INOVAÇÃO/ICTI - CAMAÇARI - 12.01.93.02",
+      "nivel": "G",
+      "category": "other",
+      "bucket": "graduacao",
+      "departmentName": "COLEGIADO DO CURSO DE BACHARELADO INTERDISCIPLINAR EM CIÊNCIA, TECNOLOGIA E INOVAÇÃO",
+      "instituteCode": "ICTI",
+      "sourceType": "department",
+      "requestedAcademicLevel": "graduacao",
+      "componentCount": 1,
+      "sampleCodes": [
+        "GCTI0010"
+      ],
+      "richCoverage": {
+        "withDetailUrl": 0,
+        "withDetailAction": 0,
+        "withDetailEndpoint": 0,
+        "withPrerequeriments": 0,
+        "withCoRequisites": 0,
+        "withEquivalences": 0,
+        "withSyllabus": 0,
+        "withWorkloadBreakdown": 1
+      }
+    },
+    {
+      "id": "1797",
+      "label": "COLEGIADO DO CURSO DE BACHARELADO INTERDISCIPLINAR EM HUMANIDADES/IHAC - SALVADOR - 12.01.11.04",
+      "nivel": "G",
+      "category": "other",
+      "bucket": "graduacao",
+      "departmentName": "COLEGIADO DO CURSO DE BACHARELADO INTERDISCIPLINAR EM HUMANIDADES",
+      "instituteCode": "IHAC",
+      "sourceType": "department",
+      "requestedAcademicLevel": "graduacao",
+      "componentCount": 7,
+      "sampleCodes": [
+        "GHAC0019",
+        "GHAC0013",
+        "GHAC0014",
+        "GHAC0015",
+        "GHAC0016",
+        "GHAC0017",
+        "GHAC0018"
+      ],
+      "richCoverage": {
+        "withDetailUrl": 0,
+        "withDetailAction": 0,
+        "withDetailEndpoint": 0,
+        "withPrerequeriments": 0,
+        "withCoRequisites": 0,
+        "withEquivalences": 0,
+        "withSyllabus": 0,
+        "withWorkloadBreakdown": 7
+      }
+    },
+    {
+      "id": "2237",
+      "label": "COLEGIADO DO CURSO DE BACHARELADO INTERDISCIPLINAR EM SAÚDE - NOTURNO /IHAC - SALVADOR - 12.01.11.16",
+      "nivel": "G",
+      "category": "other",
+      "bucket": "graduacao",
+      "departmentName": "COLEGIADO DO CURSO DE BACHARELADO INTERDISCIPLINAR EM SAÚDE",
+      "instituteCode": "IHAC",
+      "sourceType": "department",
+      "requestedAcademicLevel": "graduacao",
+      "componentCount": 1,
+      "sampleCodes": [
+        "GHAC0011"
+      ],
+      "richCoverage": {
+        "withDetailUrl": 0,
+        "withDetailAction": 0,
+        "withDetailEndpoint": 0,
+        "withPrerequeriments": 0,
+        "withCoRequisites": 0,
+        "withEquivalences": 0,
+        "withSyllabus": 0,
+        "withWorkloadBreakdown": 1
+      }
+    },
+    {
+      "id": "1798",
+      "label": "COLEGIADO DO CURSO DE BACHARELADO INTERDISCIPLINAR EM SAÚDE/IHAC - SALVADOR - 12.01.11.05",
+      "nivel": "G",
+      "category": "other",
+      "bucket": "graduacao",
+      "departmentName": "COLEGIADO DO CURSO DE BACHARELADO INTERDISCIPLINAR EM SAÚDE",
+      "instituteCode": "IHAC",
+      "sourceType": "department",
+      "requestedAcademicLevel": "graduacao",
+      "componentCount": 1,
+      "sampleCodes": [
+        "GHAC0009"
+      ],
+      "richCoverage": {
+        "withDetailUrl": 0,
+        "withDetailAction": 0,
+        "withDetailEndpoint": 0,
+        "withPrerequeriments": 0,
+        "withCoRequisites": 0,
+        "withEquivalences": 0,
+        "withSyllabus": 0,
+        "withWorkloadBreakdown": 1
+      }
+    },
+    {
+      "id": "1238",
+      "label": "COLEGIADO DO CURSO DE GRADUAÇÃO DE LICENCIATURA EM DESENHO E PLÁSTICA/EBA - SALVADOR - 12.01.24.02",
+      "nivel": "G",
+      "category": "other",
+      "bucket": "graduacao",
+      "departmentName": "COLEGIADO DO CURSO DE GRADUAÇÃO DE LICENCIATURA EM DESENHO E PLÁSTICA",
+      "instituteCode": "EBA",
+      "sourceType": "department",
+      "requestedAcademicLevel": "graduacao",
+      "componentCount": 1,
+      "sampleCodes": [
+        "GEBA0001"
+      ],
+      "richCoverage": {
+        "withDetailUrl": 0,
+        "withDetailAction": 0,
+        "withDetailEndpoint": 0,
+        "withPrerequeriments": 0,
+        "withCoRequisites": 0,
+        "withEquivalences": 0,
+        "withSyllabus": 0,
+        "withWorkloadBreakdown": 1
+      }
+    },
+    {
+      "id": "1322",
+      "label": "COLEGIADO DO CURSO DE GRADUAÇÃO DE LICENCIATURA EM EDUCAÇÃO FÍSICA/FACED - SALVADOR - 12.01.66.08",
+      "nivel": "G",
+      "category": "other",
+      "bucket": "graduacao",
+      "departmentName": "COLEGIADO DO CURSO DE GRADUAÇÃO DE LICENCIATURA EM EDUCAÇÃO FÍSICA",
+      "instituteCode": "FACED",
+      "sourceType": "department",
+      "requestedAcademicLevel": "graduacao",
+      "componentCount": 1,
+      "sampleCodes": [
+        "GEDC0091"
+      ],
+      "richCoverage": {
+        "withDetailUrl": 0,
+        "withDetailAction": 0,
+        "withDetailEndpoint": 0,
+        "withPrerequeriments": 0,
+        "withCoRequisites": 0,
+        "withEquivalences": 0,
+        "withSyllabus": 0,
+        "withWorkloadBreakdown": 1
+      }
+    },
+    {
+      "id": "2654",
+      "label": "COLEGIADO DO CURSO DE GRADUAÇÃO EM ADMINISTRAÇÃO PÚBLICA E GESTÃO SOCIAL/ EADM - SALVADOR - 12.01.58.30",
+      "nivel": "G",
+      "category": "other",
+      "bucket": "graduacao",
+      "departmentName": "COLEGIADO DO CURSO DE GRADUAÇÃO EM ADMINISTRAÇÃO PÚBLICA E GESTÃO SOCIAL",
+      "instituteCode": "EADM",
+      "sourceType": "department",
+      "requestedAcademicLevel": "graduacao",
+      "componentCount": 1,
+      "sampleCodes": [
+        "ADMK75"
+      ],
+      "richCoverage": {
+        "withDetailUrl": 0,
+        "withDetailAction": 0,
+        "withDetailEndpoint": 0,
+        "withPrerequeriments": 0,
+        "withCoRequisites": 0,
+        "withEquivalences": 0,
+        "withSyllabus": 0,
+        "withWorkloadBreakdown": 1
+      }
+    },
+    {
+      "id": "1287",
+      "label": "COLEGIADO DO CURSO DE GRADUAÇÃO EM ADMINISTRAÇÃO/EADM - SALVADOR - 12.01.58.10",
+      "nivel": "G",
+      "category": "other",
+      "bucket": "graduacao",
+      "departmentName": "COLEGIADO DO CURSO DE GRADUAÇÃO EM ADMINISTRAÇÃO",
+      "instituteCode": "EADM",
+      "sourceType": "department",
+      "requestedAcademicLevel": "graduacao",
+      "componentCount": 3,
+      "sampleCodes": [
+        "GADM0007",
+        "GADM0034",
+        "GADM0024"
+      ],
+      "richCoverage": {
+        "withDetailUrl": 0,
+        "withDetailAction": 0,
+        "withDetailEndpoint": 0,
+        "withPrerequeriments": 0,
+        "withCoRequisites": 0,
+        "withEquivalences": 0,
+        "withSyllabus": 0,
+        "withWorkloadBreakdown": 3
+      }
+    },
+    {
+      "id": "1812",
+      "label": "COLEGIADO DO CURSO DE GRADUAÇÃO EM ARQUITETURA E URBANISMO-NOTURNO/FAUFBA - SALVADOR - 12.01.57.01",
+      "nivel": "G",
+      "category": "other",
+      "bucket": "graduacao",
+      "departmentName": "COLEGIADO DO CURSO DE GRADUAÇÃO EM ARQUITETURA E URBANISMO-NOTURNO",
+      "instituteCode": "FAUFBA",
+      "sourceType": "department",
+      "requestedAcademicLevel": "graduacao",
+      "componentCount": 2,
+      "sampleCodes": [
+        "GARQ0004",
+        "GARQ0008"
+      ],
+      "richCoverage": {
+        "withDetailUrl": 0,
+        "withDetailAction": 0,
+        "withDetailEndpoint": 0,
+        "withPrerequeriments": 0,
+        "withCoRequisites": 0,
+        "withEquivalences": 0,
+        "withSyllabus": 0,
+        "withWorkloadBreakdown": 2
+      }
+    },
+    {
+      "id": "1280",
+      "label": "COLEGIADO DO CURSO DE GRADUAÇÃO EM ARQUITETURA E URBANISMO/FAUFBA - SALVADOR - 12.01.57.07",
+      "nivel": "G",
+      "category": "other",
+      "bucket": "graduacao",
+      "departmentName": "COLEGIADO DO CURSO DE GRADUAÇÃO EM ARQUITETURA E URBANISMO",
+      "instituteCode": "FAUFBA",
+      "sourceType": "department",
+      "requestedAcademicLevel": "graduacao",
+      "componentCount": 3,
+      "sampleCodes": [
+        "GARQ0003",
+        "GARQ0007",
+        "GARQ0009"
+      ],
+      "richCoverage": {
+        "withDetailUrl": 0,
+        "withDetailAction": 0,
+        "withDetailEndpoint": 0,
+        "withPrerequeriments": 0,
+        "withCoRequisites": 0,
+        "withEquivalences": 0,
+        "withSyllabus": 0,
+        "withWorkloadBreakdown": 3
+      }
+    },
+    {
+      "id": "2400",
+      "label": "COLEGIADO DO CURSO DE GRADUAÇÃO EM ARQUIVOLOGIA-NOTURNO/ICI - SALVADOR - 12.01.31.13",
+      "nivel": "G",
+      "category": "other",
+      "bucket": "graduacao",
+      "departmentName": "COLEGIADO DO CURSO DE GRADUAÇÃO EM ARQUIVOLOGIA-NOTURNO",
+      "instituteCode": "ICI",
+      "sourceType": "department",
+      "requestedAcademicLevel": "graduacao",
+      "componentCount": 1,
+      "sampleCodes": [
+        "GICI0030"
+      ],
+      "richCoverage": {
+        "withDetailUrl": 0,
+        "withDetailAction": 0,
+        "withDetailEndpoint": 0,
+        "withPrerequeriments": 0,
+        "withCoRequisites": 0,
+        "withEquivalences": 0,
+        "withSyllabus": 0,
+        "withWorkloadBreakdown": 1
+      }
+    },
+    {
+      "id": "1312",
+      "label": "COLEGIADO DO CURSO DE GRADUAÇÃO EM ARQUIVOLOGIA/ICI - SALVADOR - 12.01.31.04",
+      "nivel": "G",
+      "category": "other",
+      "bucket": "graduacao",
+      "departmentName": "COLEGIADO DO CURSO DE GRADUAÇÃO EM ARQUIVOLOGIA",
+      "instituteCode": "ICI",
+      "sourceType": "department",
+      "requestedAcademicLevel": "graduacao",
+      "componentCount": 2,
+      "sampleCodes": [
+        "GICI0029",
+        "GICI0017"
+      ],
+      "richCoverage": {
+        "withDetailUrl": 0,
+        "withDetailAction": 0,
+        "withDetailEndpoint": 0,
+        "withPrerequeriments": 0,
+        "withCoRequisites": 0,
+        "withEquivalences": 0,
+        "withSyllabus": 0,
+        "withWorkloadBreakdown": 2
+      }
+    },
+    {
+      "id": "1364",
+      "label": "COLEGIADO DO CURSO DE GRADUAÇÃO EM ARTES CÊNICAS/ETE - SALVADOR - 12.01.34.03",
+      "nivel": "G",
+      "category": "other",
+      "bucket": "graduacao",
+      "departmentName": "COLEGIADO DO CURSO DE GRADUAÇÃO EM ARTES CÊNICAS",
+      "instituteCode": "ETE",
+      "sourceType": "department",
+      "requestedAcademicLevel": "graduacao",
+      "componentCount": 2,
+      "sampleCodes": [
+        "GTEA0023",
+        "GTEA0011"
+      ],
+      "richCoverage": {
+        "withDetailUrl": 0,
+        "withDetailAction": 0,
+        "withDetailEndpoint": 0,
+        "withPrerequeriments": 0,
+        "withCoRequisites": 0,
+        "withEquivalences": 0,
+        "withSyllabus": 0,
+        "withWorkloadBreakdown": 2
+      }
+    },
+    {
+      "id": "1311",
+      "label": "COLEGIADO DO CURSO DE GRADUAÇÃO EM BIBLIOTECONOMIA E DOCUMENTAÇÃO/ICI - SALVADOR - 12.01.31.03",
+      "nivel": "G",
+      "category": "other",
+      "bucket": "graduacao",
+      "departmentName": "COLEGIADO DO CURSO DE GRADUAÇÃO EM BIBLIOTECONOMIA E DOCUMENTAÇÃO",
+      "instituteCode": "ICI",
+      "sourceType": "department",
+      "requestedAcademicLevel": "graduacao",
+      "componentCount": 8,
+      "sampleCodes": [
+        "GICI0018",
+        "GICI0019",
+        "GICI0020",
+        "GICI0021",
+        "GICI0012",
+        "GICI0015",
+        "ICIB57",
+        "ICIB64"
+      ],
+      "richCoverage": {
+        "withDetailUrl": 0,
+        "withDetailAction": 2,
+        "withDetailEndpoint": 2,
+        "withPrerequeriments": 0,
+        "withCoRequisites": 0,
+        "withEquivalences": 0,
+        "withSyllabus": 2,
+        "withWorkloadBreakdown": 8
+      }
+    },
+    {
+      "id": "1909",
+      "label": "COLEGIADO DO CURSO DE GRADUAÇÃO EM BIOTECNOLOGIA/IMS - VITÓRIA DA CONQUISTA - 12.01.51.11",
+      "nivel": "G",
+      "category": "other",
+      "bucket": "graduacao",
+      "departmentName": "COLEGIADO DO CURSO DE GRADUAÇÃO EM BIOTECNOLOGIA",
+      "instituteCode": "IMS",
+      "sourceType": "department",
+      "requestedAcademicLevel": "graduacao",
+      "componentCount": 1,
+      "sampleCodes": [
+        "GIMS0144"
+      ],
+      "richCoverage": {
+        "withDetailUrl": 0,
+        "withDetailAction": 0,
+        "withDetailEndpoint": 0,
+        "withPrerequeriments": 0,
+        "withCoRequisites": 0,
+        "withEquivalences": 0,
+        "withSyllabus": 0,
+        "withWorkloadBreakdown": 1
+      }
+    },
+    {
+      "id": "1118",
+      "label": "COLEGIADO DO CURSO DE GRADUAÇÃO EM CIÊNCIA DA COMPUTAÇÃO/IC - SALVADOR - 12.28.05",
+      "nivel": "G",
+      "category": "other",
+      "bucket": "graduacao",
+      "departmentName": "COLEGIADO DO CURSO DE GRADUAÇÃO EM CIÊNCIA DA COMPUTAÇÃO",
+      "instituteCode": "IC",
+      "sourceType": "department",
+      "requestedAcademicLevel": "graduacao",
+      "componentCount": 3,
+      "sampleCodes": [
+        "GICC0006",
+        "GICC0001",
+        "GICC0002"
+      ],
+      "richCoverage": {
+        "withDetailUrl": 0,
+        "withDetailAction": 0,
+        "withDetailEndpoint": 0,
+        "withPrerequeriments": 0,
+        "withCoRequisites": 0,
+        "withEquivalences": 0,
+        "withSyllabus": 0,
+        "withWorkloadBreakdown": 3
+      }
+    },
+    {
+      "id": "1142",
+      "label": "COLEGIADO DO CURSO DE GRADUAÇÃO EM CIÊNCIAS BIOLÓGICAS/IBIO - SALVADOR - 12.01.13.04",
+      "nivel": "G",
+      "category": "other",
+      "bucket": "graduacao",
+      "departmentName": "COLEGIADO DO CURSO DE GRADUAÇÃO EM CIÊNCIAS BIOLÓGICAS",
+      "instituteCode": "IBIO",
+      "sourceType": "department",
+      "requestedAcademicLevel": "graduacao",
+      "componentCount": 2,
+      "sampleCodes": [
+        "GBIO0103",
+        "GBIO0002"
+      ],
+      "richCoverage": {
+        "withDetailUrl": 0,
+        "withDetailAction": 0,
+        "withDetailEndpoint": 0,
+        "withPrerequeriments": 0,
+        "withCoRequisites": 0,
+        "withEquivalences": 0,
+        "withSyllabus": 0,
+        "withWorkloadBreakdown": 2
+      }
+    }
+  ],
+  "failures": [],
+  "instituteDepartmentModel": [
+    {
+      "instituteCode": "ICADS",
+      "departments": [
+        "COLEGIADO DO CURSO DE ADMINISTRAÇÃO"
+      ],
+      "unitCount": 1,
+      "componentCount": 17
+    },
+    {
+      "instituteCode": "IHAC",
+      "departments": [
+        "COLEGIADO DO CURSO DE BACHARELADO INTERDISCIPLINAR EM ARTES",
+        "COLEGIADO DO CURSO DE BACHARELADO INTERDISCIPLINAR EM HUMANIDADES",
+        "COLEGIADO DO CURSO DE BACHARELADO INTERDISCIPLINAR EM SAÚDE"
+      ],
+      "unitCount": 5,
+      "componentCount": 13
+    },
+    {
+      "instituteCode": "ICTI",
+      "departments": [
+        "COLEGIADO DO CURSO DE BACHARELADO INTERDISCIPLINAR EM CIÊNCIA, TECNOLOGIA E INOVAÇÃO"
+      ],
+      "unitCount": 1,
+      "componentCount": 1
+    },
+    {
+      "instituteCode": "EBA",
+      "departments": [
+        "COLEGIADO DO CURSO DE GRADUAÇÃO DE LICENCIATURA EM DESENHO E PLÁSTICA"
+      ],
+      "unitCount": 1,
+      "componentCount": 1
+    },
+    {
+      "instituteCode": "FACED",
+      "departments": [
+        "COLEGIADO DO CURSO DE GRADUAÇÃO DE LICENCIATURA EM EDUCAÇÃO FÍSICA"
+      ],
+      "unitCount": 1,
+      "componentCount": 1
+    },
+    {
+      "instituteCode": "EADM",
+      "departments": [
+        "COLEGIADO DO CURSO DE GRADUAÇÃO EM ADMINISTRAÇÃO",
+        "COLEGIADO DO CURSO DE GRADUAÇÃO EM ADMINISTRAÇÃO PÚBLICA E GESTÃO SOCIAL"
+      ],
+      "unitCount": 2,
+      "componentCount": 4
+    },
+    {
+      "instituteCode": "FAUFBA",
+      "departments": [
+        "COLEGIADO DO CURSO DE GRADUAÇÃO EM ARQUITETURA E URBANISMO",
+        "COLEGIADO DO CURSO DE GRADUAÇÃO EM ARQUITETURA E URBANISMO-NOTURNO"
+      ],
+      "unitCount": 2,
+      "componentCount": 5
+    },
+    {
+      "instituteCode": "ICI",
+      "departments": [
+        "COLEGIADO DO CURSO DE GRADUAÇÃO EM ARQUIVOLOGIA",
+        "COLEGIADO DO CURSO DE GRADUAÇÃO EM ARQUIVOLOGIA-NOTURNO",
+        "COLEGIADO DO CURSO DE GRADUAÇÃO EM BIBLIOTECONOMIA E DOCUMENTAÇÃO"
+      ],
+      "unitCount": 3,
+      "componentCount": 11
+    },
+    {
+      "instituteCode": "ETE",
+      "departments": [
+        "COLEGIADO DO CURSO DE GRADUAÇÃO EM ARTES CÊNICAS"
+      ],
+      "unitCount": 1,
+      "componentCount": 2
+    },
+    {
+      "instituteCode": "IMS",
+      "departments": [
+        "COLEGIADO DO CURSO DE GRADUAÇÃO EM BIOTECNOLOGIA"
+      ],
+      "unitCount": 1,
+      "componentCount": 1
+    },
+    {
+      "instituteCode": "IC",
+      "departments": [
+        "COLEGIADO DO CURSO DE GRADUAÇÃO EM CIÊNCIA DA COMPUTAÇÃO"
+      ],
+      "unitCount": 1,
+      "componentCount": 3
+    },
+    {
+      "instituteCode": "IBIO",
+      "departments": [
+        "COLEGIADO DO CURSO DE GRADUAÇÃO EM CIÊNCIAS BIOLÓGICAS"
+      ],
+      "unitCount": 1,
+      "componentCount": 2
+    }
+  ]
+}
