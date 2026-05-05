@@ -6,6 +6,7 @@ import { User } from '../entities/User';
 import { UserRepository } from '../repositories/UserRepository';
 import { AppError } from './../errors/AppError';
 import Mailer from '../middlewares/Mailer';
+import { assertUfbaInstitutionalEmail, normalizeEmail } from '../helpers/institutionalEmail';
 
 class AuthService {
     private userRepository : Repository<User>;
@@ -15,10 +16,14 @@ class AuthService {
     }
 
     async login(email: string, password: string) {
-        const normalizedEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
+        const normalizedEmail = typeof email === 'string' ? normalizeEmail(email) : '';
 
         if (!normalizedEmail || password == undefined) {
             throw new AppError('Username or password missing. Please try again!', 400);
+        }
+
+        if (!assertUfbaInstitutionalEmail(normalizedEmail)) {
+            throw new AppError('Only UFBA institutional email addresses are allowed.', 400);
         }
 
         const user = await this.userRepository.findOne({
@@ -49,7 +54,12 @@ class AuthService {
 
 
     async resetPassword(email: string) {
-        const normalizedEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
+        const normalizedEmail = typeof email === 'string' ? normalizeEmail(email) : '';
+
+        if (!assertUfbaInstitutionalEmail(normalizedEmail)) {
+            throw new AppError('Only UFBA institutional email addresses are allowed.', 400);
+        }
+
         const user = await this.userRepository.findOne({ email: normalizedEmail });
 
         if (!user) {

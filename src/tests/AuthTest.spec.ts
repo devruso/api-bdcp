@@ -34,7 +34,7 @@ beforeEach(async() => {
         },
         body:{
             'name': 'Test',
-            'email': 'test@gmail.com',
+            'email': 'test@ufba.br',
             'password':'test123'
         }
     });
@@ -53,7 +53,7 @@ describe('Login user', ()=>{
                 'Content-Type':'application/json',
             },
             body:{
-                'email': 'test@gmail.com',
+                'email': 'test@ufba.br',
                 'password':'test123'
             }
         });
@@ -70,7 +70,7 @@ describe('Login user', ()=>{
                 'Content-Type':'application/json',
             },
             body:{
-                'email': 'test@hotmail.com',
+                'email': 'invalid-user@ufba.br',
                 'password':'test123'
             }
         });
@@ -85,7 +85,7 @@ describe('Login user', ()=>{
                 'Content-Type':'application/json',
             },
             body:{
-                'email': 'test@hotmail.com',
+                'email': 'invalid-user@ufba.br',
                 'password':'123test'
             }
         });
@@ -114,7 +114,7 @@ describe('Login user', ()=>{
                 'Content-Type':'application/json',
             },
             body:{
-                'email': 'test@gmail.com'
+                'email': 'test@ufba.br'
             }
         });
         const res = new MockExpressResponse();
@@ -132,6 +132,22 @@ describe('Login user', ()=>{
         const res = new MockExpressResponse();
         await expect(authController.login(req, res)).rejects.toHaveProperty('statusCode', 400);
     });
+
+    it('should not be able to login with non-institutional email domain', async ()=>{
+        const authController = new AuthController();
+        const req = new MockExpressRequest({
+            method:'POST',
+            headers: {
+                'Content-Type':'application/json',
+            },
+            body:{
+                'email': 'test@gmail.com',
+                'password':'test123'
+            }
+        });
+        const res = new MockExpressResponse();
+        await expect(authController.login(req, res)).rejects.toHaveProperty('statusCode', 400);
+    });
 });
 
 describe('Reset password user', ()=>{
@@ -143,7 +159,7 @@ describe('Reset password user', ()=>{
                 'Content-Type':'application/json',
             },
             body:{
-                'email': 'test@gmail.com',
+                'email': 'test@ufba.br',
             }
         });
         const res = new MockExpressResponse();
@@ -159,7 +175,22 @@ describe('Reset password user', ()=>{
                 'Content-Type':'application/json',
             },
             body:{
-                'email': 'test@hotmail.com',
+                'email': 'invalid-user@ufba.br',
+            }
+        });
+        const res = new MockExpressResponse();
+        await expect(authController.resetPassword(req, res)).rejects.toHaveProperty('statusCode', 400);
+    });
+
+    it('should not be able to reset password with non-institutional email domain', async ()=>{
+        const authController = new AuthController();
+        const req = new MockExpressRequest({
+            method:'POST',
+            headers: {
+                'Content-Type':'application/json',
+            },
+            body:{
+                'email': 'test@gmail.com',
             }
         });
         const res = new MockExpressResponse();

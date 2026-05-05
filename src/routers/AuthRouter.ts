@@ -32,6 +32,16 @@ const authController = new AuthController();
 *           description: The user password
 *       example:
 *         token: emhlcnNvbkBn4ODIsImV4cCI6MTY0NzQ1ODQ4Mn0.Vhasas113131212asasasasaasafojkojosmR8-avh8VWN-ZSrjCytfw11GDGYySzYXCPuHw62c
+ *     ErrorResponse:
+ *       type: object
+ *       required:
+ *         - message
+ *       properties:
+ *         message:
+ *           type: string
+ *           description: Standardized error message returned by the API
+ *       example:
+ *         message: Only UFBA institutional email addresses are allowed.
 */
 
 authRouter.get('/user', ensureAuthenticated, authController.getCurrentUser);
@@ -63,6 +73,10 @@ authRouter.get('/user', ensureAuthenticated, authController.getCurrentUser);
 *               $ref: '#/components/schemas/Auth'
 *       400:
 *         description: Bad Request
+*         content:
+*           application/json:
+*             schema:
+*               $ref: '#/components/schemas/ErrorResponse'
 *       404:
 *         description: Error during the authentication
 *       500:
@@ -88,6 +102,10 @@ authRouter.post('/login', makeValidateBody(LoginRequestDto), authController.logi
 *         description: Success
 *       400:
 *         description: Bad Request
+*         content:
+*           application/json:
+*             schema:
+*               $ref: '#/components/schemas/ErrorResponse'
 *       404:
 *         description: User not found
 *       500:

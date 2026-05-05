@@ -6,6 +6,7 @@ import { UserRepository } from '../repositories/UserRepository';
 import { AppError } from '../errors/AppError';
 import Mailer from '../middlewares/Mailer';
 import { UserRole } from '../interfaces/UserRole';
+import { assertUfbaInstitutionalEmail, normalizeEmail } from '../helpers/institutionalEmail';
 
 class UserService {
 
@@ -100,8 +101,14 @@ class UserService {
     }
 
     async create(name: string, email: string, password: string){
+        const normalizedEmail = normalizeEmail(email);
+
+        if (!assertUfbaInstitutionalEmail(normalizedEmail)) {
+            throw new AppError('Only UFBA institutional email addresses are allowed.', 400);
+        }
+
         const userExists = await this.userRepository.findOne({
-            where: { email },
+            where: { email: normalizedEmail },
         });
 
         if (userExists) {
@@ -111,7 +118,7 @@ class UserService {
         try {
             const user = this.userRepository.create({
                 name,
-                email,
+                email: normalizedEmail,
                 password: crypto.createHmac('sha256', password).digest('hex'),
             });
 
@@ -137,6 +144,10 @@ class UserService {
         }
 
         const normalizedEmail = email.trim().toLowerCase();
+
+        if (!assertUfbaInstitutionalEmail(normalizedEmail)) {
+            throw new AppError('Only UFBA institutional email addresses are allowed.', 400);
+        }
 
         const userExists = await this.userRepository.findOne({
             where: { email: normalizedEmail },
@@ -249,6 +260,12 @@ class UserService {
     }
 
     async updateEmail(id: string, email: string){
+        const normalizedEmail = normalizeEmail(email);
+
+        if (!assertUfbaInstitutionalEmail(normalizedEmail)) {
+            throw new AppError('Only UFBA institutional email addresses are allowed.', 400);
+        }
+
         const userExists = await this.userRepository.findOne({
             where: { id }
         });
@@ -258,7 +275,7 @@ class UserService {
         }
 
         try {
-            await this.userRepository.createQueryBuilder().update(User).set({ email }).where('id = :id', { id }).execute();
+            await this.userRepository.createQueryBuilder().update(User).set({ email: normalizedEmail }).where('id = :id', { id }).execute();
 
             return await this.userRepository.findOne({
                 where: { id }

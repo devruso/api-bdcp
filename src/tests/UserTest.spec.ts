@@ -1,8 +1,11 @@
 import { UserController } from '../controllers/UserController';
 import { UserInviteService } from '../services/UserInviteService';
+import { UserService } from '../services/UserService';
 import { getCustomRepository } from 'typeorm';
 import { UserRepository } from '../repositories/UserRepository';
+import { UserRole } from '../interfaces/UserRole';
 import connection from './connection';
+import crypto from 'crypto';
 
 jest.mock('../middlewares/Mailer', () => ({
     __esModule: true,
@@ -42,7 +45,7 @@ describe('Create new user', ()=>{
             },
             body:{
                 'name': 'Test',
-                'email': 'test@gmail.com',
+                'email': 'test@ufba.br',
                 'password':'test123'
             }
         });
@@ -64,7 +67,7 @@ describe('Create new user', ()=>{
             },
             body:{
                 'name': 'Test',
-                'email': 'test@gmail.com',
+                'email': 'test@ufba.br',
                 'password':'test123'
             }
         });
@@ -106,7 +109,7 @@ describe('Create new user', ()=>{
             },
             body:{
                 'name': 'Test',
-                'email': 'test@gmail.com'
+                'email': 'test@ufba.br'
             }
         });
         const res = new MockExpressResponse();
@@ -124,7 +127,7 @@ describe('Create new user', ()=>{
                 inviteToken,
             },
             body:{
-                'email': 'test@gmail.com',
+                'email': 'test@ufba.br',
                 'password':'test123'
             }
         });
@@ -147,13 +150,10 @@ describe('Create new user', ()=>{
         const res = new MockExpressResponse();
         await expect(userController.create(req, res)).rejects.toHaveProperty('statusCode', 400);
     });
-});
 
-describe('Create teacher by admin', () => {
-    it('should be able to create teacher by admin', async () => {
-        const userController = new UserController();
+    it('should not be able to create user with non-institutional email domain', async ()=>{
         const inviteToken = getInviteToken();
-        const adminCreateReq = new MockExpressRequest({
+        const req = new MockExpressRequest({
             method:'POST',
             headers: {
                 'Content-Type':'application/json',
@@ -162,81 +162,59 @@ describe('Create teacher by admin', () => {
                 inviteToken,
             },
             body:{
-                'name': 'Admin User',
-                'email': 'admin@ufba.br',
-                'password':'Admin123!'
+                'name': 'Test',
+                'email': 'test@gmail.com',
+                'password':'test123'
             }
         });
-        const adminCreateRes = new MockExpressResponse();
-        await userController.create(adminCreateReq, adminCreateRes);
-
-        const createdAdminId = adminCreateRes._getJSON().id;
-        const userRepository = getCustomRepository(UserRepository);
-        await userRepository
-            .createQueryBuilder()
-            .update('users')
-            .set({ role: 'admin' })
-            .where('id = :id', { id: createdAdminId })
-            .execute();
-
-        const req = new MockExpressRequest({
-            method:'POST',
-            headers: {
-                authenticatedUserId: createdAdminId,
-            },
-            body:{
-                name: 'Professor Claudio',
-                email: 'claudio@ufba.br',
-                sendCredentialsByEmail: false,
-            },
-        });
         const res = new MockExpressResponse();
+        const userController = new UserController();
+        await expect(userController.create(req, res)).rejects.toHaveProperty('statusCode', 400);
+    });
+});
 
-        await userController.createTeacherByAdmin(req, res);
+describe('Create teacher by admin', () => {
+    it('should be able to create teacher by admin', async () => {
+        const userService = new UserService();
+        const userRepository = getCustomRepository(UserRepository);
+        const adminUser = await userRepository.save(userRepository.create({
+            name: 'Admin User',
+            email: 'admin@ufba.br',
+            password: crypto.createHmac('sha256', 'Admin123!').digest('hex'),
+            role: UserRole.ADMIN,
+        }));
 
-        expect(res.statusCode).toBe(201);
-        expect(res._getJSON()).toHaveProperty('temporaryPassword');
-        expect(res._getJSON()).toMatchObject({
+        const result = await userService.createTeacherByAdmin(
+            adminUser.id,
+            'Professor Claudio',
+            'claudio@ufba.br',
+            false
+        );
+
+        expect(result).toHaveProperty('temporaryPassword');
+        expect(result).toMatchObject({
             name: 'Professor Claudio',
             email: 'claudio@ufba.br',
         });
     });
 
     it('should not be able to create teacher by non-admin', async () => {
-        const userController = new UserController();
-        const inviteToken = getInviteToken();
-        const teacherReq = new MockExpressRequest({
-            method:'POST',
-            headers: {
-                'Content-Type':'application/json',
-            },
-            params: {
-                inviteToken,
-            },
-            body:{
-                'name': 'Teacher User',
-                'email': 'teacher@ufba.br',
-                'password':'Teacher123!'
-            }
-        });
-        const teacherRes = new MockExpressResponse();
-        await userController.create(teacherReq, teacherRes);
+        const userService = new UserService();
+        const userRepository = getCustomRepository(UserRepository);
+        const teacherUser = await userRepository.save(userRepository.create({
+            name: 'Teacher User',
+            email: 'teacher@ufba.br',
+            password: crypto.createHmac('sha256', 'Teacher123!').digest('hex'),
+            role: UserRole.TEACHER,
+        }));
 
-        const createdTeacherId = teacherRes._getJSON().id;
-
-        const req = new MockExpressRequest({
-            method:'POST',
-            headers: {
-                authenticatedUserId: createdTeacherId,
-            },
-            body:{
-                name: 'Professor Ivan',
-                email: 'ivan@ufba.br',
-                sendCredentialsByEmail: false,
-            },
-        });
-        const res = new MockExpressResponse();
-
-        await expect(userController.createTeacherByAdmin(req, res)).rejects.toHaveProperty('statusCode', 401);
+        await expect(
+            userService.createTeacherByAdmin(
+                teacherUser.id,
+                'Professor Ivan',
+                'ivan@ufba.br',
+                false
+            )
+        ).rejects.toHaveProperty('statusCode', 401);
     });
 });

@@ -87,6 +87,10 @@ const userController = new UserController();
 *                 $ref: '#/components/schemas/User'
 *       400:
 *         description: Bad Request
+*         content:
+*           application/json:
+*             schema:
+*               $ref: '#/components/schemas/ErrorResponse'
 *       500:
 *         description: Internal Server Error
 */
@@ -140,6 +144,10 @@ userRouter.post(
 *               $ref: '#/components/schemas/User'
 *       400:
 *         description: Bad Request
+*         content:
+*           application/json:
+*             schema:
+*               $ref: '#/components/schemas/ErrorResponse'
 *       500:
 *         description: Internal Server Error
 */
@@ -173,6 +181,10 @@ userRouter.post('/:inviteToken', makeValidateBody(CreateUserRequestDto), userCon
 *               $ref: '#/components/schemas/User'
 *       400:
 *         description: Bad Request
+*         content:
+*           application/json:
+*             schema:
+*               $ref: '#/components/schemas/ErrorResponse'
 *       404:
 *         description: The user was not found
 *       500:
