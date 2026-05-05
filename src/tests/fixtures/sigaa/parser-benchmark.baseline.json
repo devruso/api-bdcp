@@ -1,0 +1,35 @@
+{
+  "generatedAt": "2026-05-05T17:55:07.091Z",
+  "config": {
+    "iterations": 800,
+    "warmup": 100,
+    "regressionThresholdPercent": 20
+  },
+  "results": [
+    {
+      "name": "linear",
+      "iterations": 800,
+      "avgMs": 0.162323,
+      "minMs": 0.0913,
+      "maxMs": 2.4778,
+      "p95Ms": 0.3262
+    },
+    {
+      "name": "table",
+      "iterations": 800,
+      "avgMs": 0.283524,
+      "minMs": 0.1373,
+      "maxMs": 2.8967,
+      "p95Ms": 0.6233
+    },
+    {
+      "name": "hybrid",
+      "iterations": 800,
+      "avgMs": 0.223542,
+      "minMs": 0.1183,
+      "maxMs": 3.0022,
+      "p95Ms": 0.4272
+    }
+  ],
+  "regressions": []
+}

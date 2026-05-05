@@ -15,6 +15,7 @@
     "migration:run": "node -r ts-node/register -r dotenv/config ./node_modules/typeorm/cli.js migration:run",
     "typeorm": "node -r ts-node/register -r dotenv/config ./node_modules/typeorm/cli.js",
     "sigaa:full-catalog": "node -r ts-node/register -r dotenv/config src/scripts/sigaa-full-catalog.ts",
+    "benchmark:parser": "node -r ts-node/register -r dotenv/config src/scripts/sigaa-parser-benchmark.ts",
     "test": "jest --detectOpenHandles --forceExit",
     "test:coverage": "jest --detectOpenHandles --forceExit --coverage"
   },
