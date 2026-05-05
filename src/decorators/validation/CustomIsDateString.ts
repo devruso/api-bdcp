@@ -9,7 +9,7 @@ export const CustomIsDateString = (validationOptions?: ValidationOptions) => {
             propertyName,
             options: validationOptions,
             validator: {
-                validate: isDateString,
+                validate: (value: unknown) => typeof value === 'string' && isDateString(value),
                 defaultMessage: () => `${propertyName} deve ser uma data`
             }
         });
