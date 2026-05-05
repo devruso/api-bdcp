@@ -28,3 +28,8 @@ services:
             POSTGRES_PASSWORD: supersecret
             POSTGRES_USER: admin
             POSTGRES_DB: bdcp
+        volumes:
+            - postgres_data:/var/lib/postgresql/data
+
+volumes:
+    postgres_data:
