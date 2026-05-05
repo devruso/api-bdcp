@@ -306,7 +306,7 @@ const componentDraftController = new ComponentDraftController();
 *       500:
 *         description: Internal Server Error
 */
-componentDraftRouter.get('/', componentDraftController.getDrafts);
+componentDraftRouter.get('/', ensureAuthenticated, componentDraftController.getDrafts);
 
 componentDraftRouter.post(
 	'/import-preview',

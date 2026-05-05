@@ -1,7 +1,17 @@
 import { Router } from 'express';
 import { UserController } from '../controllers/UserController';
-import { CreateUserRequestDto, UpdateUserRequestDto } from '../dtos/user';
-import { ensureAdminAuthenticated, ensureAuthenticated } from '../middlewares/EnsureAuthenticated';
+import {
+	CreateTeacherByAdminRequestDto,
+	CreateUserRequestDto,
+	UpdateUserRequestDto,
+	UpdateUserRoleRequestDto,
+	UpdateUserSignatureRequestDto,
+} from '../dtos/user';
+import {
+	ensureAdminAuthenticated,
+	ensureAuthenticated,
+	ensureSuperAdminAuthenticated,
+} from '../middlewares/EnsureAuthenticated';
 import { makeValidateBody } from '../middlewares/Validator';
 
 const userRouter = Router();
@@ -81,6 +91,14 @@ const userController = new UserController();
 *         description: Internal Server Error
 */
 userRouter.get('/', ensureAuthenticated, ensureAdminAuthenticated, userController.getUsers);
+
+userRouter.post(
+	'/create-teacher',
+	ensureAuthenticated,
+	ensureAdminAuthenticated,
+	makeValidateBody(CreateTeacherByAdminRequestDto),
+	userController.createTeacherByAdmin
+);
 
 /**
 * @swagger
@@ -197,6 +215,10 @@ userRouter.put('/update/email', ensureAuthenticated, makeValidateBody(UpdateUser
 */
 userRouter.put('/update/password', ensureAuthenticated, makeValidateBody(UpdateUserRequestDto), userController.updatePassword);
 
+userRouter.put('/update/signature', ensureAuthenticated, makeValidateBody(UpdateUserSignatureRequestDto), userController.updateSignature);
+
+userRouter.put('/:id/role', ensureAuthenticated, ensureSuperAdminAuthenticated, makeValidateBody(UpdateUserRoleRequestDto), userController.updateRole);
+
 /**
 * @swagger
 * /api/users/{id}:
@@ -218,6 +240,6 @@ userRouter.put('/update/password', ensureAuthenticated, makeValidateBody(UpdateU
 *       500:
 *         description: Internal Server Error
 */
-userRouter.delete('/:id', ensureAuthenticated, userController.delete);
+userRouter.delete('/:id', ensureAuthenticated, ensureAdminAuthenticated, userController.delete);
 
 export { userRouter };

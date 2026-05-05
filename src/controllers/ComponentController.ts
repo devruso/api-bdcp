@@ -4,8 +4,10 @@ import { getAuthToken } from '../helpers/getAuthToken';
 import { paginate } from '../helpers/paginate';
 import { verifyAuthToken } from '../helpers/verifyAuthToken';
 import { ComponentLogService } from '../services/ComponentLogService';
+import { ComponentPublicShareService } from '../services/ComponentPublicShareService';
 import { ComponentService } from '../services/ComponentService';
 import { CrawlerService } from '../services/CrawlerService';
+import { AcademicLevel } from '../interfaces/AcademicLevel';
 
 const isUserAuthenticated = (authorization?: string) => {
     try {
@@ -44,6 +46,31 @@ class ComponentController {
         return response.status(201).end();
     }
 
+    async importComponentsFromSigaaPublic(request: Request, response: Response) {
+        const { sourceType, sourceId, academicLevel } = request.body as {
+            sourceType: 'department' | 'program';
+            sourceId: string;
+            academicLevel: AcademicLevel;
+        };
+        const authenticatedUserId = request.headers.authenticatedUserId as string;
+        const crawlerService = new CrawlerService();
+
+        if (!sourceType || !sourceId || !academicLevel) {
+            return response.status(400).json({
+                message: 'sourceType, sourceId e academicLevel são obrigatórios.',
+            });
+        }
+
+        await crawlerService.importComponentsFromSigaaPublic(
+            authenticatedUserId,
+            sourceType,
+            sourceId,
+            academicLevel
+        );
+
+        return response.status(201).end();
+    }
+
     async getComponents(request: Request, response: Response) {
         const componentService = new ComponentService();
 
@@ -75,6 +102,14 @@ class ComponentController {
         const component = await componentService.getComponentByCode(
             request.params.code
         );
+
+        return response.status(200).json(component);
+    }
+
+    async getSharedPublicComponent(request: Request, response: Response) {
+        const { token } = request.params;
+        const publicShareService = new ComponentPublicShareService();
+        const component = await publicShareService.getPublishedComponentByToken(token);
 
         return response.status(200).json(component);
     }
@@ -154,6 +189,89 @@ class ComponentController {
             'Content-Disposition': `attachment; filename="${exportedFile.fileName}"`,
         });
         return response.status(200).send(exportedFile.buffer);
+    }
+
+    async createPublicShare(request: Request, response: Response) {
+        const { id } = request.params;
+        const authenticatedUserId = request.headers.authenticatedUserId as string;
+        const { expiresInHours } = request.body as { expiresInHours?: number };
+
+        const publicShareService = new ComponentPublicShareService();
+        const publicShare = await publicShareService.createShare(
+            id,
+            authenticatedUserId,
+            expiresInHours
+        );
+
+        return response.status(201).json({
+            ...publicShare,
+            publicLink: `/publico/disciplinas/${publicShare.token}`,
+        });
+    }
+
+    async getActivePublicShares(request: Request, response: Response) {
+        const { id } = request.params;
+        const authenticatedUserId = request.headers.authenticatedUserId as string;
+        const page = parseInt(String(request.query.page)) || 0;
+        const limit = parseInt(String(request.query.limit)) || 10;
+        const sortBy = String(request.query.sortBy ?? '').trim() || 'createdAt';
+        const sortOrder = String(request.query.sortOrder ?? 'DESC').toUpperCase() === 'ASC'
+            ? 'ASC'
+            : 'DESC';
+        const creatorId = String(request.query.creatorId ?? '').trim() || undefined;
+        const expirationRange = String(request.query.expirationRange ?? 'all').trim() as '24h' | '72h' | '168h' | 'all';
+
+        const publicShareService = new ComponentPublicShareService();
+        const shares = await publicShareService.listActiveShares(id, authenticatedUserId, {
+            page,
+            limit,
+            sortBy,
+            sortOrder,
+            creatorId,
+            expirationRange,
+        });
+
+        const totalPages = limit > 0 ? Math.ceil(shares.total / limit) : 0;
+
+        return response.status(200).json({
+            results: shares.results.map((share) => ({
+                ...share,
+                publicLink: `/publico/disciplinas/${share.token}`,
+            })),
+            total: shares.total,
+            meta: {
+                page,
+                limit,
+                total: shares.total,
+                totalPages,
+                sortBy,
+                sortOrder,
+                filters: {
+                    creatorId,
+                    expirationRange,
+                },
+            },
+        });
+    }
+
+    async revokePublicShare(request: Request, response: Response) {
+        const { shareId } = request.params;
+        const authenticatedUserId = request.headers.authenticatedUserId as string;
+
+        const publicShareService = new ComponentPublicShareService();
+        const revokedShare = await publicShareService.revokeShare(shareId, authenticatedUserId);
+
+        return response.status(200).json(revokedShare);
+    }
+
+    async revokeAllPublicShares(request: Request, response: Response) {
+        const { id } = request.params;
+        const authenticatedUserId = request.headers.authenticatedUserId as string;
+
+        const publicShareService = new ComponentPublicShareService();
+        const result = await publicShareService.revokeAllActiveShares(id, authenticatedUserId);
+
+        return response.status(200).json(result);
     }
 }
 

@@ -14,6 +14,7 @@ import { ComponentWorkload } from './ComponentWorkload';
 import { ComponentLog } from './ComponentLog';
 import { ComponentLogType } from '../interfaces/ComponentLogType';
 import { Component } from './Component';
+import { AcademicLevel } from '../interfaces/AcademicLevel';
 
 @Entity('component_drafts')
 class ComponentDraft {
@@ -47,6 +48,9 @@ class ComponentDraft {
 
     @Column({ default: '' })
         semester?: string;
+
+    @Column({ name: 'academic_level', enum: AcademicLevel, default: AcademicLevel.GRADUATION })
+        academicLevel: AcademicLevel;
 
     @Column({ default: '' })
         prerequeriments?: string;

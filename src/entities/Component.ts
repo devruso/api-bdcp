@@ -15,6 +15,7 @@ import { ComponentLog } from './ComponentLog';
 import { ComponentLogType } from '../interfaces/ComponentLogType';
 import { ComponentStatus } from '../interfaces/ComponentStatus';
 import { ComponentDraft } from './ComponentDraft';
+import { AcademicLevel } from '../interfaces/AcademicLevel';
 
 @Entity('components')
 class Component {
@@ -51,6 +52,9 @@ class Component {
 
     @Column({ default: '' })
         semester: string;
+
+    @Column({ name: 'academic_level', enum: AcademicLevel, default: AcademicLevel.GRADUATION })
+        academicLevel: AcademicLevel;
 
     @Column({ default: '' })
         prerequeriments: string;
@@ -140,6 +144,8 @@ class Component {
             this.learningAssessment = draft.learningAssessment;
         if (draft.modality != null)
             this.modality = draft.modality;
+        if (draft.academicLevel != null)
+            this.academicLevel = draft.academicLevel;
 
         return this;
     }

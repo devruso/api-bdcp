@@ -290,7 +290,9 @@ const componentController = new ComponentController();
 *       500:
 *         description: Internal Server Error
 */
-componentRouter.get('/', componentController.getComponents);
+componentRouter.get('/', ensureAuthenticated, componentController.getComponents);
+
+componentRouter.get('/shared/:token', componentController.getSharedPublicComponent);
 
 /**
  * @swagger
@@ -328,7 +330,7 @@ componentRouter.get('/', componentController.getComponents);
  *       500:
  *         description: Internal Server Error
  */
-componentRouter.get('/:code', componentController.getComponentByCode);
+componentRouter.get('/:code', ensureAuthenticated, componentController.getComponentByCode);
 
 componentRouter.get('/:id/logs', ensureAuthenticated, componentController.getComponentLogs);
 
@@ -761,6 +763,16 @@ componentRouter.delete('/:id', ensureAuthenticated, componentController.delete);
 */
 componentRouter.post('/import', ensureAuthenticated, componentController.importComponentsFromSiac);
 
-componentRouter.get('/:id/export', componentController.export);
+componentRouter.post('/import/sigaa-public', ensureAuthenticated, componentController.importComponentsFromSigaaPublic);
+
+componentRouter.post('/:id/public-shares', ensureAuthenticated, componentController.createPublicShare);
+
+componentRouter.get('/:id/public-shares', ensureAuthenticated, componentController.getActivePublicShares);
+
+componentRouter.post('/:id/public-shares/revoke-all', ensureAuthenticated, componentController.revokeAllPublicShares);
+
+componentRouter.post('/public-shares/:shareId/revoke', ensureAuthenticated, componentController.revokePublicShare);
+
+componentRouter.get('/:id/export', ensureAuthenticated, componentController.export);
 
 export { componentRouter };

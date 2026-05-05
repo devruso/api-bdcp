@@ -9,4 +9,8 @@ export class ApproveDraftRequestDto {
     @CustomIsNotEmpty()
     @CustomMatches(/^\d+$/)
     public agreementNumber: string;
+
+    @CustomIsNotEmpty()
+    @CustomMatches(/^.{6,}$/)
+    public signature: string;
 }

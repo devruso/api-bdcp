@@ -59,6 +59,10 @@ describe('Component document flow', () => {
 
     beforeEach(async () => {
         token = await createUserAndLogin();
+        await supertest(app)
+            .put('/api/users/update/signature')
+            .set('Authorization', `Bearer ${token}`)
+            .send({ signature: 'Assina123!' });
     });
 
     afterEach(async () => {
@@ -119,7 +123,7 @@ describe('Component document flow', () => {
         expect(Array.isArray(response.body.warnings)).toBe(true);
     });
 
-    it('should be able to get component details by code without authentication', async () => {
+    it('should not be able to get component details by code without authentication', async () => {
         const createResponse = await supertest(app)
             .post('/api/components')
             .set('Content-Type', 'application/json')
@@ -144,8 +148,7 @@ describe('Component document flow', () => {
         const componentResponse = await supertest(app)
             .get('/api/components/PUB123');
 
-        expect(componentResponse.statusCode).toBe(200);
-        expect(componentResponse.body.code).toBe('PUB123');
+        expect(componentResponse.statusCode).toBe(401);
     });
 
     it('should be able to search published disciplines without accent marks', async () => {
@@ -172,6 +175,7 @@ describe('Component document flow', () => {
 
         const searchResponse = await supertest(app)
             .get('/api/components')
+            .set('Authorization', `Bearer ${token}`)
             .query({ search: 'expressao' });
 
         expect(searchResponse.statusCode).toBe(200);
@@ -223,7 +227,8 @@ describe('Component document flow', () => {
         expect(targetComponentResponse.statusCode).toBe(201);
 
         const getByCodeResponse = await supertest(app)
-            .get('/api/components/ic045');
+            .get('/api/components/ic045')
+            .set('Authorization', `Bearer ${token}`);
 
         expect(getByCodeResponse.statusCode).toBe(200);
         expect(getByCodeResponse.body.code).toBe('IC045');
@@ -329,6 +334,7 @@ describe('Component document flow', () => {
             .send({
                 agreementNumber: '12345',
                 agreementDate: '2026-05-01T12:00:00.000Z',
+                signature: 'Assina123!',
             });
 
         expect(approveResponse.statusCode).toBe(200);

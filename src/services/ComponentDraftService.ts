@@ -1,4 +1,5 @@
 import { Brackets, getCustomRepository, Repository, getConnection, Raw } from 'typeorm';
+import crypto from 'crypto';
 import { ComponentDraftRepository } from '../repositories/ComponentDraftRepository';
 import { AppError } from '../errors/AppError';
 import { WorkloadService } from './WorkloadService';
@@ -13,18 +14,22 @@ import { ApproveDraftRequestDto } from '../dtos/component/draft/ApproveDraftRequ
 import { CreateDraftRequestDto } from '../dtos/component/draft/CreateDraftRequest';
 import { UpdateComponentRequestDto } from '../dtos/component';
 import { ComponentLogRepository } from '../repositories/ComponentLogRepository';
+import { User } from '../entities/User';
+import { UserRepository } from '../repositories/UserRepository';
 
 export class ComponentDraftService {
 
     private componentDraftRepository : Repository<ComponentDraft>;
     private componentRepository: Repository<Component>;
     private componentLogRepository: Repository<ComponentLog>;
+    private userRepository: Repository<User>;
     private workloadService: WorkloadService;
 
     constructor() {
         this.componentDraftRepository = getCustomRepository(ComponentDraftRepository);
         this.componentRepository = getCustomRepository(ComponentRepository);
         this.componentLogRepository = getCustomRepository(ComponentLogRepository);
+        this.userRepository = getCustomRepository(UserRepository);
         this.workloadService = new WorkloadService();
     }
 
@@ -356,6 +361,24 @@ export class ComponentDraftService {
         try {
             const connection = getConnection();
             const queryRunner = connection.createQueryRunner();
+            const approver = await this.userRepository.findOne({ where: { id: userId, isDeleted: false } });
+
+            if (!approver) {
+                throw new AppError('User not found.', 404);
+            }
+
+            if (!approver.signatureHash) {
+                throw new AppError('Assinatura digital não configurada. Atualize sua assinatura no perfil antes de publicar.', 400);
+            }
+
+            const informedSignatureHash = crypto
+                .createHmac('sha256', approvalDto.signature.trim())
+                .digest('hex');
+
+            if (informedSignatureHash !== approver.signatureHash) {
+                throw new AppError('Assinatura inválida para publicação oficial.', 401);
+            }
+
             const draftExists = await this.componentDraftRepository.findOne({
                 where: { id: draftId }
             });
@@ -380,7 +403,7 @@ export class ComponentDraftService {
             const approvalLog = component.generateLog(
                 userId,
                 ComponentLogType.APPROVAL,
-                `Versao oficial ${versionCode} publicada por aprovacao formal.`,
+                `Versao oficial ${versionCode} publicada por aprovacao formal com assinatura validada.`,
                 approvalDto.agreementNumber,
                 approvalDto.agreementDate,
                 versionCode,

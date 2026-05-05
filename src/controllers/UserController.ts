@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { CreateUserRequestDto, UpdateUserRequestDto } from '../dtos/user';
+import { CreateUserRequestDto, UpdateUserRequestDto, UpdateUserRoleRequestDto, UpdateUserSignatureRequestDto } from '../dtos/user';
 
 import { UserService } from '../services/UserService';
 import { UserInviteService } from '../services/UserInviteService';
@@ -57,6 +57,25 @@ class UserController {
         return response.status(201).send({ id: user.id });
     }
 
+    async createTeacherByAdmin(request: Request, response: Response) {
+        const authenticatedUserId = request.headers.authenticatedUserId as string;
+        const { name, email, sendCredentialsByEmail } = request.body as {
+            name: string;
+            email: string;
+            sendCredentialsByEmail?: boolean;
+        };
+
+        const userService = new UserService();
+        const createdTeacher = await userService.createTeacherByAdmin(
+            authenticatedUserId,
+            name,
+            email,
+            sendCredentialsByEmail ?? true
+        );
+
+        return response.status(201).json(createdTeacher);
+    }
+
     async updateEmail(request: Request, response: Response) {
         const authenticatedUserId = request.headers.authenticatedUserId as string;
         const { email } = request.body as UpdateUserRequestDto;
@@ -73,6 +92,27 @@ class UserController {
 
         const userService = new UserService();
         const user = await userService.updatePassword(authenticatedUserId, password);
+
+        return response.status(200).json(user);
+    }
+
+    async updateSignature(request: Request, response: Response) {
+        const authenticatedUserId = request.headers.authenticatedUserId as string;
+        const { signature } = request.body as UpdateUserSignatureRequestDto;
+
+        const userService = new UserService();
+        const user = await userService.updateSignature(authenticatedUserId, signature);
+
+        return response.status(200).json(user);
+    }
+
+    async updateRole(request: Request, response: Response) {
+        const authenticatedUserId = request.headers.authenticatedUserId as string;
+        const { id } = request.params;
+        const { role } = request.body as UpdateUserRoleRequestDto;
+
+        const userService = new UserService();
+        const user = await userService.updateUserRole(authenticatedUserId, id, role);
 
         return response.status(200).json(user);
     }

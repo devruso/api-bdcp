@@ -1,0 +1,41 @@
+{
+  "sources": {
+    "dcc-1114": {
+      "fixturePath": "src/tests/fixtures/sigaa/source-busca-componentes-dcc-1114.html",
+      "sourceType": "department",
+      "academicLevel": "graduacao",
+      "expectedDepartment": "Departamento SIGAA"
+    },
+    "dci-2440": {
+      "fixturePath": "src/tests/fixtures/sigaa/source-busca-componentes-dci-2440.html",
+      "sourceType": "department",
+      "academicLevel": "graduacao",
+      "expectedDepartment": "Departamento SIGAA"
+    },
+    "pgcomp-1820": {
+      "fixturePath": "src/tests/fixtures/sigaa/source-busca-componentes-pgcomp-1820.html",
+      "sourceType": "program",
+      "academicLevel": "mestrado",
+      "expectedDepartment": "Programa SIGAA"
+    }
+  },
+  "samples": [
+    { "sourceKey": "dcc-1114", "expectedCode": "MATA90", "expectedName": "ALGORITMOS DISTRIBUIDOS" },
+    { "sourceKey": "dcc-1114", "expectedCode": "MATC19", "expectedName": "ALGORITMOS E PROGRAMACAO" },
+    { "sourceKey": "dcc-1114", "expectedCode": "MAT053", "expectedName": "ANALISE DE PROJETO DE ALGORITMOS" },
+    { "sourceKey": "dcc-1114", "expectedCode": "MATA52", "expectedName": "ANALISE E PROJETO DE ALGORITMOS" },
+    { "sourceKey": "dcc-1114", "expectedCode": "MATA48", "expectedName": "ARQUITETURA DE COMPUTADORES" },
+
+    { "sourceKey": "dci-2440", "expectedCode": "MATF54", "expectedName": "ACCS:ONDA EDUCATIVA, DIGITAL, ECOLOGISTA E PAN-AFRO-INDIGENA" },
+    { "sourceKey": "dci-2440", "expectedCode": "MATB21", "expectedName": "AMBIENTES INTERATIVOS DE APRENDIZAGEM" },
+    { "sourceKey": "dci-2440", "expectedCode": "MATA68", "expectedName": "COMPUTADOR, ETICA E SOCIEDADE" },
+    { "sourceKey": "dci-2440", "expectedCode": "MATA41", "expectedName": "INFORMATICA NA EDUCACAO" },
+    { "sourceKey": "dci-2440", "expectedCode": "MATB20", "expectedName": "INTELIGENCIA ARTIFICIAL EM EDUCACAO" },
+
+    { "sourceKey": "pgcomp-1820", "expectedCode": "IC0051", "expectedName": "ASPECTOS RECENTES EM ESTATISTICA" },
+    { "sourceKey": "pgcomp-1820", "expectedCode": "IC0032", "expectedName": "BANCO DE DADOS" },
+    { "sourceKey": "pgcomp-1820", "expectedCode": "IC0033", "expectedName": "COMPUTACAO DISTRIBUIDA" },
+    { "sourceKey": "pgcomp-1820", "expectedCode": "IC0036", "expectedName": "INTELIGENCIA ARTIFICIAL" },
+    { "sourceKey": "pgcomp-1820", "expectedCode": "IC0001", "expectedName": "SISTEMAS OPERACIONAIS" }
+  ]
+}

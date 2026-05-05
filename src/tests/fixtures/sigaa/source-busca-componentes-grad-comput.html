@@ -1,0 +1,579 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"  "http://www.w3.org/TR/html4/loose.dtd">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+	<META HTTP-EQUIV="Pragma" CONTENT="no-cache">
+	<title>SIGAA - Sistema Integrado de Gest&#227;o de Atividades Acad&#234;micas</title>
+	<link class="component" href="/sigaa/a4j/s/3_3_3.Finalorg/richfaces/renderkit/html/css/basic_classes.xcss/DATB/eAF7sqpgb-jyGdIAFrMEaw__.jsf" rel="stylesheet" type="text/css" /><link class="component" href="/sigaa/a4j/s/3_3_3.Finalorg/richfaces/renderkit/html/css/extended_classes.xcss/DATB/eAF7sqpgb-jyGdIAFrMEaw__.jsf" media="rich-extended-skinning" rel="stylesheet" type="text/css" /><script type="text/javascript">window.RICH_FACES_EXTENDED_SKINNING_ON=true;</script><script src="/sigaa/a4j/g/3_3_3.Finalorg/richfaces/renderkit/html/scripts/skinning.js.jsf" type="text/javascript"></script><link rel="shortcut icon" href="/sigaa/img/sigaa.ico">
+	
+	<script type="text/javascript" src="/shared/jsBundles/jawr_loader.js" ></script>
+	<script src="/sigaa/javascript/prevenir-duplo-clique.js" type="text/javascript"></script>
+	<script type="text/javascript">
+		JAWR.loader.style('/javascript/ext-2.0.a.1/resources/css/ext-all.css', 'all');
+		JAWR.loader.style('/css/public.css','all');
+	 	JAWR.loader.script('/bundles/js/sigaa_base.js');
+	 	JAWR.loader.script('/bundles/js/ext2_all.js');
+
+	 	
+	</script>
+	<link rel="stylesheet" type="text/css" media="all" href="/sigaa/cssBundles/787491763/public/css/public.css" />
+
+	
+	<link rel="stylesheet" type="text/css" href="/shared/beta/css/font-awesome.css" media="screen" />
+	
+	<script src="/shared/javascript/STICookieConsent.js"></script>
+	<script>
+	    document.addEventListener("DOMContentLoaded", () => {
+	    	generateCookieConsentModal("SIGAA", "N&#243;s usamos cookies para melhorar sua experi&#234;ncia de navega&#231;&#227;o no portal. Ao utilizar o %sitename%, voc&#234; concorda com a pol&#237;&#173;tica de monitoramento de cookies. Para ter mais informa&#231;&#245;es sobre como isso &#233; feito e como remover, acesse a <a href=%cookie-policy%>Pol&#237;tica de Privacidade</a>. Para saber como a UFRN trata os dados, acesse a <a href=%privacy-policy%> Pol&#237;&#173;tica de cookies</a>. Se voc&#234; concorda, clique em %button-text%.", "https://ufrn.br/institucional/politica-de-privacidade-e-termos-de-uso", "https://ufrn.br/institucional/politica-de-cookies");
+	    })
+	</script>
+	
+</head>
+
+<body>
+	<div id="container">
+	
+
+	<div id="container-inner">
+
+	<div id="cabecalho">
+		<div id="logo">
+				<a href="/sigaa/public/"> <img src="https://sipac.ufba.br/shared/img/instituicao/brasao_ufba48x75.jpg" /> </a>		
+		</div>
+		<div id="identificacao">
+			<span class="ufrn"> Universidade Federal da Bahia </span>
+			<span class="data">
+				 Salvador, 
+				 04 de Maio de 
+				 2026 
+			</span>
+			<a id="home" href="/sigaa/public/" title="P&#225;gina inicial" style="width: 450px;"> </a>
+			<div id="menu_info">
+				<ul>
+				
+				
+				
+					
+					<li class="login">
+						<a href="/sigaa/" alt="Clique aqui para logar-se no SIGAA" title="Clique aqui para logar-se no SIGAA">
+							Login
+						<i class="fa fa-angle-right"></i></a>	
+					</li>
+				</ul>
+			</div>
+			
+		</div>
+		<br clear="all"/>
+	</div>
+
+
+	<div id="corpo">
+	
+
+
+
+
+<h2> Consulta de Componentes Curriculares </h2>
+
+<style>
+	span.info {
+		color: #777;
+		font-size: 0.9em;
+		padding: 2px 5px;
+	}
+	
+	input {
+		padding: 2px;
+	}
+</style>
+
+<script>
+	var marcar = function(idCheck) {
+		$(idCheck).checked = true;
+	}
+</script>
+
+
+	
+	
+		
+	<div class="descricaoOperacao">
+		<p>
+			Atrav&#233;s desta p&#225;gina voc&#234; pode consultar os componentes curriculares 
+			(disciplinas, atividades acad&#234;micas espec&#237;ficas, blocos e m&#243;dulos)
+			oferecidos aos cursos da UFBA. Para cada componente &#233; poss&#237;vel visualizar os detalhes 
+			que o caracterizam e ainda consultar seu programa atual.
+		</p>
+		<p>
+			Utilize os crit&#233;rios de busca abaixo para filtrar os componentes de acordo com os crit&#233;rios desejados.
+		</p>
+	</div>
+	
+	
+<form id="form" name="form" method="post" action="/sigaa/public/componentes/busca_componentes.jsf" enctype="application/x-www-form-urlencoded">
+<input type="hidden" name="form" value="form" />
+
+		<table class="formulario" align="center" width="75%">
+		<caption class="listagem">Informe os crit&#233;rios de consulta</caption>
+			
+			<tr>
+				<td width="3%"></td>
+				<td width="25%">N&#237;vel de Ensino:</td>
+				<td>
+					
+					<select id="form:nivel" name="form:nivel" size="1" style="width:40%">	<option value="I">INFANTIL</option>
+	<option value="U">FUNDAMENTAL</option>
+	<option value="M">M&Eacute;DIO</option>
+	<option value="T">T&Eacute;CNICO</option>
+	<option value="N">INTEGRADO</option>
+	<option value="F">FORMA&Ccedil;&Atilde;O COMPLEMENTAR</option>
+	<option value="G">GRADUA&Ccedil;&Atilde;O</option>
+	<option value="L">LATO SENSU - ESPECIALIZA&Ccedil;&Atilde;O</option>
+	<option value="R">LATO SENSU - RESID&Ecirc;NCIA</option>
+	<option value="S">STRICTO SENSU</option>
+</select>
+				</td>
+			</tr>	
+					
+			<tr>
+				<td><input id="form:checkTipo" type="checkbox" name="form:checkTipo" class="noborder" /> </td>			
+				<td>Tipo do Componente:</td>
+				<td>
+					<select id="form:tipo" name="form:tipo" size="1" onchange="marcar('form:checkTipo');" style="width:40%">	<option value="0" selected="selected">-- SELECIONE --</option>
+	<option value="2">DISCIPLINA</option>
+	<option value="1">ATIVIDADE</option>
+	<option value="4">BLOCO</option>
+	<option value="3">M&Oacute;DULO</option>
+</select>
+				</td>
+			</tr>
+			<tr>
+				<td><input id="form:checkCodigo" type="checkbox" name="form:checkCodigo" class="noborder" /> </td>			
+				<td>C&#243;digo do Componente:</td>
+				<td>
+					<input type="text" name="form:j_id_jsp_1092268766_11" onchange="marcar('form:checkCodigo');" style="width:15%;" />
+					<span class="info"> (Ex. MAT0311)</span>
+				</td>
+			</tr>
+			<tr>
+				<td><input id="form:checkNome" type="checkbox" name="form:checkNome" class="noborder" /> </td>			
+				<td>Nome do Componente:</td>
+				<td>
+					<input type="text" name="form:j_id_jsp_1092268766_13" onchange="marcar('form:checkNome');" style="width: 95%;" />
+				</td>
+			</tr>
+			<tr>
+				<td><input id="form:checkUnidade" type="checkbox" name="form:checkUnidade" class="noborder" /> </td>			
+				<td>Unidade Respons&#225;vel:</td>
+				<td>
+					<select id="form:unidades" name="form:unidades" size="1" onchange="marcar('form:checkUnidade');" style="width: 95%">	<option value="0" selected="selected">-- SELECIONE UMA UNIDADE ACAD&Ecirc;MICA --</option>
+	<option value="1027">COLEGIADO DO CURSO DE ADMINISTRA&Ccedil;&Atilde;O/ICADS - BARREIRAS - 12.01.19.07</option>
+	<option value="2235">COLEGIADO DO CURSO DE BACHARELADO INTERDISCIPLINAR EM ARTES - NOTURNO /IHAC - SALVADOR - 12.01.11.14</option>
+	<option value="1796">COLEGIADO DO CURSO DE BACHARELADO INTERDISCIPLINAR EM ARTES/IHAC - SALVADOR - 12.01.11.03</option>
+	<option value="2294">COLEGIADO DO CURSO DE BACHARELADO INTERDISCIPLINAR EM CI&Ecirc;NCIA, TECNOLOGIA E INOVA&Ccedil;&Atilde;O/ICTI - CAMA&Ccedil;ARI - 12.01.93.02</option>
+	<option value="1797">COLEGIADO DO CURSO DE BACHARELADO INTERDISCIPLINAR EM HUMANIDADES/IHAC - SALVADOR - 12.01.11.04</option>
+	<option value="2237">COLEGIADO DO CURSO DE BACHARELADO INTERDISCIPLINAR EM SA&Uacute;DE - NOTURNO /IHAC - SALVADOR - 12.01.11.16</option>
+	<option value="1798">COLEGIADO DO CURSO DE BACHARELADO INTERDISCIPLINAR EM SA&Uacute;DE/IHAC - SALVADOR - 12.01.11.05</option>
+	<option value="1238">COLEGIADO DO CURSO DE GRADUA&Ccedil;&Atilde;O DE LICENCIATURA EM DESENHO E PL&Aacute;STICA/EBA - SALVADOR - 12.01.24.02</option>
+	<option value="1322">COLEGIADO DO CURSO DE GRADUA&Ccedil;&Atilde;O DE LICENCIATURA EM EDUCA&Ccedil;&Atilde;O F&Iacute;SICA/FACED - SALVADOR - 12.01.66.08</option>
+	<option value="2654">COLEGIADO DO CURSO DE GRADUA&Ccedil;&Atilde;O EM ADMINISTRA&Ccedil;&Atilde;O P&Uacute;BLICA E GEST&Atilde;O SOCIAL/ EADM - SALVADOR - 12.01.58.30</option>
+	<option value="1287">COLEGIADO DO CURSO DE GRADUA&Ccedil;&Atilde;O EM ADMINISTRA&Ccedil;&Atilde;O/EADM - SALVADOR - 12.01.58.10</option>
+	<option value="1812">COLEGIADO DO CURSO DE GRADUA&Ccedil;&Atilde;O EM ARQUITETURA E URBANISMO-NOTURNO/FAUFBA - SALVADOR - 12.01.57.01</option>
+	<option value="1280">COLEGIADO DO CURSO DE GRADUA&Ccedil;&Atilde;O EM ARQUITETURA E URBANISMO/FAUFBA - SALVADOR - 12.01.57.07</option>
+	<option value="2400">COLEGIADO DO CURSO DE GRADUA&Ccedil;&Atilde;O EM ARQUIVOLOGIA-NOTURNO/ICI - SALVADOR - 12.01.31.13</option>
+	<option value="1312">COLEGIADO DO CURSO DE GRADUA&Ccedil;&Atilde;O EM ARQUIVOLOGIA/ICI - SALVADOR - 12.01.31.04</option>
+	<option value="1364">COLEGIADO DO CURSO DE GRADUA&Ccedil;&Atilde;O EM ARTES C&Ecirc;NICAS/ETE - SALVADOR - 12.01.34.03</option>
+	<option value="1311">COLEGIADO DO CURSO DE GRADUA&Ccedil;&Atilde;O EM BIBLIOTECONOMIA E DOCUMENTA&Ccedil;&Atilde;O/ICI - SALVADOR - 12.01.31.03</option>
+	<option value="1909">COLEGIADO DO CURSO DE GRADUA&Ccedil;&Atilde;O EM BIOTECNOLOGIA/IMS - VIT&Oacute;RIA DA CONQUISTA - 12.01.51.11</option>
+	<option value="1118">COLEGIADO DO CURSO DE GRADUA&Ccedil;&Atilde;O EM CI&Ecirc;NCIA DA COMPUTA&Ccedil;&Atilde;O/IC - SALVADOR - 12.28.05</option>
+	<option value="1142">COLEGIADO DO CURSO DE GRADUA&Ccedil;&Atilde;O EM CI&Ecirc;NCIAS BIOL&Oacute;GICAS/IBIO - SALVADOR - 12.01.13.04</option>
+	<option value="1910">COLEGIADO DO CURSO DE GRADUA&Ccedil;&Atilde;O EM CI&Ecirc;NCIAS BIOL&Oacute;GICAS/IMS - VIT&Oacute;RIA DA CONQUISTA - 12.01.51.12</option>
+	<option value="2240">COLEGIADO DO CURSO DE GRADUA&Ccedil;&Atilde;O EM CI&Ecirc;NCIAS CONT&Aacute;BEIS-NOTURNO/FCC - SALVADOR - 12.01.61.10</option>
+	<option value="1371">COLEGIADO DO CURSO DE GRADUA&Ccedil;&Atilde;O EM CI&Ecirc;NCIAS CONT&Aacute;BEIS/FCC - SALVADOR - 12.01.61.05</option>
+	<option value="1248">COLEGIADO DO CURSO DE GRADUA&Ccedil;&Atilde;O EM CI&Ecirc;NCIAS ECON&Ocirc;MICAS/FCE - SALVADOR - 12.01.25.01</option>
+	<option value="1226">COLEGIADO DO CURSO DE GRADUA&Ccedil;&Atilde;O EM CI&Ecirc;NCIAS SOCIAIS/FFCH - SALVADOR - 12.01.56.18</option>
+	<option value="1350">COLEGIADO DO CURSO DE GRADUA&Ccedil;&Atilde;O EM COMUNICA&Ccedil;&Atilde;O/FACOM - SALVADOR - 12.01.60.05</option>
+	<option value="1357">COLEGIADO DO CURSO DE GRADUA&Ccedil;&Atilde;O EM DAN&Ccedil;A/EDAN - SALVADOR - 12.01.33.06</option>
+	<option value="1240">COLEGIADO DO CURSO DE GRADUA&Ccedil;&Atilde;O EM DESIGN DE INTERIORES - SALVADOR - 12.01.24.04</option>
+	<option value="1196">COLEGIADO DO CURSO DE GRADUA&Ccedil;&Atilde;O EM DIREITO/FADIR - SALVADOR - 12.01.22.02</option>
+	<option value="1255">COLEGIADO DO CURSO DE GRADUA&Ccedil;&Atilde;O EM ENFERMAGEM/EENF - SALVADOR - 12.01.26.07</option>
+	<option value="1023">COLEGIADO DO CURSO DE GRADUA&Ccedil;&Atilde;O EM ENFERMAGEM/IMS - VIT&Oacute;RIA DA CONQUISTA - 12.01.51.03</option>
+	<option value="1209">COLEGIADO DO CURSO DE GRADUA&Ccedil;&Atilde;O EM ENGENHARIA CIVIL/EPOLI - SALVADOR - 12.01.23.09</option>
+	<option value="1906">COLEGIADO DO CURSO DE GRADUA&Ccedil;&Atilde;O EM ENGENHARIA DE AGRIMENSURA E CARTOGR&Aacute;FICA-NOTURNO/EPOLI - SALVADOR - 12.01.23.31</option>
+	<option value="1804">COLEGIADO DO CURSO DE GRADUA&Ccedil;&Atilde;O EM ENGENHARIA DE COMPUTA&Ccedil;&Atilde;O-NOTURNO/EPOLI - SALVADOR - 12.01.23.22</option>
+	<option value="1803">COLEGIADO DO CURSO DE GRADUA&Ccedil;&Atilde;O EM ENGENHARIA DE CONTROLE E AUTOMA&Ccedil;&Atilde;O DE PROCESSOS-NOTURNO/EPOLI - SALVADOR - 12.01.23.18</option>
+	<option value="1212">COLEGIADO DO CURSO DE GRADUA&Ccedil;&Atilde;O EM ENGENHARIA DE MINAS/EPOLI - SALVADOR - 12.01.23.11</option>
+	<option value="2652">COLEGIADO DO CURSO DE GRADUA&Ccedil;&Atilde;O EM ENGENHARIA DE PETR&Oacute;LEO - SALVADOR - 12.01.23.64</option>
+	<option value="2644">COLEGIADO DO CURSO DE GRADUA&Ccedil;&Atilde;O EM ENGENHARIA DE PRODU&Ccedil;&Atilde;O - CAMA&Ccedil;ARI - 12.01.93.10</option>
+	<option value="1805">COLEGIADO DO CURSO DE GRADUA&Ccedil;&Atilde;O EM ENGENHARIA DE PRODU&Ccedil;&Atilde;O-NOTURNO/EPOLI - SALVADOR - 12.01.23.23</option>
+	<option value="2689">COLEGIADO DO CURSO DE GRADUA&Ccedil;&Atilde;O EM ENGENHARIA DE TRANSPORTES - SALVADOR - 12.01.23.66</option>
+	<option value="2688">COLEGIADO DO CURSO DE GRADUA&Ccedil;&Atilde;O EM ENGENHARIA EL&Eacute;TRICA /ICTI - 12.01.93.11</option>
+	<option value="1208">COLEGIADO DO CURSO DE GRADUA&Ccedil;&Atilde;O EM ENGENHARIA EL&Eacute;TRICA/EPOLI - SALVADOR - 12.01.23.08</option>
+	<option value="1210">COLEGIADO DO CURSO DE GRADUA&Ccedil;&Atilde;O EM ENGENHARIA MEC&Acirc;NICA/EPOLI - SALVADOR - 12.01.23.10</option>
+	<option value="1211">COLEGIADO DO CURSO DE GRADUA&Ccedil;&Atilde;O EM ENGENHARIA QU&Iacute;MICA/EPOLI - SALVADOR - 12.01.23.21</option>
+	<option value="1213">COLEGIADO DO CURSO DE GRADUA&Ccedil;&Atilde;O EM ENGENHARIA SANIT&Aacute;RIA E AMBIENTAL/EPOLI - SALVADOR - 12.01.23.12</option>
+	<option value="1262">COLEGIADO DO CURSO DE GRADUA&Ccedil;&Atilde;O EM FARM&Aacute;CIA/FFAR - SALVADOR - 12.01.29.09</option>
+	<option value="1022">COLEGIADO DO CURSO DE GRADUA&Ccedil;&Atilde;O EM FARM&Aacute;CIA/IMS - VIT&Oacute;RIA DA CONQUISTA - 12.01.51.05</option>
+	<option value="1227">COLEGIADO DO CURSO DE GRADUA&Ccedil;&Atilde;O EM FILOSOFIA/FFCH - SALVADOR - 12.01.56.11</option>
+	<option value="1172">COLEGIADO DO CURSO DE GRADUA&Ccedil;&Atilde;O EM FONOAUDIOLOGIA/IMRS - SALVADOR - 12.29.02</option>
+	<option value="1124">COLEGIADO DO CURSO DE GRADUA&Ccedil;&Atilde;O EM F&Iacute;SICA/IFIS - SALVADOR - 12.01.55.06</option>
+	<option value="1800">COLEGIADO DO CURSO DE GRADUA&Ccedil;&Atilde;O EM GASTRONOMIA-NOTURNO/ENUT - SALVADOR - 12.01.30.10</option>
+	<option value="1151">COLEGIADO DO CURSO DE GRADUA&Ccedil;&Atilde;O EM GEOGRAFIA/IGEO - SALVADOR - 12.01.14.03</option>
+	<option value="1808">COLEGIADO DO CURSO DE GRADUA&Ccedil;&Atilde;O EM G&Ecirc;NERO E DIVERSIDADE/FFCH - SALVADOR - 12.01.56.21</option>
+	<option value="1228">COLEGIADO DO CURSO DE GRADUA&Ccedil;&Atilde;O EM HIST&Oacute;RIA/FFCH - SALVADOR - 12.01.56.12</option>
+	<option value="1163">COLEGIADO DO CURSO DE GRADUA&Ccedil;&Atilde;O EM LETRAS VERN&Aacute;CULAS/IL - SALVADOR - 12.01.18.06</option>
+	<option value="1793">COLEGIADO DO CURSO DE GRADUA&Ccedil;&Atilde;O EM L&Iacute;NGUA ESTRANGEIRA MODERNA OU CL&Aacute;SSICA/IL - SALVADOR - 12.01.18.09</option>
+	<option value="1116">COLEGIADO DO CURSO DE GRADUA&Ccedil;&Atilde;O EM MATEM&Aacute;TICA/IME - SALVADOR - 12.01.17.05</option>
+	<option value="1184">COLEGIADO DO CURSO DE GRADUA&Ccedil;&Atilde;O EM MEDICINA/FMB - SALVADOR - 12.01.21.10</option>
+	<option value="2176">COLEGIADO DO CURSO DE GRADUA&Ccedil;&Atilde;O EM MEDICINA/IMS - VIT&Oacute;RIA DA CONQUISTA - 12.01.51.33</option>
+	<option value="1024">COLEGIADO DO CURSO DE GRADUA&Ccedil;&Atilde;O EM NUTRI&Ccedil;&Atilde;O/IMS - VIT&Oacute;RIA DA CONQUISTA - 12.01.51.06</option>
+	<option value="1795">COLEGIADO DO CURSO DE GRADUA&Ccedil;&Atilde;O EM OCEANOGRAFIA/IGEO - SALVADOR - 12.01.14.18</option>
+	<option value="1270">COLEGIADO DO CURSO DE GRADUA&Ccedil;&Atilde;O EM ODONTOLOGIA/FOUFBA - SALVADOR - 12.01.27.04</option>
+	<option value="1950">COLEGIADO DO CURSO DE GRADUA&Ccedil;&Atilde;O EM PSICOLOGIA/IMS - VIT&Oacute;RIA DA CONQUISTA - 12.01.51.14</option>
+	<option value="1230">COLEGIADO DO CURSO DE GRADUA&Ccedil;&Atilde;O EM PSICOLOGIA/IPSS - SALVADOR - 12.01.67.03</option>
+	<option value="1133">COLEGIADO DO CURSO DE GRADUA&Ccedil;&Atilde;O EM QU&Iacute;MICA/IQUI - SALVADOR - 12.01.15.10</option>
+	<option value="1288">COLEGIADO DO CURSO DE GRADUA&Ccedil;&Atilde;O EM SECRETARIADO EXECUTIVO/EADM - SALVADOR - 12.01.58.11</option>
+	<option value="1935">COLEGIADO DO CURSO DE GRADUA&Ccedil;&Atilde;O EM SISTEMAS DE INFORMA&Ccedil;&Atilde;O/IC - SALVADOR - 12.28.06</option>
+	<option value="2434">COLEGIADO DO CURSO DE GRADUA&Ccedil;&Atilde;O EM TERAPIA OCUPACIONAL /FMB - SALVADOR - 12.01.21.36</option>
+	<option value="1320">COLEGIADO DO CURSO DE LICENCIATURA EM CI&Ecirc;NCIAS NATURAIS/FACED - SALVADOR - 12.01.66.06</option>
+	<option value="1934">COLEGIADO DO CURSO DE LICENCIATURA EM COMPUTA&Ccedil;&Atilde;O/IC - SALVADOR - 12.28.07</option>
+	<option value="1575">COLEGIADO DO CURSO DE LICENCIATURA EM F&Iacute;SICA-NOTURNO/IFIS - SALVADOR - 12.01.55.03</option>
+	<option value="1810">COLEGIADO DO CURSO DE LICENCIATURA EM HIST&Oacute;RIA-NOTURNO/FFCH - SALVADOR - 12.01.56.03</option>
+	<option value="1567">COLEGIADO DO CURSO DE LICENCIATURA EM LETRAS VERN&Aacute;CULAS-NOTURNO/IL - SALVADOR - 12.01.18.01</option>
+	<option value="2239">COLEGIADO DO CURSO DE LICENCIATURA EM L&Iacute;NGUA ESTRANGEIRA MODERNA OU CL&Aacute;SSICA-NOTURNO/IL - SALVADOR - 12.01.18.18</option>
+	<option value="2397">COLEGIADO DO CURSO DE LICENCIATURA EM MATEM&Aacute;TICA-NOTURNO/IME - SALVADOR - 12.01.17.29</option>
+	<option value="2650">COLEGIADO DO CURSO DE LICENCIATURA EM M&Uacute;SICA-EAD/EMUS - SALVADOR - 12.01.28.25</option>
+	<option value="2640">COLEGIADO DO CURSO DE LICENCIATURA EM PEDAGOGIA - EAD /FACED - SALVADOR - 12.01.66.25</option>
+	<option value="1321">COLEGIADO DO CURSO DE LICENCIATURA EM PEDAGOGIA/FACED - SALVADOR - 12.01.66.07</option>
+	<option value="2396">COLEGIADO DO CURSO DE LICENCIATURA EM QU&Iacute;MICA-NOTURNO/IQUI - SALVADOR - 12.01.15.21</option>
+	<option value="1365">COLEGIADO DO CURSO DE LICENCIATURA EM TEATRO/ETE - SALVADOR - 12.01.34.04</option>
+	<option value="2663">COLEGIADO DO CURSO DE LICENCIATURA INTERCULTURAL IND&Iacute;GENA - SALVADOR - 12.01.56.43</option>
+	<option value="1900">COLEGIADO DO CURSO SUPERIOR DE TECNOLOGIA EM TRANSPORTE TERRESTRE-NOTURNO/EPOLI - SALVADOR - 12.01.23.30</option>
+	<option value="1920">COORDENA&Ccedil;&Atilde;O ACAD&Ecirc;MICA /IMS - VIT&Oacute;RIA DA CONQUISTA - 12.01.51.13</option>
+	<option value="2355">COORDENA&Ccedil;&Atilde;O ACAD&Ecirc;MICA DE ENSINO DE LETRAS/LET - SALVADOR - 12.01.18.21</option>
+	<option value="2031">COORDENA&Ccedil;&Atilde;O ACAD&Ecirc;MICA/EADM - SALVADOR - 12.01.58.17</option>
+	<option value="2027">COORDENA&Ccedil;&Atilde;O ACAD&Ecirc;MICA/EENF - SALVADOR - 12.01.26.14</option>
+	<option value="2194">COORDENA&Ccedil;&Atilde;O ACAD&Ecirc;MICA/FAUFBA - SALVADOR - 12.01.57.16</option>
+	<option value="2351">COORDENA&Ccedil;&Atilde;O ACAD&Ecirc;MICA/IBIO - SALVADOR - 12.01.13.22</option>
+	<option value="1838">COORDENA&Ccedil;&Atilde;O ACAD&Ecirc;MICA/IHAC - SALVADOR - 12.01.11.02</option>
+	<option value="1814">COORDENA&Ccedil;&Atilde;O ACAD&Ecirc;MICA/IPSS - SALVADOR - 12.01.67.04</option>
+	<option value="1106">COORDENA&Ccedil;&Atilde;O ACAD&Ecirc;MICA/ISC - SALVADOR - 12.01.12.01</option>
+	<option value="1338">DEPARTAMENTO DE ANATOMIA, PATOLOGIA E CL&Iacute;NICAS VETERIN&Aacute;RIAS/EMEVZ - SALVADOR - 12.01.32.02</option>
+	<option value="1915">DEPARTAMENTO DE ANESTESIOLOGIA E CIRURGIA/FMB - SALVADOR - 12.01.21.22</option>
+	<option value="1219">DEPARTAMENTO DE ANTROPOLOGIA/FFCH - SALVADOR - 12.01.56.15</option>
+	<option value="1260">DEPARTAMENTO DE AN&Aacute;LISES BROMATOL&Oacute;GICAS/FFAR - SALVADOR - 12.01.29.07</option>
+	<option value="1261">DEPARTAMENTO DE AN&Aacute;LISES CL&Iacute;NICAS E TOXICOL&Oacute;GICAS/FFAR - SALVADOR - 12.01.29.08</option>
+	<option value="1171">DEPARTAMENTO DE BIOINTERA&Ccedil;&Atilde;O/ICS - SALVADOR - 12.01.20.05</option>
+	<option value="1170">DEPARTAMENTO DE BIOMORFOLOGIA/ICS - SALVADOR - 12.01.20.04</option>
+	<option value="1168">DEPARTAMENTO DE BIOQU&Iacute;MICA E BIOF&Iacute;SICA/ICS - SALVADOR - 12.01.20.03</option>
+	<option value="1169">DEPARTAMENTO DE BIORREGULA&Ccedil;&Atilde;O/ICS - SALVADOR - 12.01.20.10</option>
+	<option value="2390">DEPARTAMENTO DE BIOTECNOLOGIA/ICS - SALVADOR - 12.01.20.24</option>
+	<option value="1177">DEPARTAMENTO DE CIRURGIA EXPERIMENTAL E ESPECIALIDADES CIR&Uacute;RGICAS/FMB - SALVADOR - 12.01.21.03</option>
+	<option value="1114">DEPARTAMENTO DE CI&Ecirc;NCIA DA COMPUTA&Ccedil;&Atilde;O /IC - SALVADOR - 12.28.01</option>
+	<option value="1304">DEPARTAMENTO DE CI&Ecirc;NCIA DOS ALIMENTOS/NUT - SALVADOR - 12.01.30.05</option>
+	<option value="1201">DEPARTAMENTO DE CI&Ecirc;NCIA E TECNOLOGIA DOS MATERIAIS/POLI - SALVADOR - 12.01.23.02</option>
+	<option value="1220">DEPARTAMENTO DE CI&Ecirc;NCIA POL&Iacute;TICA/FFCH - SALVADOR - 12.01.56.14</option>
+	<option value="2293">DEPARTAMENTO DE CI&Ecirc;NCIA, TECNOLOGIA E INOVA&Ccedil;&Atilde;O/ICTI - CAMA&Ccedil;ARI - 12.01.93.01</option>
+	<option value="1370">DEPARTAMENTO DE CI&Ecirc;NCIAS CONT&Aacute;BEIS/FCC - SALVADOR - 12.01.61.06</option>
+	<option value="2441">DEPARTAMENTO DE CI&Ecirc;NCIAS DA COMPUTA&Ccedil;&Atilde;O/MAT - SALVADOR - 12.01.17.08</option>
+	<option value="1303">DEPARTAMENTO DE CI&Ecirc;NCIAS DA NUTRI&Ccedil;&Atilde;O/ENUT - SALVADOR - 12.01.30.01</option>
+	<option value="1331">DEPARTAMENTO DE CI&Ecirc;NCIAS SOCIAIS APLICADA &Agrave; AGRICULTURA/AGR - CRUZ DAS ALMAS - 12.01.59.08</option>
+	<option value="1269">DEPARTAMENTO DE CL&Iacute;NICA ODONTOL&Oacute;GICA/ODON - SALVADOR - 12.01.27.03</option>
+	<option value="2440">DEPARTAMENTO DE COMPUTA&Ccedil;&Atilde;O INTERDISCIPLINAR /IC - SALVADOR - 12.28.02</option>
+	<option value="1349">DEPARTAMENTO DE COMUNICA&Ccedil;&Atilde;O/FACOM - SALVADOR - 12.01.60.04</option>
+	<option value="1202">DEPARTAMENTO DE CONSTRU&Ccedil;&Atilde;O E ESTRUTURAS/POLI - SALVADOR - 12.01.23.03</option>
+	<option value="2192">DEPARTAMENTO DE DAN&Ccedil;A/EDAN - SALVADOR - 12.01.33.16</option>
+	<option value="1195">DEPARTAMENTO DE DIREITO PRIVADO/FADIR - SALVADOR - 12.01.22.06</option>
+	<option value="1194">DEPARTAMENTO DE DIREITO P&Uacute;BLICO/FADIR - SALVADOR - 12.01.22.01</option>
+	<option value="1310">DEPARTAMENTO DE DOCUMENTA&Ccedil;&Atilde;O E INFORM&Ccedil;&Atilde;O/ICI - SALVADOR - 12.01.31.02</option>
+	<option value="2255">DEPARTAMENTO DE ECONOMIA/FCE - SALVADOR - 12.01.25.11</option>
+	<option value="1317">DEPARTAMENTO DE EDUCACAO I/FACED - SALVADOR - 12.01.66.04</option>
+	<option value="1318">DEPARTAMENTO DE EDUCACAO II/FACED - SALVADOR - 12.01.66.05</option>
+	<option value="1319">DEPARTAMENTO DE EDUCA&Ccedil;&Atilde;O III/FACED - SALVADOR - 12.01.66.13</option>
+	<option value="1327">DEPARTAMENTO DE ENGENHARIA AGR&Iacute;COLA/AGR - CRUZ DAS ALMAS - 12.01.59.04</option>
+	<option value="1204">DEPARTAMENTO DE ENGENHARIA AMBIENTAL/POLI - SALVADOR - 12.01.23.05</option>
+	<option value="1203">DEPARTAMENTO DE ENGENHARIA DE TRANSPORTES E GEOD&Eacute;SIA/POLI - SALVADOR - 12.01.23.04</option>
+	<option value="1205">DEPARTAMENTO DE ENGENHARIA EL&Eacute;TRICA E DE COMPUTA&Ccedil;&Atilde;O/POLI - SALVADOR - 12.01.23.06</option>
+	<option value="1207">DEPARTAMENTO DE ENGENHARIA MEC&Acirc;NICA/POLI - SALVADOR - 12.01.23.07</option>
+	<option value="1206">DEPARTAMENTO DE ENGENHARIA QU&Iacute;MICA/POLI - SALVADOR - 12.01.23.20</option>
+	<option value="1115">DEPARTAMENTO DE ESTAT&Iacute;STICA/IME - SALVADOR - 12.01.17.04</option>
+	<option value="2173">DEPARTAMENTO DE ESTUDOS DE G&Ecirc;NERO E FEMINISMO/FFCH - SALVADOR - 12.01.56.29</option>
+	<option value="2288">DEPARTAMENTO DE ESTUDOS JUR&Iacute;DICOS FUNDAMENTAIS/DIR - SALVADOR - 12.01.22.15</option>
+	<option value="1237">DEPARTAMENTO DE EXPRESS&Atilde;O GR&Aacute;FICA E TRIDIMENSIONAL/EBA - SALVADOR - 12.01.24.01</option>
+	<option value="1221">DEPARTAMENTO DE FILOSOFIA/FFCH - SALVADOR - 12.01.56.20</option>
+	<option value="2448">DEPARTAMENTO DE FISIOTERAPIA/ICS - SALVADOR - 12.01.20.23</option>
+	<option value="2174">DEPARTAMENTO DE FISIOTERAPIA/IMRS - SALVADOR - 12.29.03</option>
+	<option value="1329">DEPARTAMENTO DE FITOTECNIA/AGR - CRUZ DAS ALMAS - 12.01.59.10</option>
+	<option value="2449">DEPARTAMENTO DE FONOAUDIOLOGIA/ICS - SALVADOR - 12.01.20.17</option>
+	<option value="1516">DEPARTAMENTO DE FONOAUDIOLOGIA/IMRS - SALVADOR - 12.29.04</option>
+	<option value="1363">DEPARTAMENTO DE FUNDAMENTOS DO TEATRO/ETE - SALVADOR - 12.01.34.02</option>
+	<option value="1309">DEPARTAMENTO DE FUNDAMENTOS E PROCESSOS INFORMACIONAIS/ICI - SALVADOR - 12.01.31.09</option>
+	<option value="1123">DEPARTAMENTO DE F&Iacute;SICA DA TERRA E DO MEIO AMBIENTE/IFIS - SALVADOR - 12.01.55.05</option>
+	<option value="1122">DEPARTAMENTO DE F&Iacute;SICA DO ESTADO S&Oacute;LIDO/IFIS - SALVADOR - 12.01.55.11</option>
+	<option value="1121">DEPARTAMENTO DE F&Iacute;SICA GERAL/IFIS - SALVADOR - 12.01.55.04</option>
+	<option value="1131">DEPARTAMENTO DE F&Iacute;SICO-QU&Iacute;MICA/IQUI - SALVADOR - 12.01.15.05</option>
+	<option value="1147">DEPARTAMENTO DE GEOF&Iacute;SICA/IGEO - SALVADOR - 12.01.14.08</option>
+	<option value="1145">DEPARTAMENTO DE GEOGRAFIA/IGEO - SALVADOR - 12.01.14.01</option>
+	<option value="1146">DEPARTAMENTO DE GEOLOGIA/IGEO - SALVADOR - 12.01.14.11</option>
+	<option value="2282">DEPARTAMENTO DE GEOQU&Iacute;MICA/GEO - SALVADOR - 12.01.14.22</option>
+	<option value="1179">DEPARTAMENTO DE GINECOLOGIA E OBSTETR&Iacute;CIA/FMB - SALVADOR - 12.01.21.13</option>
+	<option value="1236">DEPARTAMENTO DE HIST&Oacute;RIA DA ARTE E PINTURA/EBA - SALVADOR - 12.01.24.08</option>
+	<option value="1222">DEPARTAMENTO DE HIST&Oacute;RIA/FFCH - SALVADOR - 12.01.56.07</option>
+	<option value="1113">DEPARTAMENTO DE MATEM&Aacute;TICA/IME - SALVADOR - 12.01.17.03</option>
+	<option value="1176">DEPARTAMENTO DE MEDICINA INTERNA/FMB - SALVADOR - 12.01.21.02</option>
+	<option value="1181">DEPARTAMENTO DE MEDICINA PREVENTIVA E SOCIAL/FMB - SALVADOR - 12.01.21.06</option>
+	<option value="1337">DEPARTAMENTO DE MEDICINA VETERIN&Aacute;RIA PREVENTIVA E PRODU&Ccedil;&Atilde;O ANIMAL/EMEVZ - SALVADOR - 12.01.32.01</option>
+	<option value="1223">DEPARTAMENTO DE MUSEOLOGIA/FFCH - SALVADOR - 12.01.56.08</option>
+	<option value="1293">DEPARTAMENTO DE M&Uacute;SICA/MUS - SALVADOR - 12.01.28.08</option>
+	<option value="1178">DEPARTAMENTO DE NEUROLOGIA E PSIQUIATRIA/FMB - SALVADOR - 12.01.21.04</option>
+	<option value="1148">DEPARTAMENTO DE OCEANOGRAFIA/IGEO - SALVADOR - 12.01.14.07</option>
+	<option value="1268">DEPARTAMENTO DE ODONTOLOGIA SOCIAL E PEDI&Aacute;TRICA/ODON - SALVADOR - 12.01.27.02</option>
+	<option value="1180">DEPARTAMENTO DE PATOLOGIA, DIAGN&Oacute;STICO POR IMAGEM E MEDICINA LEGAL/FMB - SALVADOR - 12.01.21.05</option>
+	<option value="1183">DEPARTAMENTO DE PEDIATRIA/FMB - SALVADOR - 12.01.21.11</option>
+	<option value="1267">DEPARTAMENTO DE PROPED&Ecirc;UTICA E CL&Iacute;NICA INTEGRADA/ODON - SALVADOR - 12.01.27.07</option>
+	<option value="1328">DEPARTAMENTO DE QU&Iacute;MICA AGR&Iacute;COLA/SOLOS/AGR - CRUZ DAS ALMAS - 12.01.59.05</option>
+	<option value="1130">DEPARTAMENTO DE QU&Iacute;MICA ANAL&Iacute;TICA/IQUI - SALVADOR - 12.01.15.04</option>
+	<option value="1132">DEPARTAMENTO DE QU&Iacute;MICA GERAL E INORG&Acirc;NICA/IQUI - SALVADOR - 12.01.15.06</option>
+	<option value="1129">DEPARTAMENTO DE QU&Iacute;MICA ORG&Acirc;NICA/IQUI - SALVADOR - 12.01.15.03</option>
+	<option value="1914">DEPARTAMENTO DE SA&Uacute;DE DA FAM&Iacute;LIA E TERAPIA OCUPACIONAL/FMB - SALVADOR - 12.01.21.21</option>
+	<option value="2281">DEPARTAMENTO DE SEDIMENTOLOGIA/GEO - SALVADOR - 12.01.14.21</option>
+	<option value="1225">DEPARTAMENTO DE SOCIOLOGIA/FFCH - SALVADOR - 12.01.56.10</option>
+	<option value="1362">DEPARTAMENTO DE T&Eacute;CNICAS DO ESPET&Aacute;CULO/ETE - SALVADOR - 12.01.34.01</option>
+	<option value="1330">DEPARTAMENTO DE ZOOTECNIA/AGR - CRUZ DAS ALMAS - 12.01.59.13</option>
+	<option value="1346">DEPARTAMENTO DE ZOOTECNIA/EMEVZ - SALVADOR - 12.01.32.08</option>
+	<option value="2638">DEPARTAMENTO DO INSTITUTO DAS CI&Ecirc;NCIAS AMBIENTAIS E DESENVOLVIMENTO SUSTENT&Aacute;VEL/ICADS - BARREIRAS - 12.01.19.25</option>
+	<option value="1259">DEPARTAMENTO DO MEDICAMENTO/FFAR - SALVADOR - 12.01.29.06</option>
+	<option value="1289">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM ADMINISTRA&Ccedil;&Atilde;O (NPGA) - SALVADOR - 12.01.58.12</option>
+	<option value="1839">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM ADMINISTRA&Ccedil;&Atilde;O (NPGA-P) - SALVADOR - 12.01.58.04</option>
+	<option value="1306">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM ALIMENTOS, NUTRI&Ccedil;&Atilde;O E SA&Uacute;DE (PGNUT) - SALVADOR - 12.01.30.03</option>
+	<option value="1832">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM ANTROPOLOGIA (PPGA) - SALVADOR - 12.01.56.04</option>
+	<option value="1281">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM ARQUITETURA E URBANISMO (PPG-AU) - SALVADOR - 12.01.57.08</option>
+	<option value="1366">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM ARTES C&Ecirc;NICAS (PPGAC) - SALVADOR - 12.01.34.05</option>
+	<option value="1242">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM ARTES VISUAIS (PPGAV) - SALVADOR - 12.01.24.10</option>
+	<option value="2251">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM ASSIST&Ecirc;NCIA FARMAC&Ecirc;UTICA (PPGASFAR) - SALVADOR - 12.01.22.14</option>
+	<option value="1951">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM BIOCI&Ecirc;NCIAS (PPGBIOCIENCIAS) - VIT&Oacute;RIA DA CONQUISTA - 12.01.51.15</option>
+	<option value="1962">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM BIODIVERSIDADE (DIVPG/IBIO) - SALVADOR - 12.01.13.14</option>
+	<option value="1825">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM BIODIVERSIDADE E EVOLU&Ccedil;&Atilde;O (PPGBIOEVO) - SALVADOR - 12.01.13.11</option>
+	<option value="2131">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM BIOQU&Iacute;MICA E BIOLOGIA MOLECULAR (PMBQBM) - SALVADOR - 12.01.20.22</option>
+	<option value="1759">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM BIOTECNOLOGIA (PPGBIOTEC) - SALVADOR - 12.01.20.15</option>
+	<option value="2022">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM BIOTECNOLOGIA - REDE RENORBIO (RENORBIO) - SALVADOR - 12.01.20.21</option>
+	<option value="1186">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM CIRURGIA (CPGCIR/MED) - SALVADOR - 12.01.21.07</option>
+	<option value="1342">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM CI&Ecirc;NCIA ANIMAL NOS TR&Oacute;PICOS (PPGCAT) - SALVADOR - 12.01.32.15</option>
+	<option value="2148">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM CI&Ecirc;NCIA DA COMPUTA&Ccedil;&Atilde;O (CPPCC/UEFS) - SALVADOR - 12.01.17.23</option>
+	<option value="1820">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM CI&Ecirc;NCIA DA COMPUTA&Ccedil;&Atilde;O (PGCOMP) - SALVADOR - 12.28.03</option>
+	<option value="2146">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM CI&Ecirc;NCIA DA COMPUTA&Ccedil;&Atilde;O (PMCC) - SALVADOR - 12.28.04</option>
+	<option value="1313">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM CI&Ecirc;NCIA DA INFORMA&Ccedil;&Atilde;O (PPGCI) - SALVADOR - 12.01.31.05</option>
+	<option value="1829">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM CI&Ecirc;NCIA DE ALIMENTOS (PGALI) - SALVADOR - 12.01.29.02</option>
+	<option value="2433">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM CI&Ecirc;NCIA POL&Iacute;TICA (PPGCP) - SALVADOR - 12.01.56.30</option>
+	<option value="1333">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM CI&Ecirc;NCIAS AGR&Aacute;RIAS (CCPGA/AGR) - CRUZ DAS ALMAS - 12.01.59.06</option>
+	<option value="2143">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM CI&Ecirc;NCIAS AMBIENTAIS (CPGCM/ICADS) - BARREIRAS - 12.01.19.24</option>
+	<option value="1961">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM CI&Ecirc;NCIAS BIOL&Oacute;GICAS (ECOPG/IBIO) - SALVADOR - 12.01.13.13</option>
+	<option value="2394">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM CI&Ecirc;NCIAS DA REABILITA&Ccedil;&Atilde;O (PPGREAB) - SALVADOR - 12.29.05</option>
+	<option value="1819">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM CI&Ecirc;NCIAS DA SA&Uacute;DE (PPGCS) - SALVADOR - 12.01.21.01</option>
+	<option value="1826">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM CI&Ecirc;NCIAS FISIOL&Oacute;GICAS (PMPGCF) - VIT&Oacute;RIA DA CONQUISTA - 12.01.51.02</option>
+	<option value="1232">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM CI&Ecirc;NCIAS SOCIAIS (PPGCS) - SALVADOR - 12.01.56.23</option>
+	<option value="1351">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM COMUNICA&Ccedil;&Atilde;O E CULTURA CONTEMPOR&Acirc;NEA (POSCOM) - SALVADOR - 12.01.60.06</option>
+	<option value="2257">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM CONSERVA&Ccedil;&Atilde;O E RESTAURA&Ccedil;&Atilde;O (CECRE) - SALVADOR - 12.01.57.17</option>
+	<option value="1831">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM CONTABILIDADE (PPGCONT) - SALVADOR - 12.01.61.04</option>
+	<option value="2094">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM CULTURA E SOCIEDADE (POSCULTURA) - SALVADOR - 12.01.11.10</option>
+	<option value="2260">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM CURR&Iacute;CULO, LINGUAGENS E INOVA&Ccedil;&Otilde;ES PEDAG&Oacute;GICAS (PGEDU-P) - SALVADOR - 12.01.66.17</option>
+	<option value="1822">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM DAN&Ccedil;A (PPGDANCA) - SALVADOR - 12.01.33.03</option>
+	<option value="2316">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM DAN&Ccedil;A/PRODAN - SALVADOR - 12.01.33.19</option>
+	<option value="1578">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM DESENVOLVIMENTO E GEST&Atilde;O SOCIAL (PPGDGS) - SALVADOR - 12.01.58.05</option>
+	<option value="2657">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM DESIGN/EBA - SALVADOR - 12.01.24.19</option>
+	<option value="1577">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM DIFUS&Atilde;O DO CONHECIMENTO (DMMDC) - SALVADOR - 12.01.66.01</option>
+	<option value="1197">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM DIREITO (PPGD) - SALVADOR - 12.01.22.03</option>
+	<option value="2258">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM ECOLOGIA (PPGECOLOGIA) - SALVADOR - 12.01.13.19</option>
+	<option value="1141">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM ECOLOGIA: TEORIA, APLICA&Ccedil;&Atilde;O E VALORES (PPGECOTAV) - SALVADOR - 12.01.13.03</option>
+	<option value="1249">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM ECONOMIA (PPGE) - SALVADOR - 12.01.25.03</option>
+	<option value="1323">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM EDUCA&Ccedil;&Atilde;O (PGEDU) - SALVADOR - 12.01.66.09</option>
+	<option value="1827">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM ENERGIA E AMBIENTE (PPGENAM) - SALVADOR - 12.01.23.27</option>
+	<option value="1256">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM ENFERMAGEM E SA&Uacute;DE (PPGENF) - SALVADOR - 12.01.26.06</option>
+	<option value="1836">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM ENGENHARIA AMBIENTAL E URBANA (CPMEAU/ENG) - SALVADOR - 12.01.23.24</option>
+	<option value="2178">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM ENGENHARIA CIVIL (PPEC) - SALVADOR - 12.01.23.40</option>
+	<option value="2144">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM ENGENHARIA DE ESTRUTURAS (PPEE) - SALVADOR - 12.01.23.38</option>
+	<option value="2300">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM ENGENHARIA DE PRODU&Ccedil;&Atilde;O (PPGEP) - SALVADOR - 12.01.23.41</option>
+	<option value="1215">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM ENGENHARIA EL&Eacute;TRICA (PPGEE) - SALVADOR - 12.01.23.14</option>
+	<option value="1833">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM ENGENHARIA INDUSTRIAL (PEI) - SALVADOR - 12.01.23.28</option>
+	<option value="1835">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM ENGENHARIA INDUSTRIAL (PEI-P) - SALVADOR - 12.01.23.19</option>
+	<option value="2145">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM ENGENHARIA QU&Iacute;MICA (PPEQ) - SALVADOR - 12.01.23.39</option>
+	<option value="2693">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM ENSINO DE COMPUTA&Ccedil;&Atilde;O (PROFCOMP) - SALVADOR - 12.28.11</option>
+	<option value="1966">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM ENSINO, FILOSOFIA E HIST&Oacute;RIA DAS CI&Ecirc;NCIAS (PPGEFHC) - SALVADOR - 12.01.55.15</option>
+	<option value="2653">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM ESTAT&Iacute;STICA E CI&Ecirc;NCIAS DE DADOS - SALVADOR - 12.01.17.43</option>
+	<option value="1983">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM ESTUDOS INTERDISCIPLINARES SOBRE A UNIVERSIDADE (PPGEISU) - SALVADOR - 12.01.11.09</option>
+	<option value="1828">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM ESTUDOS INTERDISCIPLINARES SOBRE MULHERES, G&Ecirc;NERO E FEMINISMO (PPGNEIM) - SALVADOR - 12.01.56.06</option>
+	<option value="1913">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM ESTUDOS &Eacute;TNICOS E AFRICANOS (POSAFRO) - SALVADOR - 12.01.56.26</option>
+	<option value="1756">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM FARM&Aacute;CIA (PPGFAR) - SALVADOR - 12.01.29.03</option>
+	<option value="1566">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM FILOSOFIA (PPGF) - SALVADOR - 12.01.56.24</option>
+	<option value="1125">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM F&Iacute;SICA (PPGFIS) - SALVADOR - 12.01.55.07</option>
+	<option value="1963">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM GEN&Eacute;TICA E BIODIVERSIDADE (PPGGENBIO) - SALVADOR - 12.01.13.15</option>
+	<option value="1152">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM GEOF&Iacute;SICA (PGGEOFISICA) - SALVADOR - 12.01.14.04</option>
+	<option value="1154">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM GEOGRAFIA (POSGEO) - SALVADOR - 12.01.14.13</option>
+	<option value="1155">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM GEOLOGIA (PGGEOLOGIA) - SALVADOR - 12.01.14.14</option>
+	<option value="1905">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM GEOQU&Iacute;MICA E MEIO AMBIENTE (POSGEMA) - SALVADOR - 12.01.14.20</option>
+	<option value="1153">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM GEOQU&Iacute;MICA: PETR&Oacute;LEO E MEIO AMBIENTE (POSPETRO-GEO) - SALVADOR - 12.01.14.05</option>
+	<option value="1757">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM GERENCIAMENTO E TECNOLOGIA AMBIENTAL NO PROCESSO PRODUTIVO (CCPGPL) - SALVADOR - 12.01.23.01</option>
+	<option value="2660">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM GEST&Atilde;O E PR&Aacute;TICAS EM COMUNICA&Ccedil;&Atilde;O E CULTURA/FACOM - SALVADOR - 12.01.60.15</option>
+	<option value="2301">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM GEST&Atilde;O E REGULA&Ccedil;&Atilde;O DE RECURSOS H&Iacute;DRICOS (PROFAGUA) - SALVADOR - 12.01.23.42</option>
+	<option value="1231">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM HIST&Oacute;RIA (PPGH) - SALVADOR - 12.01.56.19</option>
+	<option value="1824">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM IMUNOLOGIA (PPGIM) - SALVADOR - 12.01.20.01</option>
+	<option value="2261">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM LETRAS (PROFLETRAS) - SALVADOR - 12.01.18.19</option>
+	<option value="1164">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM LETRAS E LING&Uuml;&Iacute;STICA (PPGLL) - SALVADOR - 12.01.18.07</option>
+	<option value="1898">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM LITERATURA E CULTURA (PPGLITCULT) - SALVADOR - 12.01.18.17</option>
+	<option value="1897">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM L&Iacute;NGUA E CULTURA (PPGLINC) - SALVADOR - 12.01.18.16</option>
+	<option value="1110">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM MATEM&Aacute;TICA (PGMAT) - SALVADOR - 12.01.17.15</option>
+	<option value="2147">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM MATEM&Aacute;TICA (PGMAT-UFAL) - SALVADOR - 12.01.17.22</option>
+	<option value="2164">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM MATEM&Aacute;TICA EM REDE NACIONAL (PROFMAT) - SALVADOR - 12.01.17.24</option>
+	<option value="1572">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM MECATR&Ocirc;NICA (PPGM) - SALVADOR - 12.01.17.01</option>
+	<option value="1187">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM MEDICINA E SA&Uacute;DE (PPGMS) - SALVADOR - 12.01.21.08</option>
+	<option value="2106">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM MEIO AMBIENTE, &Aacute;GUAS E SANEAMENTO (MAASA) - SALVADOR - 12.01.23.37</option>
+	<option value="2191">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM MICROBIOLOGIA (PGMICRO) - SALVADOR - 12.01.13.16</option>
+	<option value="2012">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM MUSEOLOGIA (PPGMUSEU) - SALVADOR - 12.01.56.28</option>
+	<option value="1299">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM M&Uacute;SICA (PPGMUS) - SALVADOR - 12.01.28.04</option>
+	<option value="2011">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM M&Uacute;SICA (PPGPROM) - SALVADOR - 12.01.28.16</option>
+	<option value="2302">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM NUTRI&Ccedil;&Atilde;O (PPNUT) - SALVADOR - 12.01.30.13</option>
+	<option value="1823">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM ODONTOLOGIA (CPGLO/ODO) - SALVADOR - 12.01.27.01</option>
+	<option value="1271">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM ODONTOLOGIA E SA&Uacute;DE (PPGOS) - SALVADOR - 12.01.27.05</option>
+	<option value="1188">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM PATOLOGIA HUMANA (PGPAT) - SALVADOR - 12.01.21.17</option>
+	<option value="2304">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM PATOLOGIA VETERIN&Aacute;RIA (PPGPV) - SALVADOR - 12.01.32.20</option>
+	<option value="1830">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM PROCESSOS INTERATIVOS DOS &Oacute;RG&Atilde;OS E SISTEMAS (PPGORGSIS) - SALVADOR - 12.01.20.16</option>
+	<option value="2168">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM PROFARTES (PROFARTES) - SALVADOR - 12.01.11.12</option>
+	<option value="2296">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM PROPRIEDADE INTELECTUAL E TRANSFER&Ecirc;NCIA DE TECNOLOGIA PARA INOVA&Ccedil;&Atilde;O (PROFNIT) - SALVADOR - 12.01.15.18</option>
+	<option value="1815">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM PSICOLOGIA (PPGPSI) - SALVADOR - 12.01.67.01</option>
+	<option value="2318">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM PSICOLOGIA DA SA&Uacute;DE (PPGPS) - VIT&Oacute;RIA DA CONQUISTA - 12.01.51.35</option>
+	<option value="1134">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM QU&Iacute;MICA (PPGQ) - SALVADOR - 12.01.15.07</option>
+	<option value="1982">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM RELA&Ccedil;&Otilde;ES INTERNACIONAIS (PPGRI) - SALVADOR - 12.01.11.08</option>
+	<option value="1107">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM SA&Uacute;DE COLETIVA (PPGSC) - SALVADOR - 12.01.12.02</option>
+	<option value="2172">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM SA&Uacute;DE COLETIVA (PPGSC-IMS) - VIT&Oacute;RIA DA CONQUISTA - 12.01.51.32</option>
+	<option value="2208">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM SA&Uacute;DE COLETIVA (PPGSC-P) - SALVADOR - 12.01.12.10</option>
+	<option value="2656">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM SA&Uacute;DE DA FAM&Iacute;LIA - VIT&Oacute;RIA DA CONQUISTA - 12.01.51.49</option>
+	<option value="1821">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM SA&Uacute;DE, AMBIENTE E TRABALHO (PPGSAT) - SALVADOR - 12.01.21.19</option>
+	<option value="2108">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM SEGURAN&Ccedil;A P&Uacute;BLICA, JUSTI&Ccedil;A E CIDADANIA (MPSPJC) - SALVADOR - 12.01.22.12</option>
+	<option value="2314">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM SERVI&Ccedil;O SOCIAL (PPGSS) - SALVADOR - 12.01.67.05</option>
+	<option value="1734">PROGRAMA DE P&Oacute;S-GRADUA&Ccedil;&Atilde;O EM ZOOTECNIA (PPGZ) - SALVADOR - 12.01.32.14</option>
+</select>
+				</td>
+			</tr>
+			<tfoot>
+				<tr>
+					<td colspan="3">
+						<input id="form:btnBuscarComponentes" type="submit" name="form:btnBuscarComponentes" value="Buscar Componentes" /> 
+						&nbsp;
+						<input id="form:btnCancelarBuscarComponentes" type="submit" name="form:btnCancelarBuscarComponentes" value="Cancelar" onclick="return confirm('Confirma a remo&ccedil;&atilde;o desta informa&ccedil;&atilde;o?');" />
+					</td>
+				</tr>
+			</tfoot>
+		</table>
+	<input type="hidden" name="javax.faces.ViewState" id="javax.faces.ViewState" value="j_id2" />
+</form>
+	
+	
+	
+	<br>
+	<div style="width: 80%; text-align: center; margin: 0 auto;">
+		<a href="/sigaa/public/home.jsf" style="color: #404E82;"><< Voltar ao menu principal</a>
+	</div>
+<br>
+
+
+<br />
+	
+	
+	
+	<div class="clear"></div>
+	</div>
+
+	<div id="rodape">
+		<p>	<!-- Redmine 24523 - Telas e relat&#243;rios com rodap&#233;s sem a altera&#231;&#227;o - Portal P&#250;blico -->
+			SIGAA | STI/SUPAC | -  | Copyright &copy; 2006-2026 - UFBA - sigaapl07.intranet.ufba.br
+			 
+				<a onclick="javascript:versao();">v4.13.8_28-20260406</a>
+			
+		</p>
+	</div>
+
+	<!-- Fim dos containers -->
+	</div>
+	</div>
+	
+
+
+
+
+
+<!-- MYFACES JAVASCRIPT -->
+
+</body>
+
+</html>
+
+ 
+	<script type="text/javascript" charset="UTF-8">
+		function versao(){
+			var msg='';
+			msg+='SIGAA 4.13.8_28-20260406,  publicado em: 06/04/2026 17:27\n\n';
+			msg+='Depend\u00eancias:\n';
+			msg+='Arquitetura 4.4.5\n';
+			msg+='Entidades Comuns 2.3.3\n';
+			msg+='Servicos Integrados 2.0.8\n';
+			msg+='SharedResources 2.1.4\n';
+			msg+='Servicos Remoto Biblioteca null\n';
+			msg+='SIGAA Mobile Objects 1.0.0\n\n';
+			msg+='Copyright SINFO/UFRN';
+			alert(msg);
+		}	
+	</script>
+
+<style>
+a.linkMobile:link {
+	color: #003395;
+	font-weight: bold;
+	font-size: inherit;
+	text-decoration: none;
+}
+
+a.linkMobile:visited {
+	color: #003390;
+	text-decoration: none;
+	font-weight: bold;
+}
+
+a.linkMobile:active {
+	color: #444444;
+	text-decoration: none;
+	font-weight: bold;
+}
+</style>
+
+

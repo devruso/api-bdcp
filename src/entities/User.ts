@@ -27,6 +27,12 @@ class User {
     @Column({ default: UserRole.TEACHER })
         role: UserRole;
 
+    @Column({ name: 'signature_hash', nullable: true })
+        signatureHash?: string;
+
+    @Column({ name: 'signature_updated_at', type: 'timestamptz', nullable: true })
+        signatureUpdatedAt?: Date;
+
     @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
         createdAt: Date;
 

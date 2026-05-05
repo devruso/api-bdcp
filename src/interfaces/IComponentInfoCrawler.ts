@@ -1,3 +1,5 @@
+import { AcademicLevel } from './AcademicLevel';
+
 export interface IComponentInfoCrawler {
     code: string;
     name: string;
@@ -11,6 +13,7 @@ export interface IComponentInfoCrawler {
     methodology?: string;
     modality?: string;
     learningAssessment?: string;
+    academicLevel?: AcademicLevel;
     workload?: {
         theoretical: number;
         practice: number;

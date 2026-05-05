@@ -12,6 +12,7 @@ import { ComponentLog } from '../entities/ComponentLog';
 import { ComponentLogRepository } from '../repositories/ComponentLogRepository';
 import { ComponentStatus } from '../interfaces/ComponentStatus';
 import { ComponentLogType } from '../interfaces/ComponentLogType';
+import { AcademicLevel } from '../interfaces/AcademicLevel';
 import { IComponentInfoCrawler } from '../interfaces/IComponentInfoCrawler';
 import { ComponentDraft } from '../entities/ComponentDraft';
 import { ComponentDraftRepository } from '../repositories/ComponentDraftRepository';
@@ -61,6 +62,186 @@ export class CrawlerService {
         return 'NAO_SE_APLICA';
     }
 
+    private normalizeDepartmentLabel(rawDepartment: string, sourceType: 'department' | 'program') {
+        const normalized = rawDepartment.replace(/\s+/g, ' ').trim();
+
+        if (normalized) {
+            return normalized;
+        }
+
+        return sourceType === 'department' ? 'Departamento SIGAA' : 'Programa SIGAA';
+    }
+
+    private getSigaaSourceUrls(
+        sourceType: 'department' | 'program',
+        sourceId: string,
+        academicLevel: AcademicLevel
+    ): string[] {
+        const encodedId = encodeURIComponent(sourceId);
+        const nivel = academicLevel === AcademicLevel.GRADUATION
+            ? 'G'
+            : academicLevel === AcademicLevel.MASTERS
+                ? 'E'
+                : 'D';
+
+        if (sourceType === 'department') {
+            return [
+                `https://sigaa.ufba.br/sigaa/public/departamento/componentes.jsf?id=${encodedId}`,
+                `https://sigaa.ufba.br/sigaa/public/departamento/portal.jsf?id=${encodedId}&lc=pt_BR`,
+                `https://sigaa.ufba.br/sigaa/public/curso/curriculo.jsf?id=${encodedId}&lc=pt_BR&nivel=${nivel}`,
+            ];
+        }
+
+        return [
+            `https://sigaa.ufba.br/sigaa/public/programa/curriculo.jsf?lc=pt_BR&id=${encodedId}`,
+            `https://sigaa.ufba.br/sigaa/public/curso/curriculo.jsf?id=${encodedId}&lc=pt_BR&nivel=${nivel}`,
+            `https://sigaa.ufba.br/sigaa/public/departamento/componentes.jsf?id=${encodedId}`,
+        ];
+    }
+
+    private getSigaaSearchLevel(academicLevel: AcademicLevel): 'G' | 'S' {
+        return academicLevel === AcademicLevel.GRADUATION ? 'G' : 'S';
+    }
+
+    private async searchSigaaComponentsByUnit(
+        sourceType: 'department' | 'program',
+        sourceId: string,
+        academicLevel: AcademicLevel
+    ): Promise<Array<IComponentInfoCrawler>> {
+        const nivel = this.getSigaaSearchLevel(academicLevel);
+        const formPageResponse = await axios.get<ArrayBuffer>('https://sigaa.ufba.br/sigaa/public/componentes/busca_componentes.jsf', {
+            responseType: 'arraybuffer',
+            responseEncoding: 'binary',
+        });
+
+        const decoder = new TextDecoder('ISO-8859-1');
+        const formHtml = decoder.decode(formPageResponse.data);
+        const $formPage = cheerio.load(formHtml);
+
+        const formId = $formPage('form').first().attr('id') || 'form';
+        const action = $formPage('form').first().attr('action') || '/sigaa/public/componentes/busca_componentes.jsf';
+        const viewState = $formPage('input[name="javax.faces.ViewState"]').first().attr('value') || '';
+        const actionUrl = new URL(action, 'https://sigaa.ufba.br').toString();
+
+        const payload = new URLSearchParams();
+        payload.set(formId, formId);
+        payload.set(`${formId}:nivel`, nivel);
+        payload.set(`${formId}:checkTipo`, 'on');
+        payload.set(`${formId}:tipo`, '2');
+        payload.set(`${formId}:checkUnidade`, 'on');
+        payload.set(`${formId}:unidades`, sourceId);
+        payload.set(`${formId}:btnBuscarComponentes`, 'Buscar Componentes');
+
+        if (viewState) {
+            payload.set('javax.faces.ViewState', viewState);
+        }
+
+        const searchResponse = await axios.post<ArrayBuffer>(actionUrl, payload.toString(), {
+            responseType: 'arraybuffer',
+            responseEncoding: 'binary',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+        });
+
+        const searchHtml = decoder.decode(searchResponse.data);
+        const $searchPage = cheerio.load(searchHtml);
+
+        return this.extractSigaaListRows($searchPage, sourceType, academicLevel);
+    }
+
+    private findCodeFromRowCells(cells: string[]): string | null {
+        for (const cell of cells.slice(0, 2)) {
+            const match = cell.match(/(^|[^A-Z0-9])([A-Z]{2,6}[0-9]{2,4})(?=[^A-Z0-9]|$)/);
+
+            if (match?.[2]) {
+                return match[2].toUpperCase();
+            }
+        }
+
+        return null;
+    }
+
+    private extractSigaaListRows(
+        $: CheerioAPI,
+        sourceType: 'department' | 'program',
+        academicLevel: AcademicLevel
+    ): Array<IComponentInfoCrawler> {
+        const foundItems = new Map<string, IComponentInfoCrawler>();
+        const pageDepartmentLabel =
+            $('h1, h2')
+                .map((_, el) => $(el).text().replace(/\s+/g, ' ').trim())
+                .toArray()
+                .find((text) => /departamento|programa|computa|informa/i.test(text)) || '';
+
+        $('tr').each((_, row) => {
+            const $row = $(row);
+            const rowCells = $row
+                .find('td')
+                .map((__, cell) => $(cell).text().replace(/\s+/g, ' ').trim())
+                .toArray()
+                .filter(Boolean);
+
+            // Ignore layout rows and JSF scaffolding rows that do not represent components.
+            if (rowCells.length < 2) {
+                return;
+            }
+
+            const code = this.findCodeFromRowCells(rowCells);
+
+            if (!code) {
+                return;
+            }
+
+            if (foundItems.has(code)) {
+                return;
+            }
+
+            const nameCell = rowCells
+                .slice(0, 3)
+                .find((cell) => !cell.includes(code) && cell.length >= 4);
+            const rawName = (nameCell || rowCells.join(' '))
+                .replace(code, '')
+                .replace(/^[-:\s]+/, '')
+                .replace(/\s+CH\s+.*/i, '')
+                .trim();
+            const name = (rawName || `Disciplina ${code}`).slice(0, 255);
+
+            const departmentCell = rowCells.find((cell) => /\b(departamento|instituto)\b/i.test(cell));
+            const programCell = sourceType === 'program'
+                ? rowCells.find((cell) => /\bprograma\b/i.test(cell) && !/\/[A-Z]{2,6}[0-9]{2,4}/i.test(cell))
+                : undefined;
+
+            const department = this.normalizeDepartmentLabel(
+                departmentCell || programCell || pageDepartmentLabel,
+                sourceType
+            );
+
+            foundItems.set(code, {
+                code,
+                name,
+                department,
+                semester: '',
+                description: 'Conteúdo programático definido internamente no BDCP.',
+                objective: '',
+                syllabus: 'Ementa importada do SIGAA público.',
+                bibliography: '',
+                prerequeriments: 'NAO_SE_APLICA',
+                methodology: 'Definida internamente no BDCP.',
+                modality: sourceType === 'department' ? 'Presencial' : 'Programa acadêmico',
+                learningAssessment: 'Definida internamente no BDCP.',
+                academicLevel,
+                workload: {
+                    theoretical: 0,
+                    practice: 0,
+                    internship: 0,
+                },
+            });
+        });
+
+        return Array.from(foundItems.values());
+    }
+
     async createComponent(userId: string, data: IComponentInfoCrawler) {
         const componentExists = await this.componentRepository.findOne({
             where: { code: data.code },
@@ -92,6 +273,7 @@ export class CrawlerService {
                 objective: data.objective,
                 syllabus: data.syllabus,
                 bibliography: data.bibliography,
+                academicLevel: data.academicLevel ?? AcademicLevel.GRADUATION,
                 status: ComponentStatus.PUBLISHED,
                 prerequeriments: this.normalizePrerequeriments(data.prerequeriments),
                 methodology: 'Não há Metodologia cadastrada',
@@ -230,6 +412,59 @@ export class CrawlerService {
                     if (appError.message !== 'Component already exists.') {
                         throw err;
                     }
+                }
+            }
+        }
+    }
+
+    async importComponentsFromSigaaPublic(
+        userId: string,
+        sourceType: 'department' | 'program',
+        sourceId: string,
+        academicLevel: AcademicLevel
+    ) {
+        const normalizedSourceId = String(sourceId).trim();
+
+        if (!normalizedSourceId) {
+            throw new AppError('Invalid SIGAA source id.', 400);
+        }
+
+        const sourceUrls = this.getSigaaSourceUrls(sourceType, normalizedSourceId, academicLevel);
+        let componentsInfo: Array<IComponentInfoCrawler> = [];
+
+        for (const sourceUrl of sourceUrls) {
+            const { data } = await axios.get<ArrayBuffer>(sourceUrl, {
+                responseType: 'arraybuffer',
+                responseEncoding: 'binary',
+            });
+
+            const decoder = new TextDecoder('ISO-8859-1');
+            const html = decoder.decode(data);
+            const $ = cheerio.load(html);
+
+            componentsInfo = this.extractSigaaListRows($, sourceType, academicLevel);
+
+            if (componentsInfo.length > 0) {
+                break;
+            }
+        }
+
+        if (componentsInfo.length === 0) {
+            componentsInfo = await this.searchSigaaComponentsByUnit(sourceType, normalizedSourceId, academicLevel);
+        }
+
+        if (componentsInfo.length === 0) {
+            throw new AppError('No components found in SIGAA public source.', 404);
+        }
+
+        for (const componentData of componentsInfo) {
+            try {
+                await this.createComponent(userId, componentData);
+            } catch (err) {
+                const appError = err as AppError;
+
+                if (appError.message !== 'Component already exists.') {
+                    throw err;
                 }
             }
         }

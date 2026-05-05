@@ -3,10 +3,11 @@ import { Type } from 'class-transformer';
 import { Component } from '../../entities/Component';
 import { ComponentWorkloadDto } from './ComponentWorkload';
 import { CustomIsDefined, CustomIsString, CustomMatches } from '../../decorators/validation';
+import { AcademicLevel } from '../../interfaces/AcademicLevel';
 
 
 export class CreateComponentRequestDto
-implements Omit<Component, 'id' | 'userId' | 'status' | 'logs' | 'user' | 'generateLog' | 'workload' | 'createdAt' | 'updatedAt' | 'publishDraft'> {
+implements Omit<Component, 'id' | 'userId' | 'status' | 'logs' | 'user' | 'generateLog' | 'workload' | 'createdAt' | 'updatedAt' | 'publishDraft' | 'academicLevel'> {
     @CustomIsDefined()
     @CustomIsString()
     @CustomMatches(/^[A-Z]{2,4}[0-9]{2,4}$/)
@@ -55,6 +56,11 @@ implements Omit<Component, 'id' | 'userId' | 'status' | 'logs' | 'user' | 'gener
     @CustomIsDefined()
     @CustomIsString()
     public learningAssessment: string;
+
+    @IsOptional()
+    @CustomIsString()
+    @CustomMatches(/^(graduacao|mestrado|doutorado)$/)
+    public academicLevel?: AcademicLevel;
     
     public workloadId?: string;
 

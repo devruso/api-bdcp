@@ -1,0 +1,275 @@
+{
+  "generatedAt": "2026-05-05T03:00:24.070Z",
+  "totals": {
+    "samples": 15,
+    "extractedBySource": [
+      {
+        "sourceKey": "dcc-1114",
+        "sourceType": "department",
+        "academicLevel": "graduacao",
+        "extractedCount": 133
+      },
+      {
+        "sourceKey": "dci-2440",
+        "sourceType": "department",
+        "academicLevel": "graduacao",
+        "extractedCount": 32
+      },
+      {
+        "sourceKey": "pgcomp-1820",
+        "sourceType": "program",
+        "academicLevel": "mestrado",
+        "extractedCount": 70
+      }
+    ]
+  },
+  "accuracyByField": {
+    "code": {
+      "correct": 15,
+      "total": 15,
+      "percent": 100
+    },
+    "name": {
+      "correct": 15,
+      "total": 15,
+      "percent": 100
+    },
+    "department": {
+      "correct": 15,
+      "total": 15,
+      "percent": 100
+    },
+    "academicLevel": {
+      "correct": 15,
+      "total": 15,
+      "percent": 100
+    }
+  },
+  "perSampleResults": [
+    {
+      "sourceKey": "dcc-1114",
+      "expectedCode": "MATA90",
+      "expectedName": "ALGORITMOS DISTRIBUIDOS",
+      "predictedCode": "MATA90",
+      "predictedName": "ALGORITMOS DISTRIBUIDOS",
+      "predictedDepartment": "Departamento SIGAA",
+      "predictedAcademicLevel": "graduacao",
+      "checks": {
+        "codeOk": true,
+        "nameOk": true,
+        "departmentOk": true,
+        "academicLevelOk": true
+      }
+    },
+    {
+      "sourceKey": "dcc-1114",
+      "expectedCode": "MATC19",
+      "expectedName": "ALGORITMOS E PROGRAMACAO",
+      "predictedCode": "MATC19",
+      "predictedName": "ALGORÍTMOS E PROGRAMAÇÃO",
+      "predictedDepartment": "Departamento SIGAA",
+      "predictedAcademicLevel": "graduacao",
+      "checks": {
+        "codeOk": true,
+        "nameOk": true,
+        "departmentOk": true,
+        "academicLevelOk": true
+      }
+    },
+    {
+      "sourceKey": "dcc-1114",
+      "expectedCode": "MAT053",
+      "expectedName": "ANALISE DE PROJETO DE ALGORITMOS",
+      "predictedCode": "MAT053",
+      "predictedName": "ANALISE DE PROJETO DE ALGORITMOS",
+      "predictedDepartment": "Departamento SIGAA",
+      "predictedAcademicLevel": "graduacao",
+      "checks": {
+        "codeOk": true,
+        "nameOk": true,
+        "departmentOk": true,
+        "academicLevelOk": true
+      }
+    },
+    {
+      "sourceKey": "dcc-1114",
+      "expectedCode": "MATA52",
+      "expectedName": "ANALISE E PROJETO DE ALGORITMOS",
+      "predictedCode": "MATA52",
+      "predictedName": "ANÁLISE E PROJETO DE ALGORITMOS",
+      "predictedDepartment": "Departamento SIGAA",
+      "predictedAcademicLevel": "graduacao",
+      "checks": {
+        "codeOk": true,
+        "nameOk": true,
+        "departmentOk": true,
+        "academicLevelOk": true
+      }
+    },
+    {
+      "sourceKey": "dcc-1114",
+      "expectedCode": "MATA48",
+      "expectedName": "ARQUITETURA DE COMPUTADORES",
+      "predictedCode": "MATA48",
+      "predictedName": "ARQUITETURA DE COMPUTADORES",
+      "predictedDepartment": "Departamento SIGAA",
+      "predictedAcademicLevel": "graduacao",
+      "checks": {
+        "codeOk": true,
+        "nameOk": true,
+        "departmentOk": true,
+        "academicLevelOk": true
+      }
+    },
+    {
+      "sourceKey": "dci-2440",
+      "expectedCode": "MATF54",
+      "expectedName": "ACCS:ONDA EDUCATIVA, DIGITAL, ECOLOGISTA E PAN-AFRO-INDIGENA",
+      "predictedCode": "MATF54",
+      "predictedName": "ACCS:ONDA EDUCATIVA, DIGITAL, ECOLOGISTA E PAN-AFRO-INDÍGENA",
+      "predictedDepartment": "Departamento SIGAA",
+      "predictedAcademicLevel": "graduacao",
+      "checks": {
+        "codeOk": true,
+        "nameOk": true,
+        "departmentOk": true,
+        "academicLevelOk": true
+      }
+    },
+    {
+      "sourceKey": "dci-2440",
+      "expectedCode": "MATB21",
+      "expectedName": "AMBIENTES INTERATIVOS DE APRENDIZAGEM",
+      "predictedCode": "MATB21",
+      "predictedName": "AMBIENTES INTERATIVOS DE APRENDIZAGEM",
+      "predictedDepartment": "Departamento SIGAA",
+      "predictedAcademicLevel": "graduacao",
+      "checks": {
+        "codeOk": true,
+        "nameOk": true,
+        "departmentOk": true,
+        "academicLevelOk": true
+      }
+    },
+    {
+      "sourceKey": "dci-2440",
+      "expectedCode": "MATA68",
+      "expectedName": "COMPUTADOR, ETICA E SOCIEDADE",
+      "predictedCode": "MATA68",
+      "predictedName": "COMPUTADOR, ÉTICA E SOCIEDADE",
+      "predictedDepartment": "Departamento SIGAA",
+      "predictedAcademicLevel": "graduacao",
+      "checks": {
+        "codeOk": true,
+        "nameOk": true,
+        "departmentOk": true,
+        "academicLevelOk": true
+      }
+    },
+    {
+      "sourceKey": "dci-2440",
+      "expectedCode": "MATA41",
+      "expectedName": "INFORMATICA NA EDUCACAO",
+      "predictedCode": "MATA41",
+      "predictedName": "INFORMÁTICA NA EDUCAÇÃO",
+      "predictedDepartment": "Departamento SIGAA",
+      "predictedAcademicLevel": "graduacao",
+      "checks": {
+        "codeOk": true,
+        "nameOk": true,
+        "departmentOk": true,
+        "academicLevelOk": true
+      }
+    },
+    {
+      "sourceKey": "dci-2440",
+      "expectedCode": "MATB20",
+      "expectedName": "INTELIGENCIA ARTIFICIAL EM EDUCACAO",
+      "predictedCode": "MATB20",
+      "predictedName": "INTELIGÊNCIA ARTIFICIAL EM EDUCAÇÃO",
+      "predictedDepartment": "Departamento SIGAA",
+      "predictedAcademicLevel": "graduacao",
+      "checks": {
+        "codeOk": true,
+        "nameOk": true,
+        "departmentOk": true,
+        "academicLevelOk": true
+      }
+    },
+    {
+      "sourceKey": "pgcomp-1820",
+      "expectedCode": "IC0051",
+      "expectedName": "ASPECTOS RECENTES EM ESTATISTICA",
+      "predictedCode": "IC0051",
+      "predictedName": "ASPECTOS RECENTES EM ESTATÍSTICA",
+      "predictedDepartment": "Programa SIGAA",
+      "predictedAcademicLevel": "mestrado",
+      "checks": {
+        "codeOk": true,
+        "nameOk": true,
+        "departmentOk": true,
+        "academicLevelOk": true
+      }
+    },
+    {
+      "sourceKey": "pgcomp-1820",
+      "expectedCode": "IC0032",
+      "expectedName": "BANCO DE DADOS",
+      "predictedCode": "IC0032",
+      "predictedName": "BANCO DE DADOS",
+      "predictedDepartment": "Programa SIGAA",
+      "predictedAcademicLevel": "mestrado",
+      "checks": {
+        "codeOk": true,
+        "nameOk": true,
+        "departmentOk": true,
+        "academicLevelOk": true
+      }
+    },
+    {
+      "sourceKey": "pgcomp-1820",
+      "expectedCode": "IC0033",
+      "expectedName": "COMPUTACAO DISTRIBUIDA",
+      "predictedCode": "IC0033",
+      "predictedName": "COMPUTAÇÃO DISTRIBUÍDA",
+      "predictedDepartment": "Programa SIGAA",
+      "predictedAcademicLevel": "mestrado",
+      "checks": {
+        "codeOk": true,
+        "nameOk": true,
+        "departmentOk": true,
+        "academicLevelOk": true
+      }
+    },
+    {
+      "sourceKey": "pgcomp-1820",
+      "expectedCode": "IC0036",
+      "expectedName": "INTELIGENCIA ARTIFICIAL",
+      "predictedCode": "IC0036",
+      "predictedName": "INTELIGÊNCIA ARTIFICIAL",
+      "predictedDepartment": "Programa SIGAA",
+      "predictedAcademicLevel": "mestrado",
+      "checks": {
+        "codeOk": true,
+        "nameOk": true,
+        "departmentOk": true,
+        "academicLevelOk": true
+      }
+    },
+    {
+      "sourceKey": "pgcomp-1820",
+      "expectedCode": "IC0001",
+      "expectedName": "SISTEMAS OPERACIONAIS",
+      "predictedCode": "IC0001",
+      "predictedName": "SISTEMAS OPERACIONAIS",
+      "predictedDepartment": "Programa SIGAA",
+      "predictedAcademicLevel": "mestrado",
+      "checks": {
+        "codeOk": true,
+        "nameOk": true,
+        "departmentOk": true,
+        "academicLevelOk": true
+      }
+    }
+  ]
+}

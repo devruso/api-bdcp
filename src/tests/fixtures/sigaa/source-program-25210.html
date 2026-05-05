@@ -1,0 +1,1008 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"  "http://www.w3.org/TR/html4/loose.dtd">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+	<META HTTP-EQUIV="Pragma" CONTENT="no-cache">
+	<title>SIGAA - Sistema Integrado de Gest&#227;o de Atividades Acad&#234;micas</title>
+	<link class="component" href="/sigaa/a4j/s/3_3_3.Finalorg/richfaces/renderkit/html/css/basic_classes.xcss/DATB/eAF7sqpgb-jyGdIAFrMEaw__.jsf" rel="stylesheet" type="text/css" /><link class="component" href="/sigaa/a4j/s/3_3_3.Finalorg/richfaces/renderkit/html/css/extended_classes.xcss/DATB/eAF7sqpgb-jyGdIAFrMEaw__.jsf" media="rich-extended-skinning" rel="stylesheet" type="text/css" /><script type="text/javascript">window.RICH_FACES_EXTENDED_SKINNING_ON=true;</script><script src="/sigaa/a4j/g/3_3_3.Finalorg/richfaces/renderkit/html/scripts/skinning.js.jsf" type="text/javascript"></script><link rel="shortcut icon" href="/sigaa/img/sigaa.ico">
+	
+	<script type="text/javascript" src="/shared/jsBundles/jawr_loader.js" ></script>
+	<script src="/sigaa/javascript/prevenir-duplo-clique.js" type="text/javascript"></script>
+	<script type="text/javascript">
+		JAWR.loader.style('/javascript/ext-2.0.a.1/resources/css/ext-all.css', 'all');
+		JAWR.loader.style('/css/public.css','all');
+	 	JAWR.loader.script('/bundles/js/sigaa_base.js');
+	 	JAWR.loader.script('/bundles/js/ext2_all.js');
+
+	 	
+	</script>
+	<link rel="stylesheet" type="text/css" media="all" href="/sigaa/cssBundles/787491763/public/css/public.css" />
+
+	
+	<link rel="stylesheet" type="text/css" href="/shared/beta/css/font-awesome.css" media="screen" />
+	
+	<script src="/shared/javascript/STICookieConsent.js"></script>
+	<script>
+	    document.addEventListener("DOMContentLoaded", () => {
+	    	generateCookieConsentModal("SIGAA", "N&#243;s usamos cookies para melhorar sua experi&#234;ncia de navega&#231;&#227;o no portal. Ao utilizar o %sitename%, voc&#234; concorda com a pol&#237;&#173;tica de monitoramento de cookies. Para ter mais informa&#231;&#245;es sobre como isso &#233; feito e como remover, acesse a <a href=%cookie-policy%>Pol&#237;tica de Privacidade</a>. Para saber como a UFRN trata os dados, acesse a <a href=%privacy-policy%> Pol&#237;&#173;tica de cookies</a>. Se voc&#234; concorda, clique em %button-text%.", "https://ufrn.br/institucional/politica-de-privacidade-e-termos-de-uso", "https://ufrn.br/institucional/politica-de-cookies");
+	    })
+	</script>
+	
+</head>
+
+<body>
+	<div id="container">
+	
+
+	<div id="container-inner">
+
+	<div id="cabecalho">
+		<div id="logo">
+				<a href="/sigaa/public/"> <img src="https://sipac.ufba.br/shared/img/instituicao/brasao_ufba48x75.jpg" /> </a>		
+		</div>
+		<div id="identificacao">
+			<span class="ufrn"> Universidade Federal da Bahia </span>
+			<span class="data">
+				 Salvador, 
+				 04 de Maio de 
+				 2026 
+			</span>
+			<a id="home" href="/sigaa/public/" title="P&#225;gina inicial" style="width: 450px;"> </a>
+			<div id="menu_info">
+				<ul>
+				
+				
+				
+					
+					<li class="login">
+						<a href="/sigaa/" alt="Clique aqui para logar-se no SIGAA" title="Clique aqui para logar-se no SIGAA">
+							Login
+						<i class="fa fa-angle-right"></i></a>	
+					</li>
+				</ul>
+			</div>
+			
+		</div>
+		<br clear="all"/>
+	</div>
+
+
+	<div id="corpo">
+	
+
+
+
+	<script src="/sigaa/javascript/encoding.js" type="text/javascript"></script>
+	<div id="painel-erros" style="position: relative; padding-bottom: 10px;">
+		
+			
+				
+				
+					<ul class="erros">
+						
+							<li>A unidade n&#227;o corresponde a um programa de p&#243;s-gradua&#231;&#227;o.</li>
+						
+					</ul>
+				
+			
+		
+	
+		
+	
+		
+	
+		
+			<div id="fechar-painel-erros" style="position: absolute; bottom: 2px; right: 2px;" >
+				<a href="javascript://nop/" onclick="$('painel-erros').remove();" style="color: #AAA; font-size: 0.9em;">
+					(x) fechar mensagens
+				</a>
+			</div>
+		
+	</div>
+	
+	
+
+
+
+
+
+<!--  REDMINE #34572 - Ocultar menus no Portal P&#250;blico - INICIO  -->
+
+
+<!--  REDMINE #34572 - Ocultar menus no Portal P&#250;blico - FIM -->
+
+
+
+
+<style>
+	/* Altera&#231;&#245;es necess&#225;rias para aumento do panel de visualiza&#231;&#227;o dos links dos menus, para acomodar mais links. */
+	#bg-bottom{
+		min-height: 380px;
+	  	height: 380px;
+	}
+	#opcoes-modulo .painel {
+		overflow: visible;
+	}
+	.form-link {
+		margin: initial!important;
+		padding: initial!important;
+		background: none!important;
+		width: initial!important;
+		height: initial!important;
+	}
+</style>
+
+
+	<script type="text/javascript">
+		
+	
+		if (false) {
+			window.location = "/sigaa/mobile/touch/public/principal.jsf";
+		}
+	
+	</script>
+
+
+
+
+<div id="menu">
+
+	<div id="bg-top">&nbsp;</div>
+	<div id="bg-bottom">
+		<div id="modulos">
+			<div id="l-academico" class="item item-over" >
+				<a href="#"><span> Acad&#234;mico </span></a>
+			</div>
+			
+			<div id="l-biblioteca" class="item" hidden="true">
+				<a href="#"><span> Biblioteca </span></a>
+			</div>
+			<div id="l-ensino" class="item">
+				<a href="#"><span> Ensino </span></a>
+			</div>
+			
+			<div id="l-extensao" class="item" hidden="true">
+				<a href="#"><span> Extens&#227;o </span></a>
+			</div>
+			
+			
+			<!-- REDMINE #34572 - Ocultar menus no Portal P&#250;blico - INICIO  -->
+			
+				<div id="l-graduacao" class="item">
+					<a href="#"><span> Gradua&#231;&#227;o </span></a>
+				</div>
+			
+			<!-- REDMINE #34572 - Ocultar menus no Portal P&#250;blico - FIM -->
+			
+			
+			<div id="l-pesquisa" class="item" hidden="true">
+				<a href="#"><span> Pesquisa </span></a>
+			</div>
+			<div class="item inativo topico">
+				<span> P&#243;s-Gradua&#231;&#227;o </span>
+			</div>
+			<div id="l-stricto" class="item sub-item">
+				<a href="#"><span> Stricto Sensu </span></a>
+			</div>
+			
+			<div id="l-lato" class="item sub-item" hidden="true"> 
+				<a href="#"><a href="#"><span> Lato Sensu </span></a>
+			</div>
+			
+			<div id="l-processo" class="item" hidden="true">
+				<a href="#"><span> Processos Seletivos </span></a>
+			</div>
+			
+			<div id="l-tecnico" class="item" hidden="true">
+				<a href="#"><span> T&#233;cnico </span></a>
+			</div>
+			
+			
+			
+				<div id="l-ouvidoriaDesabilitada" class="item" hidden="true">
+					<a href="#" onClick="javascript:redirectManual()"><span> Ouvidoria </span></a>
+				</div>
+			
+			
+			
+		</div>
+
+		<div id="opcoes-modulo"  >
+			<div id="opcoes-slider" >
+				<div id="p-academico" class="painel" >
+					<!-- Redmine  #24459 - [PORTAL PUBLICO][ACADEMICO] Calend&#225;rio Acad&#234;mico - Link apontando para Calend&#225;rio UFRN - Inicio-->
+
+
+<!-- Redmine  #24459 - [PORTAL PUBLICO][ACADEMICO] Calend&#225;rio Acad&#234;mico - Link apontando para Calend&#225;rio UFRN - Fim-->
+
+<dl>
+
+	<dt>
+		<div class="opcao docentes">
+		<h3>Docentes</h3>
+		<a href="/sigaa/public/docente/busca_docentes.jsf?aba=p-academico">
+			Acesse as p&#225;ginas p&#250;blicas dos docentes da UFBA.
+		</a>
+		</div>
+	</dt>
+	<dt>
+		<div class="opcao autenticacao">
+		<h3>Autentica&#231;&#227;o de Documentos</h3>
+		<a href="/sigaa/documentos/?aba=p-academico">Efetue a autentica&#231;&#227;o dos documentos emitidos pelo SIGAA.</a>
+		</div>
+	</dt>
+	<br clear="all"/>
+	<dt>
+		<div class="opcao responsaveis">
+		<h3>Chefes, Coordena&#231;&#245;es e Diretores.</h3>
+		<a href="/sigaa/public/academico/busca_responsavel.jsf?aba=p-academico">
+		Consulte os chefes de departamentos, coordenadores de curso 
+		e diretores de unidade.</a>
+		</div>
+	</dt>
+	<dt>
+		<div class="opcao calendario">
+		<h3>Calend&#225;rio Acad&#234;mico</h3>
+		<!-- Redmine  #24459 - [PORTAL PUBLICO][ACADEMICO] Calend&#225;rio Acad&#234;mico - Link apontando para Calend&#225;rio UFRN - Inicio-->
+		<a href="https://supac.ufba.br/calendario-academico" target="_blank">Consulte o calend&#225;rio acad&#234;mico da UFBA.</a>
+		<!-- Redmine  #24459 - [PORTAL PUBLICO][ACADEMICO] Calend&#225;rio Acad&#234;mico - Link apontando para Calend&#225;rio UFRN - Fim-->
+		</div>
+	</dt>
+	<br clear="all"/>
+	<dt>
+		<div class="opcao centros">
+		<h3>Centros/Unidades Especializadas</h3>
+		<a href="/sigaa/public/centro/lista.jsf?aba=p-academico" target="_self">Conhe&#231;a os centros/unidades especializadas da UFBA.</a>
+		</div>
+	</dt>
+	<dt>
+		<div class="opcao departamentos">
+		<h3>Departamentos</h3>
+		<a href="/sigaa/public/departamento/lista.jsf?aba=p-academico">Conhe&#231;a os departamentos da UFBA.</a>
+		</div>
+	</dt>
+	<br clear="all"/>	 
+	 <dt>
+		<div class="opcao programas">
+		<h3>Programas de P&#243;s-Gradua&#231;&#227;o</h3>
+		<a href="/sigaa/public/programa/lista.jsf?aba=p-academico">Conhe&#231;a os programas de p&#243;s-gradua&#231;&#227;o da UFBA.</a>
+		</div>
+	</dt>
+	
+</dl>
+<br clear="all"/>
+				</div>
+				<!-- REDMINE #34572 - Ocultar menus no Portal P&#250;blico - INICIO -->			
+				
+					<div id="p-graduacao" class="painel">
+						
+
+<dl>
+	<dt>
+		<div class="opcao curso-graduacao">
+		<h3>Cursos</h3>
+		<a href="/sigaa/public/curso/lista.jsf?nivel=G&aba=p-graduacao">
+		Consulte os cursos de Gradua&#231;&#227;o oferecidos pela UFBA.
+		</a>
+		</div>
+	</dt>
+	<dt>
+		<div class="opcao componentes">
+		<h3>Componentes Curriculares</h3>
+		<a href="/sigaa/public/componentes/busca_componentes.jsf?nivel=G&aba=p-graduacao">
+			Consulte os detalhes dos componentes curriculares ministrados nos cursos de gradua&#231;&#227;o da UFBA.
+		</a>
+		</div>
+	</dt>
+	<dt>
+		<div class="opcao calendario">
+		<h3>Calend&#225;rio Acad&#234;mico</h3>
+		<!-- INICIO REDMINE #31893 - Link do regulamento da institui&#231;&#227;o - SIGPROJECT #154360 -->
+		<a href="https://supac.ufba.br/calendario-academico-0">Consulte o calend&#225;rio acad&#234;mico dos cursos de gradua&#231;&#227;o.</a>
+		<!-- FIM REDMINE #31893 - Link do regulamento da institui&#231;&#227;o - SIGPROJECT #154360 -->
+		</div>
+	</dt>
+	<dt>
+		<div class="opcao estruturaCurricular">
+		<h3>Estruturas Curriculares</h3>
+		<a href="/sigaa/public/curso/lista.jsf?nivel=G&aba=p-graduacao">
+			Acesse um curso e consulte sua estrutura curricular.
+		</a>
+		</div>
+	</dt>	
+	<dt>
+		<div class="opcao regulamento">
+		<h3>Regulamento dos Cursos de Gradua&#231;&#227;o</h3>
+		<!-- INICIO REDMINE #31893 - Link do regulamento da institui&#231;&#227;o - SIGPROJECT #154360 -->
+		<a href="https://ufba.br/sites/portal.ufba.br/files/REGPG_Revisado_Resolucao_03_2017.pdf">Consulte o regulamentos dos cursos de gradua&#231;&#227;o.</a>
+		<!-- FIM REDMINE #31893 - Link do regulamento da institui&#231;&#227;o - SIGPROJECT #154360 -->
+		</div>
+	</dt>
+	<!--<dt>
+		<div class="opcao autenticacao">
+		<h3>Revalida&#231;&#227;o de Diplomas de Gradua&#231;&#227;o</h3>
+		<a href="/sigaa/public/revalidacao_diplomas/form_busca.jsf?nivel=G&aba=p-graduacao">
+			Recebimento de solicita&#231;&#245;es de revalida&#231;&#227;o de diplomas de gradua&#231;&#227;o.</a> 
+		</div>
+	</dt>-->
+		<dt>
+		<div class="opcao processoTransferencia">
+		<h3>Outros Processos Seletivos</h3>
+			<a href="https://prograd.ufba.br/">
+				Consulte outros processos seletivos oferecidos para gradua&#231;&#227;o.
+			</a>
+		</div>
+	</dt>	
+	
+	<dt>
+		<div class="opcao processoGraduacao">
+		<h3>SISU</h3>
+			<a href="https://prograd.ufba.br/">
+				Consulte sobre a forma principal de ingresso nos cursos de gradua&#231;&#227;o da UFBA.
+			</a>
+		</div>
+	</dt>
+	
+	<dt>
+		<div class="opcao consultaPublicaDiplomas">
+		<h3>Diplomas</h3>
+			<a href="/sigaa/public/diploma/consulta_publica.jsf?aba=p-graduacao">
+				Consulta aos Registros de Diplomas do UFBA.
+			</a>
+		</div>
+	</dt>
+	
+	<dt>
+		<div class="opcao consultaPublicaDiplomaDigital">
+		<h3>Diplomas Digitais</h3>
+			<a href="/sigaa/public/diploma_digital/consulta_publica.jsf?aba=p-graduacao">
+				Consulta aos Diplomas Digitais da UFBA.
+			</a>
+		</div>
+	</dt>
+	
+</dl>
+					</div>
+									
+				<!--  REDMINE #34572 - Ocultar menus no Portal P&#250;blico - FIM -->
+				<div id="p-ensino" class="painel">
+					<!--  REDMINE #34572 - Ocultar menus no Portal P&#250;blico - INICIO  -->
+
+
+<!--  REDMINE #34572 - Ocultar menus no Portal P&#250;blico - FIM -->
+<dl>
+
+	<dt>
+		<div class="opcao turmas">
+		<h3>Turmas</h3>
+		<a href="/sigaa/public/turmas/listar.jsf?aba=p-ensino">
+			Acesse as turmas dispon&#237;veis por departamentos e n&#237;veis de ensino.
+		</a>
+		</div>
+	</dt>
+	<dt>
+		<div class="opcao componentes">
+		<h3>Componentes Curriculares</h3>
+		<a href="/sigaa/public/componentes/busca_componentes.jsf?aba=p-ensino">
+			Consulte os detalhes dos componentes curriculares ministrados nos cursos da UFBA.
+		</a>
+		</div>
+	</dt>
+	
+	<!-- REDMINE #34572 - Ocultar menus no Portal P&#250;blico - INICIO -->
+	
+	<dt>
+			<div class="opcao curso-graduacao">
+			<h3>Cursos de Gradua&#231;&#227;o</h3>
+			<a href="/sigaa/public/curso/lista.jsf?nivel=G&aba=p-ensino">
+			Consulte os cursos de Gradua&#231;&#227;o oferecidos pela UFBA.
+			</a>
+			</div>
+		</dt>
+	
+	<!--  REDMINE #34572 - Ocultar menus no Portal P&#250;blico - FIM -->
+	<dt>
+		<div class="opcao curso-stricto">
+		<h3>Cursos de Stricto-Sensu</h3>
+		<a href="/sigaa/public/curso/lista.jsf?nivel=S&aba=p-ensino">
+		Consulte os cursos de Stricto-Sensu oferecidos pela UFBA.
+		</a>
+		</div>
+	</dt>
+	
+	<dt hidden="true">
+		<div class="opcao curso-latos">
+		<h3>Cursos de Lato-Sensu</h3>
+		<a href="/sigaa/public/curso/lista.jsf?nivel=L&aba=p-ensino">
+		Consulte os cursos de Lato-Sensu oferecidos pela UFBA.
+		</a>
+		</div>
+	</dt>
+	
+	<dt hidden="true">
+		<div class="opcao curso-tecnico">
+		<h3>Cursos T&#233;cnico</h3>
+		<a href="/sigaa/public/curso/lista.jsf?nivel=T&aba=p-ensino">
+		Consulte os cursos de n&#237;vel t&#233;cnico oferecidos pela UFBA.
+		</a>
+		</div>
+	</dt>
+	
+	<dt hidden="true">
+		<div class="opcao curso-aberto">
+		<h3>Cursos Abertos / Comunidades Virtuais</h3>
+		<a href="/sigaa/public/cursosabertos.jsf?aba=p-ensino">
+		Consulte os cursos abertos atrav&#233;s dos centros e departamentos e tamb&#233;m as Comunidades Virtuais.
+		</a>
+		</div>
+	</dt>
+	
+	<dt hidden="true">
+		<div class="opcao curso-tecnico">
+		<h3>Cursos T&#233;cnico Integrados</h3>
+		<a href="/sigaa/public/curso/lista.jsf?nivel=N&aba=p-ensino">
+		Consulte os cursos de n&#237;vel t&#233;cnico integrado oferecidos pela UFBA.
+		</a>
+		</div>
+	</dt>
+	
+</dl>
+<br clear="all"/>
+				</div>
+				<div id="p-pesquisa" class="painel">
+					<dl>
+	<dt>
+		<div class="opcao pesquisadores">
+		<h3>Pesquisadores</h3>
+		<a href="/sigaa/public/pesquisa/consulta_projetos.jsf?aba=p-pesquisa">
+			Consulte quem pesquisa o que na UFBA
+		</a>
+		</div>
+	</dt>
+	<dt>
+		<div class="opcao bases">
+		<h3>Bases de Pesquisa</h3>
+		<a href="/sigaa/public/pesquisa/consulta_bases.jsf?aba=p-pesquisa">
+			Consulte as bases de pesquisa atuantes na UFBA
+		</a>
+		</div>
+	</dt>
+	<dt>
+		<div class="opcao bolsistas">
+		<h3>Inicia&#231;&#227;o Cient&#237;fica</h3>
+		<a href="/sigaa/public/pesquisa/consulta_bolsistas.jsf?aba=p-pesquisa">
+			Conhe&#231;a nossos bolsistas de Inicia&#231;&#227;o Cient&#237;fica
+		</a>
+		</div>
+	</dt>
+	<dt>
+		<div class="opcao laboratorios">
+		<h3>Laborat&#243;rios de Pesquisa</h3>
+		<a href="/sigaa/public/pesquisa/consulta_laboratorios.jsf?aba=p-pesquisa">
+			Consulte os laborat&#243;rios de pesquisa da UFBA
+		</a>
+		</div>
+	</dt>
+	
+</dl>
+				</div>
+				<div id="p-stricto" class="painel">
+					
+
+<dl>
+	<dt>
+		<div class="opcao curso-stricto">
+		<h3>Cursos</h3>
+		<a href="/sigaa/public/curso/lista.jsf?nivel=S&aba=p-stricto">Consulte os cursos de Mestrado/Doutorado oferecidos pela UFBA.</a>
+		</div>
+	</dt>
+	<dt>
+		<div class="opcao componentes">
+		<h3>Componentes Curriculares</h3>
+		<a href="/sigaa/public/componentes/busca_componentes.jsf?nivel=S&aba=p-stricto">
+			Consulte os detalhes e os programas dos componentes curriculares ministrados nos cursos de gradua&#231;&#227;o da UFBA.
+		</a>
+		</div>
+	</dt>
+	<dt>
+		<div class="opcao selecao">
+		<h3>Processos Seletivos  </h3>
+		
+<form id="j_id_jsp_1235242682_3" name="j_id_jsp_1235242682_3" method="post" action="/sigaa/public/home.jsf" class="form-link" enctype="application/x-www-form-urlencoded">
+<input type="hidden" name="j_id_jsp_1235242682_3" value="j_id_jsp_1235242682_3" />
+
+<script type="text/javascript" language="Javascript">function dpf(f) {var adp = f.adp;if (adp != null) {for (var i = 0;i < adp.length;i++) {f.removeChild(adp[i]);}}};function apf(f, pvp) {var adp = new Array();f.adp = adp;var i = 0;for (k in pvp) {var p = document.createElement("input");p.type = "hidden";p.name = k;p.value = pvp[k];f.appendChild(p);adp[i++] = p;}};function jsfcljs(f, pvp, t) {apf(f, pvp);var ft = f.target;if (t) {f.target = t;}f.submit();f.target = ft;dpf(f);};</script>
+<a href="#" onclick="if(typeof jsfcljs == 'function'){jsfcljs(document.getElementById('j_id_jsp_1235242682_3'),{'j_id_jsp_1235242682_4':'j_id_jsp_1235242682_4','aba':'p-stricto'},'');}return false">
+				Consulte os processos seletivos abertos, inscreva-se ou gerencie suas inscri&#231;&#245;es.
+				</a><input type="hidden" name="javax.faces.ViewState" id="javax.faces.ViewState" value="j_id2" />
+</form>
+		</div>
+	</dt>
+	<dt>
+		<div class="opcao programas">
+		<h3>Programas de P&#243;s-Gradua&#231;&#227;o</h3>
+		<a href="/sigaa/public/programa/lista.jsf?aba=p-stricto">Conhe&#231;a os programas de p&#243;s-gradua&#231;&#227;o da UFBA.</a>
+		</div>
+	</dt>
+	<dt>
+		<div class="opcao area-candidato">
+			<h3>&#193;rea do Candidato - Processo Seletivo</h3>
+			
+<form id="j_id_jsp_1235242682_6" name="j_id_jsp_1235242682_6" method="post" action="/sigaa/public/home.jsf" class="form-link" enctype="application/x-www-form-urlencoded">
+<input type="hidden" name="j_id_jsp_1235242682_6" value="j_id_jsp_1235242682_6" />
+<a href="#" onclick="if(typeof jsfcljs == 'function'){jsfcljs(document.getElementById('j_id_jsp_1235242682_6'),{'j_id_jsp_1235242682_6:j_id_jsp_1235242682_7':'j_id_jsp_1235242682_6:j_id_jsp_1235242682_7','servico':'inscricao-processo-seletivo-stricto-sensu'},'');}return false">Acesse a &aacute;rea do candidato e consulte detalhes de suas inscri&ccedil;&otilde;es em processos seletivos</a><input type="hidden" name="javax.faces.ViewState" id="javax.faces.ViewState" value="j_id2" />
+</form>
+		</div>
+	</dt>
+</dl>
+				</div>
+				<div id="p-lato" class="painel">
+					
+
+<dl>
+	<dt>
+		<div class="opcao curso-latos">
+		<h3>Cursos de Lato-Sensu</h3>
+		
+		<a href="/sigaa/public/curso/lista.jsf?nivel=L&aba=p-lato">
+		Consulte os cursos de especializa&#231;&#227;o oferecidos pela UFBA.
+		</a>
+		</div>
+	</dt>
+	<dt>
+		<div class="opcao selecao">
+		<h3>Processos Seletivos  </h3>
+		
+<form id="j_id_jsp_1235242682_9" name="j_id_jsp_1235242682_9" method="post" action="/sigaa/public/home.jsf" class="form-link" enctype="application/x-www-form-urlencoded">
+<input type="hidden" name="j_id_jsp_1235242682_9" value="j_id_jsp_1235242682_9" />
+<a href="#" onclick="if(typeof jsfcljs == 'function'){jsfcljs(document.getElementById('j_id_jsp_1235242682_9'),{'j_id_jsp_1235242682_9:j_id_jsp_1235242682_10':'j_id_jsp_1235242682_9:j_id_jsp_1235242682_10','aba':'p-lato'},'');}return false">
+				Consulte os processos seletivos abertos, inscreva-se ou gerencie suas inscri&#231;&#245;es.
+				</a><input type="hidden" name="javax.faces.ViewState" id="javax.faces.ViewState" value="j_id2" />
+</form>
+		</div>
+	</dt>
+	<dt>
+		<div class="opcao componentes">
+		<h3>Componentes Curriculares</h3>
+		<a href="/sigaa/public/componentes/busca_componentes.jsf?nivel=L&aba=p-lato">
+			Consulte os detalhes e os programas dos componentes curriculares ministrados nos cursos de gradua&#231;&#227;o da UFBA.
+		</a>
+		</div>
+	</dt>
+</dl>
+				</div>
+				<div id="p-tecnico" class="painel">
+					
+
+<dl>
+	<dt>
+		<div class="opcao curso-tecnico">
+		<h3>Cursos T&#233;cnicos</h3>
+		<a href="/sigaa/public/curso/lista.jsf?nivel=T&aba=p-tecnico">Consulte os cursos t&#233;cnicos oferecidos pela UFBA.</a>
+		</div>
+	</dt>
+	<dt>
+		<div class="opcao curso-tecnico">
+		<h3>Cursos T&#233;cnicos Integrados</h3>
+		<a href="/sigaa/public/curso/lista.jsf?nivel=N&aba=p-tecnico">Consulte os cursos de n&#237;vel t&#233;cnico integrado oferecidos pela UFBA.</a>
+	</dt>
+	<dt>
+		<div class="opcao selecao">
+		<h3>Processos Seletivos  </h3>
+		<a href="/sigaa/public/processo_seletivo/lista.jsf?nivel=T&aba=p-tecnico">
+			Consulte os processos seletivos abertos, inscreva-se ou gerencie suas inscri&#231;&#245;es.
+		</a>
+		</div>
+	</dt>
+	<dt>
+		<div class="opcao componentes">
+		<h3>Componentes Curriculares</h3>
+		<a href="/sigaa/public/componentes/busca_componentes.jsf?nivel=T&aba=p-tecnico">
+			Consulte os detalhes e os programas dos componentes curriculares ministrados nos cursos de gradua&#231;&#227;o da UFBA.
+		</a>
+		</div>
+	</dt>
+</dl>
+				</div>
+				<div id="p-extensao" class="painel">
+					
+<dl>
+	<dt>
+		<div class="opcao AcoesExtensao">
+		<h3>A&#231;&#245;es de Extens&#227;o</h3>
+		<a href="/sigaa/public/extensao/consulta_extensao.jsf?aba=p-extensao">
+			Consulte as a&#231;&#245;es de extens&#227;o desenvolvidas pela UFBA
+		</a>
+		</div>
+	</dt>
+	
+	<dt>
+		<div class="opcao ProgramaExtensao">
+		<h3>Programas</h3>
+		<a href="/sigaa/public/extensao/consulta_extensao.jsf?acao=1&aba=p-extensao">
+			Consulte os Programas de extens&#227;o desenvolvidos pela UFBA
+		</a>
+		</div>
+	</dt>
+	
+	<dt>
+		<div class="opcao ProjetoExtensao">
+		<h3>Projetos</h3>
+		<a href="/sigaa/public/extensao/consulta_extensao.jsf?acao=2&aba=p-extensao">
+			Consulte os Projetos de extens&#227;o desenvolvidos pela UFBA
+		</a>
+		</div>
+	</dt>
+	
+	<dt>
+		<div class="opcao CursoExtensao">
+		<h3>Cursos</h3>
+		<a href="/sigaa/public/extensao/consulta_extensao.jsf?acao=3&aba=p-extensao">
+			Consulte os Cursos de extens&#227;o ministrados pela UFBA
+		</a>
+		</div>
+	</dt>
+	
+	<dt>
+		<div class="opcao EventoExtensao">
+		<h3>Eventos</h3>
+		<a href="/sigaa/public/extensao/consulta_extensao.jsf?acao=4&aba=p-extensao">
+			Consulte os Eventos de extens&#227;o realizados pela UFBA
+		</a>
+		</div>
+	</dt>
+	
+	<dt>
+		<div class="opcao ProdutoExtensao">
+		<h3>Produtos</h3>
+		<a href="/sigaa/public/extensao/consulta_extensao.jsf?acao=6&aba=p-extensao">
+			Consulte os Produtos de extens&#227;o desenvolvidos pela UFBA
+		</a>
+		</div>
+	</dt>
+	
+	<dt>
+		<div class="opcao processoGraduacao">
+			<h3>Visualizar Cursos ou Eventos</h3>
+			<a href="/sigaa/public/extensao/paginaListaPeriodosInscricoesAtividadesPublico.jsf?aba=p-extensao">
+				Consulte os Cursos e Eventos de extens&#227;o da UFBA que possuem inscri&#231;&#245;es abertas.
+			</a>
+		</div>
+	</dt>
+	
+	
+	<dt>
+		<div class="opcao processoTransferencia">
+			<h3>Acesso &#224; &#193;rea de Inscritos em Cursos e Eventos</h3>
+			<a href="/sigaa/link/public/extensao/acessarAreaInscrito">
+				Realize o acesso na &#225;rea de inscritos para gerenciar as inscri&#231;&#245;es nos cursos e eventos
+			</a>
+		</div>
+	</dt>
+	
+		
+</dl>
+				</div>
+				<div id="p-processo" class="painel">
+					
+
+
+<dl>
+	
+	<dt hidden="true">
+		<div class="opcao processoLatos" hi>
+		<h3>Processos Seletivos - Lato Sensu</h3>
+			
+<form id="j_id_jsp_1235242682_13" name="j_id_jsp_1235242682_13" method="post" action="/sigaa/public/home.jsf" class="form-link" enctype="application/x-www-form-urlencoded">
+<input type="hidden" name="j_id_jsp_1235242682_13" value="j_id_jsp_1235242682_13" />
+<a href="#" onclick="if(typeof jsfcljs == 'function'){jsfcljs(document.getElementById('j_id_jsp_1235242682_13'),{'j_id_jsp_1235242682_13:j_id_jsp_1235242682_14':'j_id_jsp_1235242682_13:j_id_jsp_1235242682_14','aba':'p-processo'},'');}return false">
+					Consulte os processos seletivos de n&#237;vel lato sensu abertos,
+					 inscreva-se ou gerencie suas inscri&#231;&#245;es.
+					 </a><input type="hidden" name="javax.faces.ViewState" id="javax.faces.ViewState" value="j_id2" />
+</form>
+		</div>
+	</dt>
+	<dt>
+		<div class="opcao processoStricto">
+			<h3>Processos Seletivos - Stricto Sensu</h3>
+			
+<form id="j_id_jsp_1235242682_16" name="j_id_jsp_1235242682_16" method="post" action="/sigaa/public/home.jsf" class="form-link" enctype="application/x-www-form-urlencoded">
+<input type="hidden" name="j_id_jsp_1235242682_16" value="j_id_jsp_1235242682_16" />
+<a href="#" onclick="if(typeof jsfcljs == 'function'){jsfcljs(document.getElementById('j_id_jsp_1235242682_16'),{'j_id_jsp_1235242682_16:j_id_jsp_1235242682_17':'j_id_jsp_1235242682_16:j_id_jsp_1235242682_17','aba':'p-processo'},'');}return false">
+					Consulte os processos seletivos de n&#237;vel stricto-sensu abertos,
+					 inscreva-se ou gerencie suas inscri&#231;&#245;es.
+					 </a><input type="hidden" name="javax.faces.ViewState" id="javax.faces.ViewState" value="j_id2" />
+</form>
+		</div>
+	</dt>
+	
+	<dt hidden="true">
+		<div class="opcao processoTecnico">
+		<h3>Processos Seletivos - T&#233;cnico</h3>
+		<a href="/sigaa/public/processo_seletivo/lista.jsf?aba=p-processo&nivel=T">
+			Consulte os processos seletivos de n&#237;vel t&#233;cnico abertos,
+			 inscreva-se ou gerencie suas inscri&#231;&#245;es.
+		</a>
+		</div>
+	</dt>
+	
+	<dt hidden="true">
+		<div class="opcao processoInfantil">
+		<h3>Processos Seletivos - Infantil / Fundamental</h3>
+		<a href="/sigaa/public/processo_seletivo/lista.jsf?aba=p-processo&nivel=I">
+			Processos seletivos do infantil e fundamental,
+			 inscreva-se ou gerencie suas inscri&#231;&#245;es.
+		</a>
+		</div>
+	</dt>
+	
+	<dt hidden="true">
+		<div class="opcao processoTransferencia">
+		<h3>Outros Processos Seletivos</h3>
+		<a href="https://prograd.ufba.br/">
+			Consulte outros processos seletivos oferecidos para gradua&#231;&#227;o.
+		</a>
+		</div>
+	</dt>
+	
+	<dt hidden="true">
+		<div class="opcao processoFormacaoComplementar">
+		<h3>Processos Seletivos - Forma&#231;&#227;o Complementar</h3>
+		<a href="/sigaa/public/processo_seletivo/lista.jsf?aba=p-processo&nivel=F">
+			Consulte ou inscreva-se nos processos seletivos de cursos de forma&#231;&#227;o complementar abertos.
+		</a>
+		</div>
+	</dt>		
+	
+	<dt hidden="true">
+		<div class="opcao processoGraduacao">
+		<h3>SISU</h3>
+		<a href="https://prograd.ufba.br/">
+			Consulte sobre a forma principal de ingresso nos cursos de gradua&#231;&#227;o da UFBA. 
+		</a>
+		</div>
+	</dt>
+</dl>
+<br clear="all"/>
+				</div>
+				<div id="p-biblioteca" class="painel">
+					
+
+<dl>
+	<dt>
+		<div class="opcao Acervo">
+		<h3>Consultar Acervo</h3>
+		<a href="/sigaa/public/biblioteca/buscaPublicaAcervo.jsf?aba=p-biblioteca">Consulte o acervo das bibliotecas da UFBA.</a>
+		</div>
+	</dt>
+	
+	<dt>
+		<div class="opcao Acervo">
+		<h3>Consultar Acervo de Artigos </h3>
+		<a href="/sigaa/public/biblioteca/buscaPublicaAcervoArtigos.jsf?aba=p-biblioteca">Consulte no acervo das bibliotecas da UFBA artigos de revistas, jornais, entre outros.</a>
+		</div>
+	</dt>
+		<dt>
+		<div class="opcao Emprestimo">
+		<h3>Consultar Empr&#233;stimos</h3>
+		<a href="/sigaa/verTelaLogin.do?urlRedirect=/sigaa/biblioteca/circulacao/visualizaMeusEmprestimos.jsf&subsistemaRedirect=14000">
+		Verifique aqui empr&#233;stimos efetuados e os prazos de devolu&#231;&#227;o. (Requer Autentica&#231;&#227;o)
+		</a>
+		</div>
+	</dt>
+	
+	<dt>
+		<div class="opcao Renovar">
+		<h3>Renovar Empr&#233;stimos</h3>
+		<a href="/sigaa/verTelaLogin.do?urlRedirect=/sigaa/biblioteca/circulacao/renovaMeusEmprestimos.jsf&subsistemaRedirect=14000">
+		Efetue a renova&#231;&#227;o do empr&#233;stimo. <br/>(Requer Autentica&#231;&#227;o)
+		</a>
+		</div>
+	</dt>
+	
+	<dt>
+		<div class="opcao Aquisicao">
+		<h3>Novas Compras</h3>
+		<a href="/sigaa/public/biblioteca/buscaPublicaAquisicoes.jsf?aba=p-biblioteca">Confira as compras de livros mais recentes.</a>
+		</div>
+	</dt>
+	
+	<dt>
+		<div class="opcao Aquisicao">
+		<h3>Novas Aquisi&#231;&#245;es</h3>
+		<a href="/sigaa/public/biblioteca/buscaPublicaNovasAquisicoes.jsf?aba=p-biblioteca">Confira as aquisi&#231;&#245;es de materiais mais recentes que se encontram dispon&#237;veis no acervo.</a>
+		</div>
+	</dt>
+	
+	<dt>
+		<div class="opcao Mobile">
+		<h3>Biblioteca Mobile</h3>
+		<a href="">
+			Portabilidade, veja como acessar a biblioteca atrav&#233;s de um dispositivo m&#243;vel.
+		</a>
+		</div>
+	</dt>
+
+	<dt>
+		<div class="opcao BDTD">
+		<h3>BDTD - UFBA</h3>
+		<a href="">
+			Disponibiliza&#231;&#227;o, via Internet, as teses e disserta&#231;&#245;es produzidas no &#226;mbito da UFBA.</a>
+		</div>
+	</dt>
+
+	<dt>
+		<div class="opcao IBICT">
+		<h3>BDTD - Nacional (IBICT) </h3>
+		<a href=""> 
+			Integra&#231;&#227;o dos sistemas de informa&#231;&#227;o de teses e disserta&#231;&#245;es existentes no pa&#237;s.</a>
+		</div>
+	</dt>
+	
+</dl>
+				</div>
+				<div id="p-ouvidoria" class="painel">
+					<dl>
+	<dt>
+		<div class="opcao entrarEmContato">
+		<h3>Entrar em Contato</h3>
+		<a href="/sigaa/public/ouvidoria/Manifestacao/form.jsf?aba=p-ouvidoria">Envie sua sugest&#227;o, reclama&#231;&#227;o ou cr&#237;tica referente &#224; UFBA, entrando em contato com a ouvidoria.</a>
+		</div>
+	</dt>
+	
+	<dt>
+		<div class="opcao responderEsclarecimento">
+		<h3>Responder Solicita&#231;&#227;o de Esclarecimento</h3>
+		<a href="/sigaa/public/ouvidoria/Manifestacao/form_senha.jsf?aba=p-ouvidoria">Responda uma solicita&#231;&#227;o de esclarecimento referente a uma manifesta&#231;&#227;o &#224; ouvidoria previamente encaminhada.</a>
+		</div>
+	</dt>
+	
+</dl>
+				</div>
+				<div id="p-relacoes-internacionais" class="painel">
+					<dl>
+	<dt>
+		<div class="opcao docentes">
+			<h3>Acordos de Mobilidade</h3>
+			
+<form id="j_id_jsp_1235242682_19" name="j_id_jsp_1235242682_19" method="post" action="/sigaa/public/home.jsf" class="form-link" enctype="application/x-www-form-urlencoded">
+<input type="hidden" name="j_id_jsp_1235242682_19" value="j_id_jsp_1235242682_19" />
+
+				<a href="/sigaa/public/acordo_mobilidade/acordos_mobilidade.jsf?aba=p-relacoes-internacionais">
+					Consulte os Acordos de Mobilidade Vigentes na Instituicao
+				</a>
+			<input type="hidden" name="javax.faces.ViewState" id="javax.faces.ViewState" value="j_id2" />
+</form>
+		</div>
+	</dt>
+</dl>
+				</div>
+			</div>
+		</div>
+	</div>
+	<br clear="all">
+</div>
+
+<br clear="all"/>
+<div id="noticias">
+	<h3> Not&#237;cias e Comunicados </h3>
+
+	
+		<div style="text-align: center; font-style: italic; padding: 10px">
+		N&#227;o h&#225; not&#237;cias cadastradas
+		</div>
+	
+
+	
+</div>
+
+<script>
+	var ativo = Ext.get('');
+	
+	
+	function redirectManual(){
+		return window.open("https://sistema.ouvidorias.gov.br/publico/Manifestacao/RegistrarManifestacao.aspx?ReturnUrl=%2f","_blank");
+	}
+</script>
+<script type="text/javascript" src="/shared/javascript/public/menu.js"> </script>
+
+	
+	
+	
+	<div class="clear"></div>
+	</div>
+
+	<div id="rodape">
+		<p>	<!-- Redmine 24523 - Telas e relat&#243;rios com rodap&#233;s sem a altera&#231;&#227;o - Portal P&#250;blico -->
+			SIGAA | STI/SUPAC | -  | Copyright &copy; 2006-2026 - UFBA - sigaapl02.intranet.ufba.br
+			 
+				<a onclick="javascript:versao();">v4.13.8_28-20260406</a>
+			
+		</p>
+	</div>
+
+	<!-- Fim dos containers -->
+	</div>
+	</div>
+	
+
+
+
+
+
+<!-- MYFACES JAVASCRIPT -->
+
+</body>
+
+</html>
+
+ 
+	<script type="text/javascript" charset="UTF-8">
+		function versao(){
+			var msg='';
+			msg+='SIGAA 4.13.8_28-20260406,  publicado em: 06/04/2026 17:27\n\n';
+			msg+='Depend\u00eancias:\n';
+			msg+='Arquitetura 4.4.5\n';
+			msg+='Entidades Comuns 2.3.3\n';
+			msg+='Servicos Integrados 2.0.8\n';
+			msg+='SharedResources 2.1.4\n';
+			msg+='Servicos Remoto Biblioteca null\n';
+			msg+='SIGAA Mobile Objects 1.0.0\n\n';
+			msg+='Copyright SINFO/UFRN';
+			alert(msg);
+		}	
+	</script>
+
+<style>
+a.linkMobile:link {
+	color: #003395;
+	font-weight: bold;
+	font-size: inherit;
+	text-decoration: none;
+}
+
+a.linkMobile:visited {
+	color: #003390;
+	text-decoration: none;
+	font-weight: bold;
+}
+
+a.linkMobile:active {
+	color: #444444;
+	text-decoration: none;
+	font-weight: bold;
+}
+</style>
+
+
