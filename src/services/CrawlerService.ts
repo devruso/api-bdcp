@@ -81,7 +81,7 @@ export class CrawlerService {
             return codeMatches.join(', ');
         }
 
-        if (/^(n[aã]o\s+se\s+aplica|nenhum(a)?|n\/a)$/i.test(text)) {
+        if (/^(n[aã]o\s+se\s+aplica|n[aã]o\s+h[aá]|nenhum(a)?|n\/a)$/i.test(text)) {
             return 'NAO_SE_APLICA';
         }
 
@@ -356,16 +356,17 @@ export class CrawlerService {
             return [];
         }
 
+        if (/(n[aã]o\s+h[aá]|nenhum(a)?|n\/a|n[aã]o\s+se\s+aplica)/i.test(text)) {
+            return [];
+        }
+
         const codes = Array.from(new Set(text.toUpperCase().match(/\b[A-Z]{2,6}[0-9]{2,4}\b/g) ?? []));
 
         if (codes.length) {
             return codes;
         }
 
-        return text
-            .split(/[;,|]/)
-            .map((value) => value.trim())
-            .filter(Boolean);
+        return [];
     }
 
     private extractFieldFromDetailText(text: string, labelVariants: string[], stopLabels: string[]): string {
@@ -373,7 +374,7 @@ export class CrawlerService {
         const escapedStops = stopLabels.map((label) => label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
 
         const regex = new RegExp(
-            `(?:${escapedLabels.join('|')})\\s*:?\\s*(.+?)(?=(?:${escapedStops.join('|')})\\s*:|$)`,
+            `\\b(?:${escapedLabels.join('|')})\\b\\s*(?::|-|–|—)?\\s*(.+?)(?=\\b(?:${escapedStops.join('|')})\\b(?:\\s*(?::|-|–|—))?|$)`,
             'i'
         );
         const match = text.match(regex);
@@ -390,15 +391,28 @@ export class CrawlerService {
         const stopLabels = [
             'Pré-Requisitos',
             'Pre-Requisitos',
+            'Pré Requisitos',
+            'Pre Requisitos',
+            'Pré-Requisito',
+            'Pre-Requisito',
             'Co-Requisitos',
             'Correquísitos',
+            'Co Requisitos',
+            'Correquisitos',
+            'Co-Requisito',
+            'Correquisito',
             'Equivalências',
             'Equivalencias',
+            'Equivalente(s)',
+            'Equivalente',
             'Ementa',
             'Objetivos',
+            'Objetivo',
             'Metodologia',
             'Avaliação',
             'Avaliacao',
+            'Avaliação da Aprendizagem',
+            'Avaliacao da Aprendizagem',
             'Carga Horária',
             'Carga Horaria',
             'Bibliografia',
@@ -414,15 +428,27 @@ export class CrawlerService {
 
         const prerequeriments = this.extractFieldFromDetailText(
             pageText,
-            ['Pré-Requisitos', 'Pre-Requisitos'],
+            ['Pré-Requisitos', 'Pre-Requisitos', 'Pré Requisitos', 'Pre Requisitos', 'Pré-Requisito', 'Pre-Requisito'],
             stopLabels
         );
-        const coReqRaw = this.extractFieldFromDetailText(pageText, ['Co-Requisitos', 'Correquísitos'], stopLabels);
-        const equivalencesRaw = this.extractFieldFromDetailText(pageText, ['Equivalências', 'Equivalencias'], stopLabels);
+        const coReqRaw = this.extractFieldFromDetailText(
+            pageText,
+            ['Co-Requisitos', 'Correquísitos', 'Co Requisitos', 'Correquisitos', 'Co-Requisito', 'Correquisito'],
+            stopLabels
+        );
+        const equivalencesRaw = this.extractFieldFromDetailText(
+            pageText,
+            ['Equivalências', 'Equivalencias', 'Equivalente(s)', 'Equivalente'],
+            stopLabels
+        );
         const syllabus = this.extractFieldFromDetailText(pageText, ['Ementa'], stopLabels);
         const objective = this.extractFieldFromDetailText(pageText, ['Objetivos', 'Objetivo'], stopLabels);
         const methodology = this.extractFieldFromDetailText(pageText, ['Metodologia'], stopLabels);
-        const learningAssessment = this.extractFieldFromDetailText(pageText, ['Avaliação', 'Avaliacao'], stopLabels);
+        const learningAssessment = this.extractFieldFromDetailText(
+            pageText,
+            ['Avaliação', 'Avaliacao', 'Avaliação da Aprendizagem', 'Avaliacao da Aprendizagem'],
+            stopLabels
+        );
 
         const extractHours = (patterns: RegExp[]) => {
             for (const pattern of patterns) {
@@ -436,10 +462,13 @@ export class CrawlerService {
             return 0;
         };
 
-        const theoretical = extractHours([/te[oó]rica\s*:?\s*(\d{1,3})\s*h/i]);
-        const practice = extractHours([/pr[aá]tica\s*:?\s*(\d{1,3})\s*h/i]);
-        const internship = extractHours([/est[aá]gio\s*:?\s*(\d{1,3})\s*h/i]);
-        const extension = extractHours([/extens[aã]o\s*:?\s*(\d{1,3})\s*h/i]);
+        const theoretical = extractHours([/te[oó]rica\s*:?\s*(\d{1,3})(?:\s*h)?/i]);
+        const practice = extractHours([/pr[aá]tica\s*:?\s*(\d{1,3})(?:\s*h)?/i]);
+        const internship = extractHours([/est[aá]gio\s*:?\s*(\d{1,3})(?:\s*h)?/i]);
+        const extension = extractHours([
+            /extens[aã]o\s*:?\s*(\d{1,3})(?:\s*h)?/i,
+            /carga\s*hor[aá]ria\s*de\s*extens[aã]o\s*:?\s*(\d{1,3})(?:\s*h)?/i,
+        ]);
 
         return {
             prerequeriments: prerequeriments ? this.normalizePrerequeriments(prerequeriments) : undefined,
