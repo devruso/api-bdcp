@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { ComponentController } from '../controllers/ComponentController';
 import { CreateComponentRequestDto, UpdateComponentRequestDto } from '../dtos/component';
-import { ensureAuthenticated } from '../middlewares/EnsureAuthenticated';
+import { ensureAdminAuthenticated, ensureAuthenticated } from '../middlewares/EnsureAuthenticated';
 import { makeValidateBody } from '../middlewares/Validator';
 
 const componentRouter = Router();
@@ -734,6 +734,8 @@ componentRouter.delete('/:id', ensureAuthenticated, componentController.delete);
 *   post:
 *     summary: Import and insert components from UFBA website in the database
 *     tags: [Component]
+*     security:
+*       - bearerAuth: []
 *     parameters:
 *       - in: header
 *         name: authenticatedUserId
@@ -756,14 +758,55 @@ componentRouter.delete('/:id', ensureAuthenticated, componentController.delete);
 *     responses:
 *       201:
 *         description: Insert components in the database using the crawler
+*       401:
+*         description: User is not authorized for import operation
 *       400:
 *         description: Bad Request
 *       500:
 *         description: Internal Server Error
 */
-componentRouter.post('/import', ensureAuthenticated, componentController.importComponentsFromSiac);
+componentRouter.post('/import', ensureAuthenticated, ensureAdminAuthenticated, componentController.importComponentsFromSiac);
 
-componentRouter.post('/import/sigaa-public', ensureAuthenticated, componentController.importComponentsFromSigaaPublic);
+/**
+* @swagger
+* /api/components/import/sigaa-public:
+*   post:
+*     summary: Import components from SIGAA public sources (department or program)
+*     tags: [Component]
+*     security:
+*       - bearerAuth: []
+*     requestBody:
+*       required: true
+*       content:
+*         application/json:
+*           schema:
+*             type: object
+*             required:
+*               - sourceType
+*               - sourceId
+*               - academicLevel
+*             properties:
+*               sourceType:
+*                 type: string
+*                 enum: [department, program]
+*               sourceId:
+*                 type: string
+*               academicLevel:
+*                 type: string
+*                 enum: [graduacao, mestrado, doutorado]
+*     responses:
+*       201:
+*         description: Import summary with created, skipped and failed counters
+*       400:
+*         description: Invalid request payload
+*       401:
+*         description: User is not authorized for import operation
+*       404:
+*         description: No components found in provided SIGAA source
+*       500:
+*         description: Internal Server Error
+*/
+componentRouter.post('/import/sigaa-public', ensureAuthenticated, ensureAdminAuthenticated, componentController.importComponentsFromSigaaPublic);
 
 componentRouter.post('/:id/public-shares', ensureAuthenticated, componentController.createPublicShare);
 

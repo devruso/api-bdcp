@@ -37,13 +37,19 @@ class ComponentController {
             });
         }
 
-        await crawlerService.importComponentsFromSiac(
+        const importSummary = await crawlerService.importComponentsFromSiac(
             authenticatedUserId,
             cdCurso,
             nuPerCursoInicial
         );
 
-        return response.status(201).end();
+        return response.status(201).json({
+            ...importSummary,
+            parameters: {
+                cdCurso,
+                nuPerCursoInicial,
+            },
+        });
     }
 
     async importComponentsFromSigaaPublic(request: Request, response: Response) {
@@ -61,14 +67,21 @@ class ComponentController {
             });
         }
 
-        await crawlerService.importComponentsFromSigaaPublic(
+        const importSummary = await crawlerService.importComponentsFromSigaaPublic(
             authenticatedUserId,
             sourceType,
             sourceId,
             academicLevel
         );
 
-        return response.status(201).end();
+        return response.status(201).json({
+            ...importSummary,
+            parameters: {
+                sourceType,
+                sourceId,
+                academicLevel,
+            },
+        });
     }
 
     async getComponents(request: Request, response: Response) {
