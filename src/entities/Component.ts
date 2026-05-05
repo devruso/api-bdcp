@@ -16,6 +16,7 @@ import { ComponentLogType } from '../interfaces/ComponentLogType';
 import { ComponentStatus } from '../interfaces/ComponentStatus';
 import { ComponentDraft } from './ComponentDraft';
 import { AcademicLevel } from '../interfaces/AcademicLevel';
+import { ComponentRelation } from './ComponentRelation';
 
 @Entity('components')
 class Component {
@@ -90,6 +91,9 @@ class Component {
 
     @OneToMany(() => ComponentLog, (componentLog) => componentLog.component)
         logs: ComponentLog[];
+
+    @OneToMany(() => ComponentRelation, (componentRelation) => componentRelation.component)
+        relations: ComponentRelation[];
     
     @OneToOne(() => ComponentDraft, (componentDraft) => componentDraft.component)
     @JoinColumn({ name: 'component_draft_id' })

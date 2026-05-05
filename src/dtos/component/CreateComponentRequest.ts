@@ -7,7 +7,7 @@ import { AcademicLevel } from '../../interfaces/AcademicLevel';
 
 
 export class CreateComponentRequestDto
-implements Omit<Component, 'id' | 'userId' | 'status' | 'logs' | 'user' | 'generateLog' | 'workload' | 'createdAt' | 'updatedAt' | 'publishDraft' | 'academicLevel'> {
+implements Omit<Component, 'id' | 'userId' | 'status' | 'logs' | 'relations' | 'user' | 'generateLog' | 'workload' | 'createdAt' | 'updatedAt' | 'publishDraft' | 'academicLevel'> {
     @CustomIsDefined()
     @CustomIsString()
     @CustomMatches(/^[A-Z]{2,4}[0-9]{2,4}$/)

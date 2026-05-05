@@ -6,7 +6,7 @@ import { CustomIsString, CustomMatches } from '../../decorators/validation';
 import { AcademicLevel } from '../../interfaces/AcademicLevel';
 
 export class UpdateComponentRequestDto
-implements Partial<Omit<Component, 'id' | 'userId' | 'status' | 'logs' | 'user' | 'workload' | 'generateLog' | 'createdAt' | 'updatedAt'>> {
+implements Partial<Omit<Component, 'id' | 'userId' | 'status' | 'logs' | 'relations' | 'user' | 'workload' | 'generateLog' | 'createdAt' | 'updatedAt'>> {
 
     @IsOptional()
     @CustomIsString()

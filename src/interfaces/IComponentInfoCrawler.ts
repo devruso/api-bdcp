@@ -14,6 +14,12 @@ export interface IComponentInfoCrawler {
     modality?: string;
     learningAssessment?: string;
     academicLevel?: AcademicLevel;
+    detailUrl?: string;
+    detailActionUrl?: string;
+    detailActionPayload?: string;
+    coRequisites?: string[];
+    equivalences?: string[];
+    workloadExtension?: number;
     workload?: {
         theoretical: number;
         practice: number;
