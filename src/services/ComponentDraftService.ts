@@ -25,6 +25,24 @@ export class ComponentDraftService {
     private userRepository: Repository<User>;
     private workloadService: WorkloadService;
 
+    private readonly mutableDraftFields: Array<keyof UpdateComponentRequestDto> = [
+        'code',
+        'name',
+        'department',
+        'program',
+        'semester',
+        'prerequeriments',
+        'methodology',
+        'objective',
+        'syllabus',
+        'bibliography',
+        'modality',
+        'learningAssessment',
+        'academicLevel',
+        'workloadId',
+        'workload',
+    ];
+
     constructor() {
         this.componentDraftRepository = getCustomRepository(ComponentDraftRepository);
         this.componentRepository = getCustomRepository(ComponentRepository);
@@ -149,6 +167,21 @@ export class ComponentDraftService {
         return `Rascunho alterado: ${changedFields.join(', ')} | detalhes: ${criticalChanges.join('; ')}`;
     }
 
+    private sanitizeDraftUpdateDto(payload: UpdateComponentRequestDto) {
+        const incoming = payload as Record<string, unknown>;
+        const sanitized: UpdateComponentRequestDto = {};
+
+        this.mutableDraftFields.forEach((field) => {
+            const value = incoming[field as string];
+
+            if (value !== undefined) {
+                (sanitized as Record<string, unknown>)[field] = value;
+            }
+        });
+
+        return sanitized;
+    }
+
     async getDrafts(options?: {
         search?: string;
         sortBy?: string;
@@ -259,6 +292,7 @@ export class ComponentDraftService {
         userId: string,
         requestDto: UpdateComponentRequestDto,
     ) {
+        const sanitizedRequestDto = this.sanitizeDraftUpdateDto(requestDto);
         const connection = getConnection();
         const queryRunner = connection.createQueryRunner();
         const draftExists = await this.componentDraftRepository.findOne({
@@ -269,7 +303,7 @@ export class ComponentDraftService {
             throw new AppError('Draft not found.', 404);
         }
 
-        const nextCode = requestDto.code?.trim().toUpperCase();
+        const nextCode = sanitizedRequestDto.code?.trim().toUpperCase();
         const codeDraft = nextCode && nextCode !== draftExists.code
             ? await this.componentDraftRepository.findOne({ where: { code: nextCode } })
             : null;
@@ -278,29 +312,29 @@ export class ComponentDraftService {
         }
 
         try {
-            const workloadPatch = requestDto.workload == null
+            const workloadPatch = sanitizedRequestDto.workload == null
                 ? undefined
-                : { ...requestDto.workload };
+                : { ...sanitizedRequestDto.workload };
 
             if (nextCode) {
-                requestDto.code = nextCode;
+                sanitizedRequestDto.code = nextCode;
             }
 
-            if (requestDto.prerequeriments !== undefined) {
-                requestDto.prerequeriments = await this.normalizeAndValidatePrerequeriments(
-                    requestDto.prerequeriments,
+            if (sanitizedRequestDto.prerequeriments !== undefined) {
+                sanitizedRequestDto.prerequeriments = await this.normalizeAndValidatePrerequeriments(
+                    sanitizedRequestDto.prerequeriments,
                     nextCode ?? draftExists.code
                 );
             }
 
-            if(requestDto.workload != null) {
+            if(sanitizedRequestDto.workload != null) {
                 const workloadData = {
                     ...workloadPatch,
-                    id: requestDto.workloadId ?? draftExists.workloadId as string,
+                    id: sanitizedRequestDto.workloadId ?? draftExists.workloadId as string,
                 };
                 const workload = await this.workloadService.upsert(workloadData);
-                requestDto.workloadId = workload?.id;
-                delete requestDto.workload;
+                sanitizedRequestDto.workloadId = workload?.id;
+                delete sanitizedRequestDto.workload;
             }
 
             await queryRunner.startTransaction();
@@ -310,7 +344,7 @@ export class ComponentDraftService {
                     ComponentDraft,
                     {
                         ...draftExists,
-                        ...requestDto
+                        ...sanitizedRequestDto
                     }
                 ),
                 queryRunner.manager.save(
@@ -322,7 +356,7 @@ export class ComponentDraftService {
                         ),
                         description: this.buildDraftUpdateDescription(
                             draftExists,
-                            requestDto,
+                            sanitizedRequestDto,
                             workloadPatch
                         ),
                     }

@@ -287,6 +287,48 @@ describe('Component document flow', () => {
         expect(getByCodeResponse.body.name).toBe('Disciplina Alvo');
     });
 
+    it('should ignore non-whitelisted fields when updating a published component', async () => {
+        const createResponse = await supertest(app)
+            .post('/api/components')
+            .set('Content-Type', 'application/json')
+            .set('Authorization', `Bearer ${token}`)
+            .send({
+                code: 'SAFE90',
+                name: 'Disciplina Segura',
+                department: 'Departamento Seguro',
+                program: 'Programa Seguro',
+                semester: '2026.1',
+                prerequeriments: 'Nenhum',
+                methodology: 'Aulas expositivas',
+                objective: 'Validar filtro de payload no update',
+                syllabus: 'Ementa segura',
+                bibliography: 'Bibliografia segura',
+                modality: 'Presencial',
+                learningAssessment: 'Provas',
+            });
+
+        expect(createResponse.statusCode).toBe(201);
+
+        const createdComponentId = createResponse.body.id;
+        const originalUserId = createResponse.body.userId;
+
+        const updateResponse = await supertest(app)
+            .put(`/api/components/${createdComponentId}`)
+            .set('Content-Type', 'application/json')
+            .set('Authorization', `Bearer ${token}`)
+            .send({
+                name: 'Disciplina Segura Atualizada',
+                userId: 'malicious-user-id',
+                status: 'draft',
+                createdAt: '2030-01-01T00:00:00.000Z',
+            });
+
+        expect(updateResponse.statusCode).toBe(200);
+        expect(updateResponse.body.name).toBe('Disciplina Segura Atualizada');
+        expect(updateResponse.body.userId).toBe(originalUserId);
+        expect(updateResponse.body.status).toBe('published');
+    });
+
     it('should be able to export component pdf with approval metadata when available', async () => {
         const createResponse = await supertest(app)
             .post('/api/components')

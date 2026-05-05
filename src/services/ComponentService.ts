@@ -29,6 +29,24 @@ export class ComponentService {
     private componentDraftRepository: Repository<ComponentDraft>;
     private workloadService: WorkloadService;
 
+    private readonly mutableComponentFields: Array<keyof UpdateComponentRequestDto> = [
+        'code',
+        'name',
+        'department',
+        'program',
+        'semester',
+        'prerequeriments',
+        'methodology',
+        'objective',
+        'syllabus',
+        'bibliography',
+        'modality',
+        'learningAssessment',
+        'academicLevel',
+        'workloadId',
+        'workload',
+    ];
+
     constructor() {
         this.componentRepository = getCustomRepository(ComponentRepository);
         this.componentLogRepository = getCustomRepository(
@@ -64,6 +82,21 @@ export class ComponentService {
             .toLowerCase()
             .normalize('NFD')
             .replace(/[\u0300-\u036f]/g, '');
+    }
+
+    private sanitizeComponentUpdateDto(payload: UpdateComponentRequestDto) {
+        const incoming = payload as Record<string, unknown>;
+        const sanitized: UpdateComponentRequestDto = {};
+
+        this.mutableComponentFields.forEach((field) => {
+            const value = incoming[field as string];
+
+            if (value !== undefined) {
+                (sanitized as Record<string, unknown>)[field] = value;
+            }
+        });
+
+        return sanitized;
     }
 
     private accentInsensitiveSql(column: string) {
@@ -321,6 +354,7 @@ export class ComponentService {
         componentDto: UpdateComponentRequestDto,
         userId: string
     ) {
+        const sanitizedComponentDto = this.sanitizeComponentUpdateDto(componentDto);
         const componentExists = await this.componentRepository.findOne({
             where: { id },
         });
@@ -329,7 +363,7 @@ export class ComponentService {
             throw new AppError('Component not found.', 404);
         }
 
-        const nextCode = componentDto.code?.trim().toUpperCase();
+        const nextCode = sanitizedComponentDto.code?.trim().toUpperCase();
 
         const codeComponent =
             nextCode && nextCode !== componentExists.code
@@ -343,35 +377,35 @@ export class ComponentService {
 
         try {
             if (nextCode) {
-                componentDto.code = nextCode;
+                sanitizedComponentDto.code = nextCode;
             }
 
-            if (componentDto.prerequeriments !== undefined) {
-                componentDto.prerequeriments = await this.normalizeAndValidatePrerequeriments(
-                    componentDto.prerequeriments,
+            if (sanitizedComponentDto.prerequeriments !== undefined) {
+                sanitizedComponentDto.prerequeriments = await this.normalizeAndValidatePrerequeriments(
+                    sanitizedComponentDto.prerequeriments,
                     nextCode ?? componentExists.code
                 );
             }
 
-            if (componentDto.workload != null) {
+            if (sanitizedComponentDto.workload != null) {
                 const workloadData = {
-                    ...componentDto.workload,
+                    ...sanitizedComponentDto.workload,
                     id:
-                        componentDto.workloadId ??
+                        sanitizedComponentDto.workloadId ??
                         (componentExists.workloadId as string),
                 };
 
                 const workload = await this.workloadService.upsert(
                     workloadData
                 );
-                componentDto.workloadId = workload?.id;
-                delete componentDto.workload;
+                sanitizedComponentDto.workloadId = workload?.id;
+                delete sanitizedComponentDto.workload;
             }
 
             await this.componentRepository
                 .createQueryBuilder()
                 .update(Component)
-                .set(componentDto)
+                .set(sanitizedComponentDto)
                 .where('id = :id', { id })
                 .execute();
 
