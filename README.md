@@ -1,4 +1,4 @@
-# Application Programming Interface
+﻿# Application Programming Interface
 ## Database System of Syllabus of the Subjects of the Federal University of Bahia
 
 # Get Starded
@@ -20,7 +20,7 @@ If you use `docker compose`, the local PostgreSQL port exposed by this project i
 Make sure `DB_TEST_NAME` exists before running tests. With Docker Compose, you can create it with:
 
 ```sh
-docker exec api-bdcp-postgres-1 psql -U admin -d postgres -c "CREATE DATABASE testdatabase;"
+docker exec ementas-api-postgres-1 psql -U admin -d postgres -c "CREATE DATABASE testdatabase;"
 ```
 
 ## Migrations
@@ -133,3 +133,4 @@ npm run typecheck
 ```sh
 npm run dev
 ```
+
