@@ -79,6 +79,7 @@ export class CrawlerService {
     private componentRelationRepository: Repository<ComponentRelation>;
     private workloadService: WorkloadService;
     private sigaaDetailCache = new Map<string, SigaaComponentDetail | null>();
+    private sigaaDetailInFlight = new Map<string, Promise<SigaaComponentDetail | null>>();
 
     constructor() {
         this.componentRepository = getCustomRepository(ComponentRepository);
@@ -604,6 +605,12 @@ export class CrawlerService {
     }
 
     private getDetailCacheKey(component: IComponentInfoCrawler): string {
+        const componentIdentifier = this.extractSigaaComponentIdentifier(component);
+
+        if (componentIdentifier) {
+            return `id:${componentIdentifier}`;
+        }
+
         if (component.detailUrl) {
             return `url:${component.detailUrl}`;
         }
@@ -619,6 +626,59 @@ export class CrawlerService {
         }
 
         return `code:${component.code}`;
+    }
+
+    private extractSigaaComponentIdentifier(component: IComponentInfoCrawler): string | undefined {
+        const payloadId = component.detailActionPayload?.match(/(?:^|&)idComponente=([^&]+)/i)?.[1];
+
+        if (payloadId) {
+            return decodeURIComponent(payloadId);
+        }
+
+        if (!component.detailUrl) {
+            return undefined;
+        }
+
+        try {
+            const detailUrl = new URL(component.detailUrl);
+            const urlId = detailUrl.searchParams.get('idComponente')
+                || detailUrl.searchParams.get('id')
+                || detailUrl.searchParams.get('componente');
+
+            return urlId ? decodeURIComponent(urlId) : undefined;
+        } catch {
+            return undefined;
+        }
+    }
+
+    private async getOrFetchSigaaComponentDetail(
+        cacheKey: string,
+        component: IComponentInfoCrawler,
+        detailCache: Map<string, SigaaComponentDetail | null>,
+        inFlightCache: Map<string, Promise<SigaaComponentDetail | null>>
+    ): Promise<SigaaComponentDetail | null> {
+        if (detailCache.has(cacheKey)) {
+            return detailCache.get(cacheKey) || null;
+        }
+
+        const existingRequest = inFlightCache.get(cacheKey);
+
+        if (existingRequest) {
+            return existingRequest;
+        }
+
+        const request = this.fetchSigaaComponentDetail(component)
+            .then((detail) => {
+                detailCache.set(cacheKey, detail);
+                return detail;
+            })
+            .finally(() => {
+                inFlightCache.delete(cacheKey);
+            });
+
+        inFlightCache.set(cacheKey, request);
+
+        return request;
     }
 
     private applySigaaDetailToComponent(
@@ -699,7 +759,9 @@ export class CrawlerService {
     ): Promise<Array<IComponentInfoCrawler>> {
         const normalizedConcurrency = Math.max(1, concurrency);
         const detailCache = this.sigaaDetailCache || new Map<string, SigaaComponentDetail | null>();
+        const inFlightCache = this.sigaaDetailInFlight || new Map<string, Promise<SigaaComponentDetail | null>>();
         this.sigaaDetailCache = detailCache;
+        this.sigaaDetailInFlight = inFlightCache;
         const enriched = [...components];
         let cursor = 0;
 
@@ -723,9 +785,12 @@ export class CrawlerService {
                     continue;
                 }
 
-                const detail = await this.fetchSigaaComponentDetail(current);
-
-                detailCache.set(cacheKey, detail);
+                const detail = await this.getOrFetchSigaaComponentDetail(
+                    cacheKey,
+                    current,
+                    detailCache,
+                    inFlightCache
+                );
 
                 if (!detail) {
                     continue;
