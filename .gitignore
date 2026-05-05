@@ -3,5 +3,6 @@
 /build
 /coverage
 /dist
+/tmp/
 
 .env

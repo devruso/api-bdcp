@@ -32,12 +32,14 @@ export interface GenerateHtmlData {
     approval?: {
         agreementNumber?: string;
         agreementDate?: Date;
+        approvedBy?: string;
     };
     workload?: {
         student: WorkloadGroup;
         professor: WorkloadGroup;
         module: WorkloadGroup;
     };
+    exportMode?: 'pdf' | 'docx';
 }
 
 const fallback = (value?: string, empty = 'Nao informado') =>
@@ -100,6 +102,10 @@ const WorkloadTable = ({
 );
 
 export function generateHtml(data: GenerateHtmlData) {
+    const approvalDate = data.approval?.agreementDate ? formatDate(data.approval.agreementDate) : 'Nao informada';
+    const approvalNumber = fallback(data.approval?.agreementNumber, 'Nao informada');
+    const approvalResponsible = fallback(data.approval?.approvedBy, 'Nao informado');
+
     return renderToStaticMarkup(
         <html>
             <head>
@@ -290,25 +296,17 @@ export function generateHtml(data: GenerateHtmlData) {
                         }
 
                         .approval {
-                            min-height: 110px;
+                            min-height: 92px;
                         }
 
-                        .signature-row {
-                            display: flex;
-                            gap: 16px;
-                            margin-top: 22px;
-                        }
-
-                        .signature-line {
-                            flex: 1;
-                            border-top: 1px solid #222;
-                            padding-top: 4px;
-                            text-align: center;
-                            font-size: 10px;
+                        .approval-meta {
+                            display: grid;
+                            gap: 6px;
+                            margin-top: 10px;
                         }
 
                         .approval-line {
-                            margin-top: 18px;
+                            margin-top: 12px;
                         }
                     `}
                 </style>
@@ -400,13 +398,14 @@ export function generateHtml(data: GenerateHtmlData) {
 
                 <section className="section-title">Aprovacao</section>
                 <section className="approval">
-                    <div>Docente(s) responsavel(is) a epoca da aprovacao do plano de ensino-aprendizagem.</div>
-                    <div className="signature-row">
-                        <div className="signature-line">Assinatura do docente</div>
-                        <div className="signature-line">Assinatura do docente</div>
+                    <div>Metadados da publicacao oficial registrados no BDCP.</div>
+                    <div className="approval-meta">
+                        <div><strong>Responsavel pela publicacao:</strong> {approvalResponsible}</div>
+                        <div><strong>Data de aprovacao:</strong> {approvalDate}</div>
+                        <div><strong>Ata ou referencia:</strong> {approvalNumber}</div>
                     </div>
                     <div className="approval-line">
-                        Aprovado em reuniao de Departamento (ou equivalente): {data.approval?.agreementNumber || '________________'} em {formatDate(data.approval?.agreementDate)}.
+                        Quando a disciplina ainda nao possui aprovacao formal registrada, esses campos permanecem informativos e nao substituem a homologacao institucional.
                     </div>
                 </section>
             </body>

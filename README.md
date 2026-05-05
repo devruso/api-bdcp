@@ -33,6 +33,44 @@ Run `npm run migration:generate migration_name` to generate a new migration base
 ### Create migration
 Run `npm run migration:create migration_name` in order to manually create migrations. This will create a template migration file that can be used to make changes in the database that doesn't require a change in the entities, for example: inserting data, installing plugins, create new users etc.
 
+## Development database reset
+
+When you need to rebuild the local database from scratch during development:
+
+```sh
+npm run db:reset:dev
+```
+
+This command drops and recreates schema `public`, then reapplies migrations.
+
+## SIGAA reconciliation for existing components
+
+To reconcile already imported components with richer SIGAA metadata (including prerequisites) without hardcoded course rules:
+
+```sh
+npm run sigaa:reconcile -- --sourceType=department --sourceId=1114 --academicLevel=graduacao
+```
+
+Optional operator selection by e-mail:
+
+```sh
+npm run sigaa:reconcile -- --sourceType=program --sourceId=1820 --academicLevel=mestrado --userEmail=admin@ufba.br
+```
+
+## SIAC reconciliation for existing components
+
+To import/reconcile components by curriculum course (usually richer in prerequisites):
+
+```sh
+npm run siac:reconcile -- --cdCurso=112140 --nuPerCursoInicial=20111
+```
+
+Optional operator selection by e-mail:
+
+```sh
+npm run siac:reconcile -- --cdCurso=112140 --nuPerCursoInicial=20111 --userEmail=admin@ufba.br
+```
+
 ## DOCX template for export
 
 - The API uses a generic DOCX template to generate exported documents.
