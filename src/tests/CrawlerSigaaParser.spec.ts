@@ -204,4 +204,47 @@ describe('CrawlerService SIGAA parser', () => {
         expect(result[0].detailActionPayload).toContain('idComponente=45325');
         expect(result[0].detailActionPayload).toContain('javax.faces.ViewState=j_id1');
     });
+
+      it('should parse detail labels with hyphen separators and label variants', () => {
+        const fixturePath = path.resolve(__dirname, 'fixtures/sigaa/detail-variation-hyphen.html');
+        const html = fs.readFileSync(fixturePath, 'utf-8');
+        const $ = cheerio.load(html);
+
+        const result = (service as any).parseSigaaComponentDetailPage($);
+
+        expect(result).toEqual(
+          expect.objectContaining({
+            prerequeriments: 'MAT001, MAT002',
+            coRequisites: ['FIS001', 'FIS002'],
+            equivalences: ['MATX01', 'MATX02'],
+            syllabus: 'Fundamentos de estruturas de dados.',
+            objective: 'Compreender estruturas lineares e não lineares.',
+            methodology: 'Aulas práticas e estudos dirigidos.',
+            learningAssessment: 'Provas e listas.',
+            workload: {
+              theoretical: 45,
+              practice: 15,
+              internship: 0,
+              extension: 12,
+            },
+          })
+        );
+      });
+
+      it('should ignore co-requisite and equivalence fields without structured codes', () => {
+        const fixturePath = path.resolve(__dirname, 'fixtures/sigaa/detail-variation-text-without-codes.html');
+        const html = fs.readFileSync(fixturePath, 'utf-8');
+        const $ = cheerio.load(html);
+
+        const result = (service as any).parseSigaaComponentDetailPage($);
+
+        expect(result).toEqual(
+          expect.objectContaining({
+            prerequeriments: 'NAO_SE_APLICA',
+            coRequisites: [],
+            equivalences: [],
+            syllabus: 'Estudos avançados em computação.',
+          })
+        );
+      });
 });
