@@ -1,4 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import fs from 'fs';
+import path from 'path';
 import { getCustomRepository, Repository } from 'typeorm';
 import axios, { AxiosRequestConfig } from 'axios';
 import * as cheerio from 'cheerio';
@@ -19,14 +21,17 @@ import { ComponentDraftRepository } from '../repositories/ComponentDraftReposito
 import { ComponentRelation } from '../entities/ComponentRelation';
 import { ComponentRelationRepository } from '../repositories/ComponentRelationRepository';
 import { ComponentRelationType } from '../interfaces/ComponentRelationType';
+import { getTextCorruptionScore, repairLikelyUtf8Mojibake } from '../helpers/repairMojibake';
 
 export interface ImportComponentsSummary {
     source: 'siac' | 'sigaa-public';
     requested: number;
     created: number;
     skippedExisting: number;
+    reconciled?: number;
     failed: number;
     failures: string[];
+    failureCategories: Record<string, number>;
 }
 
 type SigaaComponentDetail = {
@@ -59,6 +64,12 @@ type SigaaDetailRawFields = {
     objective?: string;
     methodology?: string;
     learningAssessment?: string;
+};
+
+type SigaaDetailActionRequest = {
+    detailActionUrl: string;
+    detailActionPayload: string;
+    priority: number;
 };
 
 const SIGAA_LABEL_MATCHERS = {
@@ -102,11 +113,380 @@ export class CrawlerService {
             return codeMatches.join(', ');
         }
 
-        if (/^(n[aã]o\s+se\s+aplica|n[aã]o\s+h[aá]|nenhum(a)?|n\/a)$/i.test(text)) {
+        if (/^(n[aã]o\s+se\s+aplica|n[aã]o\s+h[aá]|nenhum(a)?|n\/a|[-–—]+|\(?\s*[-–—]+\s*\)?)$/i.test(text)) {
+            return 'NAO_SE_APLICA';
+        }
+
+        if (/^(co\s*-?\s*requisit(?:o|os)|correquisit(?:o|os)|equivalenc(?:ia|ias)|equivalente(?:\(s\))?|ementa|objetiv(?:o|os)|metodologia|avaliac(?:ao|ao\s+da\s+aprendizagem))\s*:?$/i.test(text)) {
             return 'NAO_SE_APLICA';
         }
 
         return text;
+    }
+
+    private isNotApplicablePrerequeriment(value?: string) {
+        const normalized = String(value || '').trim();
+
+        if (!normalized) {
+            return true;
+        }
+
+        return /^(NAO_SE_APLICA|n[aã]o\s+se\s+aplica|n\/a|[-–—]+|\(?\s*[-–—]+\s*\)?)$/i.test(normalized);
+    }
+
+    private hasMeaningfulText(value?: string) {
+        const normalized = String(value || '').trim();
+
+        if (!normalized) {
+            return false;
+        }
+
+        return !/^(n[aã]o\s+h[aá]|n[aã]o\s+informado|n[aã]o\s+dispon[ií]vel|n\/a)$/i.test(normalized);
+    }
+
+    private scoreComponentCandidate(component: IComponentInfoCrawler) {
+        let score = 0;
+
+        if (!this.isNotApplicablePrerequeriment(component.prerequeriments)) {
+            score += 8;
+        }
+
+        if ((component.coRequisites || []).length > 0) {
+            score += 3;
+        }
+
+        if ((component.equivalences || []).length > 0) {
+            score += 3;
+        }
+
+        if (this.hasMeaningfulText(component.syllabus)) {
+            score += 2;
+        }
+
+        if (this.hasMeaningfulText(component.objective)) {
+            score += 2;
+        }
+
+        if (this.hasMeaningfulText(component.methodology)) {
+            score += 1;
+        }
+
+        if (this.hasMeaningfulText(component.learningAssessment)) {
+            score += 1;
+        }
+
+        if (component.detailActionPayload || component.detailUrl) {
+            score += 1;
+        }
+
+        return score;
+    }
+
+    private chooseBestComponentCandidate(
+        current: IComponentInfoCrawler,
+        candidate: IComponentInfoCrawler
+    ) {
+        const currentScore = this.scoreComponentCandidate(current);
+        const candidateScore = this.scoreComponentCandidate(candidate);
+
+        if (candidateScore > currentScore) {
+            return candidate;
+        }
+
+        if (candidateScore < currentScore) {
+            return current;
+        }
+
+        const currentSyllabusLength = String(current.syllabus || '').trim().length;
+        const candidateSyllabusLength = String(candidate.syllabus || '').trim().length;
+
+        if (candidateSyllabusLength > currentSyllabusLength) {
+            return candidate;
+        }
+
+        return current;
+    }
+
+    private selectCanonicalComponentsByCode(components: Array<IComponentInfoCrawler>) {
+        const canonicalByCode = new Map<string, IComponentInfoCrawler>();
+
+        for (const component of components) {
+            const current = canonicalByCode.get(component.code);
+
+            if (!current) {
+                canonicalByCode.set(component.code, component);
+                continue;
+            }
+
+            canonicalByCode.set(
+                component.code,
+                this.chooseBestComponentCandidate(current, component)
+            );
+        }
+
+        return Array.from(canonicalByCode.values());
+    }
+
+    private shouldAdoptIncomingField(currentValue?: string, incomingValue?: string) {
+        const current = String(currentValue || '').trim();
+        const incoming = String(incomingValue || '').trim();
+
+        if (!incoming) {
+            return false;
+        }
+
+        if (!current) {
+            return true;
+        }
+
+        return incoming.length > current.length;
+    }
+
+    private async reconcileExistingComponentFromCrawlerData(data: IComponentInfoCrawler) {
+        const existingComponent = await this.componentRepository.findOne({
+            where: { code: data.code },
+            relations: ['draft'],
+        });
+
+        if (!existingComponent) {
+            return false;
+        }
+
+        let changed = false;
+        const normalizedIncomingPrereq = this.normalizePrerequeriments(data.prerequeriments);
+        const currentPrereq = this.normalizePrerequeriments(existingComponent.prerequeriments);
+
+        if (String(existingComponent.prerequeriments || '').trim() !== currentPrereq) {
+            existingComponent.prerequeriments = currentPrereq;
+            if (existingComponent.draft) {
+                existingComponent.draft.prerequeriments = currentPrereq;
+            }
+            changed = true;
+        }
+
+        const incomingHasPrereq = !this.isNotApplicablePrerequeriment(normalizedIncomingPrereq);
+        const currentHasPrereq = !this.isNotApplicablePrerequeriment(currentPrereq);
+
+        if (incomingHasPrereq && !currentHasPrereq) {
+            existingComponent.prerequeriments = normalizedIncomingPrereq;
+            if (existingComponent.draft) {
+                existingComponent.draft.prerequeriments = normalizedIncomingPrereq;
+            }
+            changed = true;
+        }
+
+        const textFields: Array<
+            'syllabus' | 'objective' | 'methodology' | 'learningAssessment'
+        > = ['syllabus', 'objective', 'methodology', 'learningAssessment'];
+
+        for (const field of textFields) {
+            const incomingValue = String((data as any)[field] || '').trim();
+            const currentValue = String((existingComponent as any)[field] || '').trim();
+
+            if (!this.shouldAdoptIncomingField(currentValue, incomingValue)) {
+                continue;
+            }
+
+            (existingComponent as any)[field] = incomingValue;
+            if (existingComponent.draft) {
+                (existingComponent.draft as any)[field] = incomingValue;
+            }
+            changed = true;
+        }
+
+        const existingRelations = await this.componentRelationRepository.find({
+            where: { componentId: existingComponent.id },
+        });
+
+        const existingRelationKeys = new Set(
+            (existingRelations || []).map(
+                (relation) => `${relation.relationType}:${relation.relatedCode}`
+            )
+        );
+
+        const newRelations = [
+            ...(this.normalizeRelationCodes(data.coRequisites).map((relatedCode) => ({
+                relationType: ComponentRelationType.CO_REQUISITE,
+                relatedCode,
+            }))),
+            ...(this.normalizeRelationCodes(data.equivalences).map((relatedCode) => ({
+                relationType: ComponentRelationType.EQUIVALENCE,
+                relatedCode,
+            }))),
+        ].filter((relation) => relation.relatedCode !== existingComponent.code)
+            .filter((relation) => !existingRelationKeys.has(`${relation.relationType}:${relation.relatedCode}`))
+            .map((relation) => this.componentRelationRepository.create({
+                componentId: existingComponent.id,
+                relationType: relation.relationType,
+                relatedCode: relation.relatedCode,
+            }));
+
+        if (newRelations.length > 0) {
+            await this.componentRelationRepository.save(newRelations);
+            changed = true;
+        }
+
+        if (!changed) {
+            return false;
+        }
+
+        await this.componentRepository.save(existingComponent);
+
+        if (existingComponent.draft) {
+            await this.componentDraftRepository.save(existingComponent.draft);
+        }
+
+        return true;
+    }
+
+    private sanitizeTextField(rawValue: unknown, fallback = ''): string {
+        const value = repairLikelyUtf8Mojibake(String(rawValue ?? ''))
+            .replace(/\s+/g, ' ')
+            .trim();
+
+        return value || fallback;
+    }
+
+    private decodeHtmlBuffer(rawValue: ArrayBuffer | Buffer): string {
+        const buffer = Buffer.isBuffer(rawValue) ? rawValue : Buffer.from(rawValue);
+        const utf8Decoded = repairLikelyUtf8Mojibake(buffer.toString('utf8'));
+
+        if (getTextCorruptionScore(utf8Decoded) === 0) {
+            return utf8Decoded;
+        }
+
+        const latin1Decoded = repairLikelyUtf8Mojibake(buffer.toString('latin1'));
+
+        return getTextCorruptionScore(latin1Decoded) <= getTextCorruptionScore(utf8Decoded)
+            ? latin1Decoded
+            : utf8Decoded;
+    }
+
+    private normalizeParagraphText(rawValue: unknown, fallback = ''): string {
+        const normalized = String(rawValue ?? '')
+            .split(/\r?\n/)
+            .map((line) => this.sanitizeTextField(line))
+            .filter(Boolean)
+            .map((line) => line.replace(/^((\d+[.)-]?)|([A-Za-z][.)])|[-*•])\s+/u, ''))
+            .join(' ')
+            .replace(/\s{2,}/g, ' ')
+            .trim();
+
+        return normalized || fallback;
+    }
+
+    private sanitizeWorkloadValue(rawValue: unknown): number {
+        const normalized = Number(rawValue);
+
+        if (!Number.isFinite(normalized) || normalized < 0) {
+            return 0;
+        }
+
+        return Math.floor(normalized);
+    }
+
+    private normalizeRelationCodes(rawList?: string[]): string[] {
+        const normalized = (rawList || [])
+            .map((value) => String(value || '').trim().toUpperCase())
+            .filter(Boolean)
+            .filter((value) => /\b[A-Z]{2,6}[0-9]{2,4}\b/.test(value));
+
+        return Array.from(new Set(normalized));
+    }
+
+    private sanitizeImportedComponentData(data: IComponentInfoCrawler): IComponentInfoCrawler {
+        const code = this.sanitizeTextField(data.code).toUpperCase();
+
+        if (!code || !/^[A-Z]{2,6}[0-9]{2,4}$/.test(code)) {
+            throw new AppError('Invalid component code from source.', 400);
+        }
+
+        const name = this.sanitizeTextField(data.name);
+
+        if (!name) {
+            throw new AppError('Invalid component name from source.', 400);
+        }
+
+        const workload = {
+            theoretical: this.sanitizeWorkloadValue(data.workload?.theoretical),
+            practice: this.sanitizeWorkloadValue(data.workload?.practice),
+            internship: this.sanitizeWorkloadValue(data.workload?.internship),
+        };
+
+        return {
+            ...data,
+            code,
+            name,
+            department: this.sanitizeTextField(data.department, 'Departamento SIGAA'),
+            semester: this.sanitizeTextField(data.semester),
+            description: this.sanitizeTextField(data.description, 'Conteúdo programático não informado pela fonte.'),
+            objective: this.sanitizeTextField(data.objective),
+            syllabus: this.normalizeParagraphText(data.syllabus),
+            bibliography: this.sanitizeTextField(data.bibliography),
+            prerequeriments: this.normalizePrerequeriments(data.prerequeriments),
+            methodology: this.sanitizeTextField(data.methodology, 'Não há Metodologia cadastrada'),
+            modality: this.sanitizeTextField(data.modality, 'DISCIPLINA'),
+            learningAssessment: this.sanitizeTextField(
+                data.learningAssessment,
+                'Não há Avaliação de Aprendizagem cadastrada'
+            ),
+            academicLevel: data.academicLevel ?? AcademicLevel.GRADUATION,
+            coRequisites: this.normalizeRelationCodes(data.coRequisites),
+            equivalences: this.normalizeRelationCodes(data.equivalences),
+            workload,
+        };
+    }
+
+    private classifyImportFailure(error: unknown): string {
+        const genericCode = (error as { code?: string })?.code;
+        const genericMessage = (error as { message?: string })?.message || '';
+
+        if (genericCode === 'ECONNABORTED' || /timeout/i.test(genericMessage)) {
+            return 'source_timeout';
+        }
+
+        if (axios.isAxiosError(error)) {
+            const statusCode = error.response?.status;
+
+            if (error.code === 'ECONNABORTED' || /timeout/i.test(error.message || '')) {
+                return 'source_timeout';
+            }
+
+            if (statusCode === 429) {
+                return 'source_rate_limited';
+            }
+
+            if (statusCode != null && statusCode >= 500) {
+                return 'source_unavailable';
+            }
+
+            return 'network_error';
+        }
+
+        if (error instanceof AppError) {
+            if (error.message === 'Invalid component code from source.') {
+                return 'invalid_code';
+            }
+
+            if (error.message === 'Invalid component name from source.') {
+                return 'invalid_name';
+            }
+
+            if (error.message === 'No components found in SIGAA public source.') {
+                return 'source_unavailable';
+            }
+
+            return 'validation_or_business_rule';
+        }
+
+        return 'unexpected_error';
+    }
+
+    private incrementFailureCategory(
+        categories: Record<string, number>,
+        category: string
+    ) {
+        categories[category] = (categories[category] || 0) + 1;
     }
 
     private extractPrerequerimentsFromLesson($lesson: cheerio.Cheerio<any>) {
@@ -161,6 +541,43 @@ export class CrawlerService {
         return academicLevel === AcademicLevel.GRADUATION ? 'G' : 'S';
     }
 
+    private buildCookieHeader(setCookie?: string[] | string): string {
+        if (!setCookie) {
+            return '';
+        }
+
+        const values = Array.isArray(setCookie) ? setCookie : [setCookie];
+
+        return values
+            .map((entry) => String(entry || '').split(';')[0].trim())
+            .filter(Boolean)
+            .join('; ');
+    }
+
+    private mergeCookieHeaders(...cookies: Array<string | undefined>): string {
+        const tokenMap = new Map<string, string>();
+
+        cookies
+            .filter(Boolean)
+            .forEach((header) => {
+                String(header || '')
+                    .split(';')
+                    .map((token) => token.trim())
+                    .filter(Boolean)
+                    .forEach((token) => {
+                        const [key] = token.split('=');
+
+                        if (!key) {
+                            return;
+                        }
+
+                        tokenMap.set(key.trim(), token);
+                    });
+            });
+
+        return Array.from(tokenMap.values()).join('; ');
+    }
+
     private async searchSigaaComponentsByUnit(
         sourceType: 'department' | 'program',
         sourceId: string,
@@ -171,9 +588,9 @@ export class CrawlerService {
             responseType: 'arraybuffer',
             responseEncoding: 'binary',
         });
+        const formCookie = this.buildCookieHeader(formPageResponse.headers['set-cookie']);
 
-        const decoder = new TextDecoder('ISO-8859-1');
-        const formHtml = decoder.decode(formPageResponse.data);
+        const formHtml = this.decodeHtmlBuffer(formPageResponse.data);
         const $formPage = cheerio.load(formHtml);
 
         const formId = $formPage('form').first().attr('id') || 'form';
@@ -199,13 +616,16 @@ export class CrawlerService {
             responseEncoding: 'binary',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
+                ...(formCookie ? { Cookie: formCookie } : {}),
             },
         });
+        const searchCookie = this.buildCookieHeader(searchResponse.headers['set-cookie']);
+        const detailCookie = this.mergeCookieHeaders(formCookie, searchCookie);
 
-        const searchHtml = decoder.decode(searchResponse.data);
+        const searchHtml = this.decodeHtmlBuffer(searchResponse.data);
         const $searchPage = cheerio.load(searchHtml);
 
-        return this.extractSigaaListRows($searchPage, sourceType, academicLevel);
+        return this.extractSigaaListRows($searchPage, sourceType, academicLevel, detailCookie);
     }
 
     private findCodeFromRowCells(cells: string[]): string | null {
@@ -287,6 +707,80 @@ export class CrawlerService {
         };
     }
 
+    private shouldCaptureSigaaDetailDebug(code: string): boolean {
+        const enabled = String(process.env.CRAWLER_SIGAA_DEBUG_DETAIL || '').trim() === '1';
+        const rawCodes = String(process.env.CRAWLER_SIGAA_DEBUG_CODES || '').trim();
+        const codeList = rawCodes
+            .split(',')
+            .map((item) => item.trim().toUpperCase())
+            .filter(Boolean);
+
+        if (!enabled && codeList.length === 0) {
+            return false;
+        }
+
+        if (codeList.length === 0) {
+            return true;
+        }
+
+        return codeList.includes(String(code || '').trim().toUpperCase());
+    }
+
+    private captureSigaaDetailDebugSnapshot(
+        component: IComponentInfoCrawler,
+        request: { method: 'GET' | 'POST'; url: string; payload?: string; requestLabel: string },
+        html: string,
+        detail: SigaaComponentDetail | null
+    ) {
+        if (!this.shouldCaptureSigaaDetailDebug(component.code)) {
+            return;
+        }
+
+        try {
+            const debugDir = path.resolve(
+                process.cwd(),
+                String(process.env.CRAWLER_SIGAA_DEBUG_DIR || 'tmp/sigaa-detail-debug').trim()
+            );
+            fs.mkdirSync(debugDir, { recursive: true });
+
+            const $ = cheerio.load(html);
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const safeCode = String(component.code || 'UNKNOWN').replace(/[^A-Za-z0-9_-]/g, '_');
+            const baseName = `${timestamp}__${safeCode}__${request.requestLabel}`;
+            const bodyText = $('body').text().replace(/\s+/g, ' ').trim();
+            const labelSamples = $('th, td, strong, b')
+                .map((_, el) => $(el).text().replace(/\s+/g, ' ').trim())
+                .toArray()
+                .filter(Boolean)
+                .slice(0, 40);
+
+            const signature = {
+                code: component.code,
+                request,
+                title: $('title').first().text().trim(),
+                htmlLength: html.length,
+                bodyTextLength: bodyText.length,
+                hasPrereqLabel: /pr[eé]\s*-?\s*requisit(?:o|os|o\(s\))/i.test(bodyText),
+                hasSyllabusLabel: /ementa/i.test(bodyText),
+                hasObjectiveLabel: /objetiv(?:o|os)/i.test(bodyText),
+                hasListForm: $('#formListagemComponentes').length > 0,
+                forms: $('form')
+                    .map((_, form) => ({
+                        id: String($(form).attr('id') || ''),
+                        action: String($(form).attr('action') || ''),
+                    }))
+                    .toArray(),
+                extractedDetail: detail,
+                labelSamples,
+            };
+
+            fs.writeFileSync(path.join(debugDir, `${baseName}.json`), JSON.stringify(signature, null, 2), 'utf8');
+            fs.writeFileSync(path.join(debugDir, `${baseName}.html`), html, 'utf8');
+        } catch {
+            // Debug capture must never break import flow.
+        }
+    }
+
     private buildSigaaFormContexts($: CheerioAPI): Map<string, SigaaJsfFormContext> {
         const contexts = new Map<string, SigaaJsfFormContext>();
 
@@ -329,30 +823,42 @@ export class CrawlerService {
         $: CheerioAPI,
         $row: cheerio.Cheerio<any>,
         formContexts: Map<string, SigaaJsfFormContext>
-    ): { detailActionUrl?: string; detailActionPayload?: string } {
+    ): {
+        detailActionUrl?: string;
+        detailActionPayload?: string;
+        detailActionPayloadCandidates?: string[];
+    } {
         const onclickValues = $row
             .find('a[onclick]')
             .map((_, anchor) => String($(anchor).attr('onclick') || ''))
             .toArray();
+        const candidates: SigaaDetailActionRequest[] = [];
 
-        for (const onclick of onclickValues) {
-            if (!/idComponente/i.test(onclick)) {
-                continue;
-            }
-
+        onclickValues.forEach((onclick, index) => {
             const parsed = this.parseSigaaJsfOnclickInvocation(onclick);
 
             if (!parsed) {
-                continue;
+                return;
+            }
+
+            const hasPotentialDetailParams =
+                Object.prototype.hasOwnProperty.call(parsed.params, 'idComponente')
+                || Object.prototype.hasOwnProperty.call(parsed.params, 'id')
+                || Object.prototype.hasOwnProperty.call(parsed.params, 'publico');
+
+            if (!hasPotentialDetailParams) {
+                return;
             }
 
             const formContext = formContexts.get(parsed.formId);
 
             if (!formContext) {
-                continue;
+                return;
             }
 
             const payload = new URLSearchParams();
+            payload.set(parsed.formId, parsed.formId);
+            payload.set(`${parsed.formId}_SUBMIT`, '1');
 
             Object.entries(formContext.hiddenInputs).forEach(([key, value]) => {
                 payload.set(key, value);
@@ -361,13 +867,40 @@ export class CrawlerService {
                 payload.set(key, value);
             });
 
-            return {
+            let priority = 0;
+            if (Object.prototype.hasOwnProperty.call(parsed.params, 'idComponente')) {
+                priority += 100;
+            }
+            if (Object.prototype.hasOwnProperty.call(parsed.params, 'publico')) {
+                priority += 40;
+            }
+            if (Object.prototype.hasOwnProperty.call(parsed.params, 'id')) {
+                priority += 20;
+            }
+            priority += Math.max(0, 10 - index);
+
+            candidates.push({
                 detailActionUrl: formContext.actionUrl,
                 detailActionPayload: payload.toString(),
-            };
+                priority,
+            });
+        });
+
+        const uniqueCandidates = Array.from(new Map(
+            candidates
+                .sort((left, right) => right.priority - left.priority)
+                .map((candidate) => [`${candidate.detailActionUrl}|${candidate.detailActionPayload}`, candidate])
+        ).values());
+
+        if (uniqueCandidates.length === 0) {
+            return {};
         }
 
-        return {};
+        return {
+            detailActionUrl: uniqueCandidates[0].detailActionUrl,
+            detailActionPayload: uniqueCandidates[0].detailActionPayload,
+            detailActionPayloadCandidates: uniqueCandidates.map((candidate) => candidate.detailActionPayload),
+        };
     }
 
     private normalizeCodeList(rawValue?: string): string[] {
@@ -499,7 +1032,46 @@ export class CrawlerService {
             this.assignSigaaDetailFieldByLabel(fields, pair[1], pair[2]);
         });
 
+        $('b, strong, h3, h4').each((_, node) => {
+            const $node = $(node);
+            const label = $node.text().replace(/\s+/g, ' ').trim();
+
+            if (!label || label.length > 90) {
+                return;
+            }
+
+            const directContainer = $node.closest('td, div, p, li, section, article');
+            const directText = directContainer.text().replace(/\s+/g, ' ').trim();
+            const directValue = directText.replace(new RegExp(`^${label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\s*[:\-–—]?\s*`, 'i'), '').trim();
+            const siblingValue = directContainer.next('td, div, p, li').text().replace(/\s+/g, ' ').trim();
+            const value = directValue.length > siblingValue.length ? directValue : siblingValue;
+
+            this.assignSigaaDetailFieldByLabel(fields, label, value);
+        });
+
         return fields;
+    }
+
+    private hasUsefulSigaaDetail(detail?: SigaaComponentDetail | null): boolean {
+        if (!detail) {
+            return false;
+        }
+
+        const hasTextualContent = [
+            detail.syllabus,
+            detail.objective,
+            detail.methodology,
+            detail.learningAssessment,
+        ].some((value) => this.hasMeaningfulText(value));
+        const hasPrereq = !this.isNotApplicablePrerequeriment(detail.prerequeriments);
+        const hasRelations = (detail.coRequisites?.length || 0) > 0 || (detail.equivalences?.length || 0) > 0;
+        const hasWorkload =
+            Number(detail.workload?.theoretical || 0) > 0
+            || Number(detail.workload?.practice || 0) > 0
+            || Number(detail.workload?.internship || 0) > 0
+            || Number(detail.workload?.extension || 0) > 0;
+
+        return hasTextualContent || hasPrereq || hasRelations || hasWorkload;
     }
 
     private parseSigaaComponentDetailPage($: CheerioAPI): SigaaComponentDetail {
@@ -545,7 +1117,16 @@ export class CrawlerService {
 
         const prerequeriments = structuredFields.prerequeriments || this.extractFieldFromDetailText(
             pageText,
-            ['Pré-Requisitos', 'Pre-Requisitos', 'Pré Requisitos', 'Pre Requisitos', 'Pré-Requisito', 'Pre-Requisito'],
+            [
+                'Pré-Requisitos',
+                'Pre-Requisitos',
+                'Pré Requisitos',
+                'Pre Requisitos',
+                'Pré-Requisito',
+                'Pre-Requisito',
+                'Pré-requisito(s)',
+                'Pre-requisito(s)',
+            ],
             stopLabels
         );
         const coReqRaw = structuredFields.coReqRaw || this.extractFieldFromDetailText(
@@ -629,10 +1210,17 @@ export class CrawlerService {
     }
 
     private extractSigaaComponentIdentifier(component: IComponentInfoCrawler): string | undefined {
-        const payloadId = component.detailActionPayload?.match(/(?:^|&)idComponente=([^&]+)/i)?.[1];
+        const payloadCandidates = [
+            component.detailActionPayload,
+            ...(component.detailActionPayloadCandidates || []),
+        ].filter(Boolean) as string[];
 
-        if (payloadId) {
-            return decodeURIComponent(payloadId);
+        for (const payload of payloadCandidates) {
+            const payloadId = payload.match(/(?:^|&)(?:idComponente|id)=([^&]+)/i)?.[1];
+
+            if (payloadId) {
+                return decodeURIComponent(payloadId);
+            }
         }
 
         if (!component.detailUrl) {
@@ -649,6 +1237,44 @@ export class CrawlerService {
         } catch {
             return undefined;
         }
+    }
+
+    private getSigaaDetailRequestSequence(component: IComponentInfoCrawler): Array<{
+        method: 'GET' | 'POST';
+        url: string;
+        payload?: string;
+        requestLabel: string;
+    }> {
+        const requests: Array<{ method: 'GET' | 'POST'; url: string; payload?: string; requestLabel: string }> = [];
+
+        if (component.detailUrl) {
+            requests.push({
+                method: 'GET',
+                url: component.detailUrl,
+                requestLabel: 'detail-url',
+            });
+        }
+
+        const actionUrl = component.detailActionUrl;
+        const payloadCandidates = [
+            component.detailActionPayload,
+            ...(component.detailActionPayloadCandidates || []),
+        ].filter(Boolean) as string[];
+
+        if (actionUrl && payloadCandidates.length > 0) {
+            payloadCandidates.forEach((payload, index) => {
+                requests.push({
+                    method: 'POST',
+                    url: actionUrl,
+                    payload,
+                    requestLabel: `detail-action-${index + 1}`,
+                });
+            });
+        }
+
+        return Array.from(new Map(
+            requests.map((request) => [`${request.method}|${request.url}|${request.payload || ''}`, request])
+        ).values());
     }
 
     private async getOrFetchSigaaComponentDetail(
@@ -723,34 +1349,41 @@ export class CrawlerService {
     }
 
     private async fetchSigaaComponentDetail(component: IComponentInfoCrawler): Promise<SigaaComponentDetail | null> {
-        try {
-            let response: { data: ArrayBuffer };
+        const requestSequence = this.getSigaaDetailRequestSequence(component);
 
-            if (component.detailUrl) {
-                response = await axios.get<ArrayBuffer>(component.detailUrl, {
-                    responseType: 'arraybuffer',
-                    responseEncoding: 'binary',
-                });
-            } else if (component.detailActionUrl && component.detailActionPayload) {
-                response = await axios.post<ArrayBuffer>(component.detailActionUrl, component.detailActionPayload, {
-                    responseType: 'arraybuffer',
-                    responseEncoding: 'binary',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                });
-            } else {
-                return null;
+        for (const request of requestSequence) {
+            try {
+                const response = request.method === 'GET'
+                    ? await axios.get<ArrayBuffer>(request.url, {
+                        responseType: 'arraybuffer',
+                        responseEncoding: 'binary',
+                        headers: {
+                            ...(component.detailRequestCookie ? { Cookie: component.detailRequestCookie } : {}),
+                        },
+                    })
+                    : await axios.post<ArrayBuffer>(request.url, request.payload || '', {
+                        responseType: 'arraybuffer',
+                        responseEncoding: 'binary',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            ...(component.detailRequestCookie ? { Cookie: component.detailRequestCookie } : {}),
+                        },
+                    });
+
+                const html = this.decodeHtmlBuffer(response.data);
+                const $ = cheerio.load(html);
+                const parsed = this.parseSigaaComponentDetailPage($);
+                this.captureSigaaDetailDebugSnapshot(component, request, html, parsed);
+
+                if (this.hasUsefulSigaaDetail(parsed)) {
+                    return parsed;
+                }
+            } catch {
+                continue;
             }
-
-            const decoder = new TextDecoder('ISO-8859-1');
-            const html = decoder.decode(response.data);
-            const $ = cheerio.load(html);
-
-            return this.parseSigaaComponentDetailPage($);
-        } catch {
-            return null;
         }
+
+        return null;
     }
 
     async enrichSigaaComponentsFromPublicDetails(
@@ -807,7 +1440,8 @@ export class CrawlerService {
     private extractSigaaListRows(
         $: CheerioAPI,
         sourceType: 'department' | 'program',
-        academicLevel: AcademicLevel
+        academicLevel: AcademicLevel,
+        detailRequestCookie?: string
     ): Array<IComponentInfoCrawler> {
         const foundItems = new Map<string, IComponentInfoCrawler>();
         const formContexts = this.buildSigaaFormContexts($);
@@ -847,10 +1481,6 @@ export class CrawlerService {
                 return;
             }
 
-            if (foundItems.has(code)) {
-                return;
-            }
-
             const nameCell = rowCells
                 .slice(0, 3)
                 .find((cell) => !cell.includes(code) && cell.length >= 4);
@@ -881,8 +1511,16 @@ export class CrawlerService {
                     .find((href) => /componente|curriculo|programa|portal\.jsf/i.test(href));
             const detailUrl = this.normalizeSigaaDetailUrl(detailHref);
             const detailAction = this.extractSigaaDetailActionFromRow($, $row, formContexts);
+            const rowIdentity = [
+                code,
+                detailAction.detailActionPayload || '',
+                (detailAction.detailActionPayloadCandidates || []).join('|'),
+                detailAction.detailActionUrl || '',
+                detailUrl || '',
+                name,
+            ].join('|');
 
-            foundItems.set(code, {
+            foundItems.set(rowIdentity, {
                 code,
                 name,
                 department,
@@ -904,6 +1542,8 @@ export class CrawlerService {
                 detailUrl,
                 detailActionUrl: detailAction.detailActionUrl,
                 detailActionPayload: detailAction.detailActionPayload,
+                detailActionPayloadCandidates: detailAction.detailActionPayloadCandidates,
+                detailRequestCookie,
             });
         });
 
@@ -1086,38 +1726,59 @@ export class CrawlerService {
 
         const { data } = await axios(options1);
 
-        const decoder = new TextDecoder('ISO-8859-1');
-        const html = decoder.decode(data);
+        const html = this.decodeHtmlBuffer(data);
         const $ = cheerio.load(html);
         const urlList = getCourseUrls($);
-        const responses = await Promise.all(urlList.map((url) => axios({ ...options2, url })));
+        const responses = await Promise.allSettled(urlList.map((url) => axios({ ...options2, url })));
         let requested = 0;
         let created = 0;
         let skippedExisting = 0;
+        let reconciled = 0;
         let failed = 0;
         const failures: string[] = [];
+        const failureCategories: Record<string, number> = {};
 
-        for (const response of responses) {
-            const pageDecoder = new TextDecoder('ISO-8859-1');
-            const html = pageDecoder.decode(response.data);
+        const fulfilledResponses = responses
+            .map((result, index) => ({ result, index }))
+            .filter((entry): entry is { result: PromiseFulfilledResult<any>; index: number } => entry.result.status === 'fulfilled')
+            .map((entry) => entry.result.value);
+
+        for (const rejected of responses
+            .map((result, index) => ({ result, index }))
+            .filter((entry): entry is { result: PromiseRejectedResult; index: number } => entry.result.status === 'rejected')) {
+            failed += 1;
+            const category = this.classifyImportFailure(rejected.result.reason);
+            this.incrementFailureCategory(failureCategories, category);
+            failures.push(`SIAC_URL_${rejected.index}: Failed to collect source page (${category}).`);
+        }
+
+        for (const response of fulfilledResponses) {
+            const html = this.decodeHtmlBuffer(response.data);
             const $ = cheerio.load(html);
             const courseInfo = extractCourseInfo($);
             requested += courseInfo.length;
 
             for (const componentData of courseInfo) {
                 try {
-                    await this.createComponent(userId, componentData);
+                    const sanitized = this.sanitizeImportedComponentData(componentData);
+                    await this.createComponent(userId, sanitized);
                     created += 1;
                 } catch (err) {
                     const appError = err as AppError;
 
                     if (appError.message === 'Component already exists.') {
+                        const wasReconciled = await this.reconcileExistingComponentFromCrawlerData(componentData);
+
+                        if (wasReconciled) {
+                            reconciled += 1;
+                        }
                         skippedExisting += 1;
                         continue;
                     }
 
                     failed += 1;
-                    failures.push(`${componentData.code}: ${appError.message || 'Unexpected error.'}`);
+                    this.incrementFailureCategory(failureCategories, this.classifyImportFailure(err));
+                    failures.push(`${componentData.code || 'UNKNOWN'}: ${appError.message || 'Unexpected error.'}`);
                 }
             }
         }
@@ -1127,8 +1788,10 @@ export class CrawlerService {
             requested,
             created,
             skippedExisting,
+            reconciled,
             failed,
             failures,
+            failureCategories,
         } as ImportComponentsSummary;
     }
 
@@ -1136,8 +1799,12 @@ export class CrawlerService {
         userId: string,
         sourceType: 'department' | 'program',
         sourceId: string,
-        academicLevel: AcademicLevel
+        academicLevel: AcademicLevel,
+        options?: {
+            reconcileExisting?: boolean;
+        }
     ): Promise<ImportComponentsSummary> {
+        const shouldReconcileExisting = options?.reconcileExisting ?? true;
         const normalizedSourceId = String(sourceId).trim();
 
         if (!normalizedSourceId) {
@@ -1146,21 +1813,35 @@ export class CrawlerService {
 
         const sourceUrls = this.getSigaaSourceUrls(sourceType, normalizedSourceId, academicLevel);
         let componentsInfo: Array<IComponentInfoCrawler> = [];
+        let failed = 0;
+        const failures: string[] = [];
+        const failureCategories: Record<string, number> = {};
 
         for (const sourceUrl of sourceUrls) {
-            const { data } = await axios.get<ArrayBuffer>(sourceUrl, {
-                responseType: 'arraybuffer',
-                responseEncoding: 'binary',
-            });
+            let data: ArrayBuffer;
 
-            const decoder = new TextDecoder('ISO-8859-1');
-            const html = decoder.decode(data);
-            const $ = cheerio.load(html);
+            try {
+                const response = await axios.get<ArrayBuffer>(sourceUrl, {
+                    responseType: 'arraybuffer',
+                    responseEncoding: 'binary',
+                });
+                const sourceCookie = this.buildCookieHeader(response.headers['set-cookie']);
+                data = response.data;
 
-            componentsInfo = this.extractSigaaListRows($, sourceType, academicLevel);
+                const html = this.decodeHtmlBuffer(data);
+                const $ = cheerio.load(html);
 
-            if (componentsInfo.length > 0) {
-                break;
+                componentsInfo = this.extractSigaaListRows($, sourceType, academicLevel, sourceCookie);
+
+                if (componentsInfo.length > 0) {
+                    break;
+                }
+            } catch (error) {
+                failed += 1;
+                const category = this.classifyImportFailure(error);
+                this.incrementFailureCategory(failureCategories, category);
+                failures.push(`SIGAA_SOURCE: ${sourceUrl} (${category}).`);
+                continue;
             }
         }
 
@@ -1169,40 +1850,63 @@ export class CrawlerService {
         }
 
         if (componentsInfo.length === 0) {
+            if (failed > 0) {
+                return {
+                    source: 'sigaa-public',
+                    requested: 0,
+                    created: 0,
+                    skippedExisting: 0,
+                    failed,
+                    failures,
+                    failureCategories,
+                } as ImportComponentsSummary;
+            }
+
             throw new AppError('No components found in SIGAA public source.', 404);
         }
 
         componentsInfo = await this.enrichSigaaComponentsFromPublicDetails(componentsInfo, 4);
+        const canonicalComponents = this.selectCanonicalComponentsByCode(componentsInfo);
 
         let created = 0;
         let skippedExisting = 0;
-        let failed = 0;
-        const failures: string[] = [];
+        let reconciled = 0;
 
-        for (const componentData of componentsInfo) {
+        for (const componentData of canonicalComponents) {
             try {
-                await this.createComponent(userId, componentData);
+                const sanitized = this.sanitizeImportedComponentData(componentData);
+                await this.createComponent(userId, sanitized);
                 created += 1;
             } catch (err) {
                 const appError = err as AppError;
 
                 if (appError.message === 'Component already exists.') {
+                    if (shouldReconcileExisting) {
+                        const wasReconciled = await this.reconcileExistingComponentFromCrawlerData(componentData);
+
+                        if (wasReconciled) {
+                            reconciled += 1;
+                        }
+                    }
                     skippedExisting += 1;
                     continue;
                 }
 
                 failed += 1;
-                failures.push(`${componentData.code}: ${appError.message || 'Unexpected error.'}`);
+                this.incrementFailureCategory(failureCategories, this.classifyImportFailure(err));
+                failures.push(`${componentData.code || 'UNKNOWN'}: ${appError.message || 'Unexpected error.'}`);
             }
         }
 
         return {
             source: 'sigaa-public',
-            requested: componentsInfo.length,
+            requested: canonicalComponents.length,
             created,
             skippedExisting,
+            reconciled,
             failed,
             failures,
+            failureCategories,
         } as ImportComponentsSummary;
     }
 

@@ -92,6 +92,11 @@ class ComponentController {
         const sortOrder = String(request.query.sortOrder ?? 'ASC').toUpperCase() === 'DESC'
             ? 'DESC'
             : 'ASC';
+        const academicLevelQuery = String(request.query.academicLevel ?? '').trim();
+        const academicLevel = Object.values(AcademicLevel).includes(academicLevelQuery as AcademicLevel)
+            ? (academicLevelQuery as AcademicLevel)
+            : undefined;
+        const department = String(request.query.department ?? '').trim() || undefined;
         const page = parseInt(String(request.query.page)) || 0;
         const limit = parseInt(String(request.query.limit)) || 10;
 
@@ -104,9 +109,13 @@ class ComponentController {
             showDraft: isAuthenticated,
             sortBy,
             sortOrder,
+            academicLevel,
+            department,
         });
 
-        return response.status(200).json(paginate(components, { page, limit, search, sortBy, sortOrder }));
+        return response
+            .status(200)
+            .json(paginate(components, { page, limit, search, sortBy, sortOrder, filters: { academicLevel, department } }));
     }
 
     async getComponentByCode(request: Request, response: Response) {

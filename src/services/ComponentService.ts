@@ -5,6 +5,7 @@ import path from 'path';
 import { spawnSync } from 'child_process';
 import puppeteer from 'puppeteer';
 const AdmZip = require('adm-zip');
+const HTMLtoDOCX = require('html-to-docx');
 import { generateHtml } from '../helpers/templates/component';
 import { Component } from '../entities/Component';
 import { ComponentRepository } from '../repositories/ComponentRepository';
@@ -20,6 +21,7 @@ import {
 } from '../dtos/component';
 import { ComponentDraft } from '../entities/ComponentDraft';
 import { ComponentDraftRepository } from '../repositories/ComponentDraftRepository';
+import { AcademicLevel } from '../interfaces/AcademicLevel';
 
 export class ComponentService {
     private componentRepository: Repository<Component>;
@@ -38,43 +40,6 @@ export class ComponentService {
         this.workloadService = new WorkloadService();
     }
 
-    private resolveDocxTemplatePath() {
-        const configuredTemplatePath = process.env.DOCX_TEMPLATE_PATH?.trim();
-        const configuredCandidates = configuredTemplatePath
-            ? [
-                path.isAbsolute(configuredTemplatePath)
-                    ? configuredTemplatePath
-                    : path.resolve(process.cwd(), configuredTemplatePath),
-                path.resolve(__dirname, configuredTemplatePath),
-            ]
-            : [];
-
-        const defaultCandidates = [
-            path.resolve(process.cwd(), 'UFBA_TEMPLATE.docx'),
-            path.resolve(process.cwd(), 'IC045.docx'),
-            path.resolve(__dirname, '../../UFBA_TEMPLATE.docx'),
-            path.resolve(__dirname, '../../IC045.docx'),
-            path.resolve(__dirname, '../../../UFBA_TEMPLATE.docx'),
-            path.resolve(__dirname, '../../../IC045.docx'),
-        ];
-
-        const uniqueCandidates = Array.from(new Set([
-            ...configuredCandidates,
-            ...defaultCandidates,
-        ]));
-
-        return uniqueCandidates.find((candidatePath) => fs.existsSync(candidatePath));
-    }
-
-    private escapeXml(value: string) {
-        return value
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&apos;');
-    }
-
     private normalizeTemplateText(value: string | undefined, emptyText = 'Não se aplica') {
         const normalized = value?.trim();
 
@@ -87,30 +52,6 @@ export class ComponentService {
         }
 
         return normalized;
-    }
-
-    private replaceByPrefix(xml: string, prefix: string, content: string) {
-        const escapedPrefix = prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const pattern = new RegExp(`<w:t(?: xml:space="preserve")?>${escapedPrefix}[\\s\\S]*?<\\/w:t>`);
-
-        return xml.replace(
-            pattern,
-            `<w:t xml:space="preserve">${this.escapeXml(content)}</w:t>`
-        );
-    }
-
-    private replaceToken(xml: string, token: string, content: string) {
-        const escapedContent = this.escapeXml(content);
-
-        return xml.split(token).join(escapedContent);
-    }
-
-    private replaceByTokenOrPrefix(xml: string, token: string, fallbackPrefix: string, content: string) {
-        if (xml.includes(token)) {
-            return this.replaceToken(xml, token, content);
-        }
-
-        return this.replaceByPrefix(xml, fallbackPrefix, content);
     }
 
     private normalizeSearch(value?: string) {
@@ -129,92 +70,25 @@ export class ComponentService {
         return `translate(LOWER(${column}), 'áàâãäåéèêëíìîïóòôõöúùûüçñ', 'aaaaaaeeeeiiiiooooouuuucn')`;
     }
 
-    private generateTemplateDocx(component: Component, data: {
-        semester: string;
-        department: string;
-        prerequeriments: string;
-        syllabus: string;
-        objective: string;
-        program: string;
-        methodology: string;
-        learningAssessment: string;
-        bibliography: string;
-    }) {
-        const templatePath = this.resolveDocxTemplatePath();
 
-        if (!templatePath) {
-            throw new AppError(
-                'Template DOCX não encontrado para exportação. Configure DOCX_TEMPLATE_PATH ou adicione UFBA_TEMPLATE.docx na raiz da API.',
-                500
-            );
-        }
-
-        const zip = new AdmZip(templatePath);
-        let xml = zip.readAsText('word/document.xml');
-
-        const replacementMap: Array<[string, string]> = [
-            ['{{COMPONENT_CODE}}', component.code],
-            ['{{COMPONENT_NAME}}', this.normalizeTemplateText(component.name, 'Não informado')],
-            ['{{DEPARTMENT}}', this.normalizeTemplateText(data.department, 'Não informado')],
-            ['{{SEMESTER}}', this.normalizeTemplateText(data.semester, '____._')],
-            ['{{PREREQUERIMENTS}}', this.normalizeTemplateText(data.prerequeriments, 'Não se aplica')],
-            ['IC045', component.code],
-            ['Tópicos em Sistemas de Informação e Web I', this.normalizeTemplateText(component.name, 'Não informado')],
-            ['CIÊNCIA DA COMPUTAÇÃO', this.normalizeTemplateText(data.department, 'Não informado')],
-            ['Semestre 2024.2', `Semestre ${this.normalizeTemplateText(data.semester, '____._')}`],
-            ['Semestre 2024.1', `Semestre ${this.normalizeTemplateText(data.semester, '____._')}`],
-            ['Não se aplica', this.normalizeTemplateText(data.prerequeriments, 'Não se aplica')],
-        ];
-
-        replacementMap.forEach(([fromValue, toValue]) => {
-            xml = xml.split(fromValue).join(this.escapeXml(toValue));
+    private async generateTemplateDocx(html: string, componentCode: string) {
+        const docxBuffer = await HTMLtoDOCX(html, null, {
+            title: `Plano de ensino-aprendizagem - ${componentCode}`,
+            creator: 'BDCP',
+            margins: {
+                top: 720,
+                right: 720,
+                bottom: 720,
+                left: 720,
+            },
+            table: {
+                row: {
+                    cantSplit: true,
+                },
+            },
         });
 
-        xml = this.replaceByTokenOrPrefix(
-            xml,
-            '{{SYLLABUS}}',
-            'Abordagens de temas atuais, circunstanciais e/ou inovadores de problemas relacionados à área de Web e Sistemas de Informação.',
-            this.normalizeTemplateText(data.syllabus, 'Não informado')
-        );
-
-        xml = this.replaceByTokenOrPrefix(
-            xml,
-            '{{OBJECTIVE}}',
-            'OBJETIVO GERAL',
-            this.normalizeTemplateText(data.objective, 'Não informado')
-        );
-
-        xml = this.replaceByTokenOrPrefix(
-            xml,
-            '{{PROGRAM}}',
-            '1\nApresentação da Disciplina',
-            this.normalizeTemplateText(data.program, 'Não informado')
-        );
-
-        xml = this.replaceByTokenOrPrefix(
-            xml,
-            '{{METHODOLOGY}}',
-            'A metodologia de ensino adotada favorece o desenvolvimento da visão sistêmica do processo de desenvolvimento de aplicações web, que consiste em avaliar criticamente e sob diferentes aspectos todo o processo.',
-            this.normalizeTemplateText(data.methodology, 'Não informado')
-        );
-
-        xml = this.replaceByTokenOrPrefix(
-            xml,
-            '{{LEARNING_ASSESSMENT}}',
-            'As avaliações ocorrerão de modo individual ou em grupo e poderão ser utilizados recursos/instrumentos apropriados como questionários, lista de exercícios, produção de textos colaborativos, resolução de problemas em grupo. As avaliações ocorrerão através da resolução de atividades assíncronas',
-            this.normalizeTemplateText(data.learningAssessment, 'Não informado')
-        );
-
-        xml = this.replaceByTokenOrPrefix(
-            xml,
-            '{{BIBLIOGRAPHY}}',
-            'Desenvolvendo Aplicações Web com JSP, Servlets Edson Gonçalves, Ciencia Moderna, 2007.',
-            this.normalizeTemplateText(data.bibliography, 'Não informado')
-        );
-
-        zip.updateFile('word/document.xml', Buffer.from(xml, 'utf8'));
-
-        return zip.toBuffer();
+        return Buffer.isBuffer(docxBuffer) ? docxBuffer : Buffer.from(docxBuffer);
     }
 
     private convertDocxToPdf(docxBuffer: Buffer, fileBaseName: string) {
@@ -286,12 +160,16 @@ export class ComponentService {
         showDraft?: boolean;
         sortBy?: string;
         sortOrder?: 'ASC' | 'DESC';
+        academicLevel?: AcademicLevel;
+        department?: string;
     }) {
         const search = this.normalizeSearch(options?.search);
+        const normalizedDepartment = options?.department?.trim().toLowerCase();
         const sortMap: Record<string, string> = {
             code: 'components.code',
             name: 'components.name',
             department: 'components.department',
+            academicLevel: 'components.academicLevel',
             semester: 'components.semester',
             createdAt: 'components.createdAt',
             updatedAt: 'components.updatedAt',
@@ -319,6 +197,19 @@ export class ComponentService {
                     .where(`${this.accentInsensitiveSql('components.code')} LIKE :search`, { search: `%${search}%` })
                     .orWhere(`${this.accentInsensitiveSql('components.name')} LIKE :search`, { search: `%${search}%` });
             }));
+        }
+
+        if (options?.academicLevel) {
+            query.andWhere('components.academicLevel = :academicLevel', {
+                academicLevel: options.academicLevel,
+            });
+        }
+
+        if (normalizedDepartment) {
+            query.andWhere(
+                `${this.accentInsensitiveSql('components.department')} = :department`,
+                { department: normalizedDepartment }
+            );
         }
 
         const components = await query
@@ -560,12 +451,13 @@ export class ComponentService {
             ?.filter((log) => log.type === ComponentLogType.APPROVAL)
             .sort((left, right) => right.createdAt.getTime() - left.createdAt.getTime())[0];
 
-        const data = {
+        const data: Parameters<typeof generateHtml>[0] = {
             ...component,
             approval: latestApprovalLog
                 ? {
                     agreementNumber: latestApprovalLog.agreementNumber,
                     agreementDate: latestApprovalLog.agreementDate,
+                    approvedBy: latestApprovalLog.user?.name,
                 }
                 : undefined,
             workload: workload
@@ -595,19 +487,11 @@ export class ComponentService {
                     },
                 }
                 : undefined,
+            exportMode: format === 'pdf' ? 'pdf' : 'docx',
         };
 
-        const templateDocx = this.generateTemplateDocx(component, {
-            semester: component.semester,
-            department: component.department,
-            prerequeriments: component.prerequeriments,
-            syllabus: component.syllabus,
-            objective: component.objective,
-            program: component.program,
-            methodology: component.methodology,
-            learningAssessment: component.learningAssessment,
-            bibliography: component.bibliography,
-        });
+        const html = generateHtml(data);
+        const templateDocx = await this.generateTemplateDocx(html, component.code);
 
         if (format === 'doc' || format === 'docx') {
             return {
@@ -627,8 +511,6 @@ export class ComponentService {
                 fileName: `${component.code}.pdf`,
             };
         }
-
-        const html = generateHtml(data);
 
         const chromiumPath = process.env.PUPPETEER_EXECUTABLE_PATH;
         const browser = await puppeteer.launch({

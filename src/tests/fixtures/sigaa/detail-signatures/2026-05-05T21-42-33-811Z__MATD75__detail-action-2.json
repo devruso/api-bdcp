@@ -1,0 +1,77 @@
+{
+  "code": "MATD75",
+  "request": {
+    "method": "POST",
+    "url": "https://sigaa.ufba.br/sigaa/public/departamento/componentes.jsf;jsessionid=21FC63E67B0474FAB8E5B2BF55331AF2.sigaapl08",
+    "payload": "formComponenteDepartamento=formComponenteDepartamento&formComponenteDepartamento_SUBMIT=1&formComponenteDepartamento%3AformIdioma=formComponenteDepartamento%3AformIdioma&javax.faces.ViewState=j_id1&formComponenteDepartamento%3Aj_id_jsp_1418940761_13j_id_5=formComponenteDepartamento%3Aj_id_jsp_1418940761_13j_id_5&id=10453&publico=public",
+    "requestLabel": "detail-action-2"
+  },
+  "title": "SIGAA - Sistema Integrado de Gestão de Atividades Acadêmicas",
+  "htmlLength": 7995,
+  "bodyTextLength": 1023,
+  "hasPrereqLabel": true,
+  "hasSyllabusLabel": true,
+  "hasObjectiveLabel": false,
+  "hasListForm": false,
+  "forms": [
+    {
+      "id": "form",
+      "action": "/sigaa/public/componentes/resumo.jsf"
+    }
+  ],
+  "extractedDetail": {
+    "prerequeriments": "Co-Requisitos:",
+    "coRequisites": [],
+    "equivalences": [],
+    "syllabus": "/Descrição: TRABALHO DE CONCLUSÃO Referências: << Voltar SIGAA | STI/SUPAC | - | Copyright © 2006-2026 - UFBA - sigaapl08.intranet.ufba.br v4.13.8_28-20260406",
+    "learningAssessment": "Institucional: Não Aceita Criar Turma: Não Matriculável On-Line: Não Horário Flexível da Turma: Não Horário Flexível do Docente: Não Obrigatoriedade de Nota Final: Não Pode Criar Turma Sem Solicitação: Não Necessita de Orientador: Sim Exige Horário: Não Permite CH Compartilhada: Não Permite Múltiplas Aprovações: Não",
+    "workload": {
+      "theoretical": 0,
+      "practice": 0,
+      "internship": 0,
+      "extension": 0
+    }
+  },
+  "labelSamples": [
+    "Tipo do Componente Curricular:",
+    "ATIVIDADE",
+    "Tipo de Atividade:",
+    "DISSERTAÇÃO/TESE",
+    "Forma de Participação:",
+    "ATIVIDADE DE ORIENTAÇÃO INDIVIDUAL",
+    "Unidade Responsável:",
+    "PROGRAMA DE PÓS-GRADUAÇÃO EM CIÊNCIA DA COMPUTAÇÃO (PGCOMP) (12.28.03)",
+    "Código:",
+    "PGCOMP001",
+    "Nome:",
+    "TRABALHO DE CONCLUSÃO",
+    "Carga Horária Dedicada do Docente:",
+    "0 h.",
+    "Carga Horária Total:",
+    "0 h.",
+    "Pré-Requisitos:",
+    "Co-Requisitos:",
+    "Equivalências:",
+    "Excluir da Avaliação Institucional:",
+    "Não",
+    "Aceita Criar Turma:",
+    "Não",
+    "Matriculável On-Line:",
+    "Não",
+    "Horário Flexível da Turma:",
+    "Não",
+    "Horário Flexível do Docente:",
+    "Não",
+    "Obrigatoriedade de Nota Final:",
+    "Não",
+    "Pode Criar Turma Sem Solicitação:",
+    "Não",
+    "Necessita de Orientador:",
+    "Sim",
+    "Exige Horário:",
+    "Não",
+    "Permite CH Compartilhada:",
+    "Não",
+    "Permite Múltiplas Aprovações:"
+  ]
+}

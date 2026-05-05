@@ -1,0 +1,77 @@
+{
+  "code": "MATE93",
+  "request": {
+    "method": "POST",
+    "url": "https://sigaa.ufba.br/sigaa/public/departamento/componentes.jsf;jsessionid=43E4AAD44CFA1FB4032D9C3375D8C18B.sigaapl09",
+    "payload": "formComponenteDepartamento=formComponenteDepartamento&formComponenteDepartamento_SUBMIT=1&formComponenteDepartamento%3AformIdioma=formComponenteDepartamento%3AformIdioma&javax.faces.ViewState=j_id1&formComponenteDepartamento%3Aj_id_jsp_1418940761_13=formComponenteDepartamento%3Aj_id_jsp_1418940761_13&id=10632&publico=public",
+    "requestLabel": "detail-action-2"
+  },
+  "title": "SIGAA - Sistema Integrado de Gestão de Atividades Acadêmicas",
+  "htmlLength": 8068,
+  "bodyTextLength": 1059,
+  "hasPrereqLabel": true,
+  "hasSyllabusLabel": true,
+  "hasObjectiveLabel": false,
+  "hasListForm": false,
+  "forms": [
+    {
+      "id": "form",
+      "action": "/sigaa/public/componentes/resumo.jsf"
+    }
+  ],
+  "extractedDetail": {
+    "prerequeriments": "NAO_SE_APLICA",
+    "coRequisites": [],
+    "equivalences": [],
+    "syllabus": "/Descrição: Não aplicável. Referências: << Voltar SIGAA | STI/SUPAC | - | Copyright © 2006-2026 - UFBA - sigaapl09.intranet.ufba.br v4.13.8_28-20260406",
+    "learningAssessment": "Institucional: Não Aceita Criar Turma: Não Matriculável On-Line: Sim Horário Flexível da Turma: Sim Horário Flexível do Docente: Não Obrigatoriedade de Nota Final: Não Pode Criar Turma Sem Solicitação: Sim Necessita de Orientador: Sim Exige Horário: Não Permite CH Compartilhada: Não Permite Múltiplas Aprovações: Não",
+    "workload": {
+      "theoretical": 0,
+      "practice": 0,
+      "internship": 0,
+      "extension": 0
+    }
+  },
+  "labelSamples": [
+    "Tipo do Componente Curricular:",
+    "ATIVIDADE",
+    "Tipo de Atividade:",
+    "ATIVIDADE COMPLEMENTAR",
+    "Forma de Participação:",
+    "ATIVIDADE DE ORIENTAÇÃO INDIVIDUAL",
+    "Unidade Responsável:",
+    "PROGRAMA DE PÓS-GRADUAÇÃO EM CIÊNCIA DA COMPUTAÇÃO (PGCOMP) (12.28.03)",
+    "Código:",
+    "MATA34/20151",
+    "Nome:",
+    "EXAME DE QUALIFICACAO",
+    "Carga Horária de Orientação:",
+    "0 h.",
+    "Carga Horária Dedicada do Docente:",
+    "0 h.",
+    "Carga Horária Total:",
+    "0 h.",
+    "Pré-Requisitos:",
+    "Co-Requisitos:",
+    "Equivalências:",
+    "Excluir da Avaliação Institucional:",
+    "Não",
+    "Aceita Criar Turma:",
+    "Não",
+    "Matriculável On-Line:",
+    "Sim",
+    "Horário Flexível da Turma:",
+    "Sim",
+    "Horário Flexível do Docente:",
+    "Não",
+    "Obrigatoriedade de Nota Final:",
+    "Não",
+    "Pode Criar Turma Sem Solicitação:",
+    "Sim",
+    "Necessita de Orientador:",
+    "Sim",
+    "Exige Horário:",
+    "Não",
+    "Permite CH Compartilhada:"
+  ]
+}

@@ -1,0 +1,81 @@
+{
+  "code": "MATD75",
+  "request": {
+    "method": "POST",
+    "url": "https://sigaa.ufba.br/sigaa/public/departamento/componentes.jsf;jsessionid=43E4AAD44CFA1FB4032D9C3375D8C18B.sigaapl09",
+    "payload": "formComponenteDepartamento=formComponenteDepartamento&formComponenteDepartamento_SUBMIT=1&formComponenteDepartamento%3AformIdioma=formComponenteDepartamento%3AformIdioma&javax.faces.ViewState=j_id1&formComponenteDepartamento%3Aj_id_jsp_1418940761_13j_id_5=formComponenteDepartamento%3Aj_id_jsp_1418940761_13j_id_5&id=10453&publico=public",
+    "requestLabel": "detail-action-2"
+  },
+  "title": "SIGAA - Sistema Integrado de Gestão de Atividades Acadêmicas",
+  "htmlLength": 9269,
+  "bodyTextLength": 1180,
+  "hasPrereqLabel": true,
+  "hasSyllabusLabel": true,
+  "hasObjectiveLabel": false,
+  "hasListForm": false,
+  "forms": [
+    {
+      "id": "form",
+      "action": "/sigaa/public/componentes/resumo.jsf"
+    }
+  ],
+  "extractedDetail": {
+    "prerequeriments": "NAO_SE_APLICA",
+    "coRequisites": [
+      "MATE62"
+    ],
+    "equivalences": [
+      "MATE62"
+    ],
+    "syllabus": "/Descrição: Não definido Referências: Histórico de",
+    "learningAssessment": "Institucional: Não Matriculável On-Line: Sim Horário Flexível da Turma: Sim Horário Flexível do Docente: Sim Obrigatoriedade de Nota Final: Sim Pode Criar Turma Sem Solicitação: Sim Necessita de Orientador: Não Exige Horário: Sim Permite CH Compartilhada: Não Permite Múltiplas Aprovações: Sim Quantidade Máxima de Matrículas: 30 Quantidade de Avaliações: 1 Módulo:",
+    "workload": {
+      "theoretical": 45,
+      "practice": 0,
+      "internship": 0,
+      "extension": 0
+    }
+  },
+  "labelSamples": [
+    "Tipo do Componente Curricular:",
+    "DISCIPLINA",
+    "Unidade Responsável:",
+    "PROGRAMA DE PÓS-GRADUAÇÃO EM CIÊNCIA DA COMPUTAÇÃO (PGCOMP) (12.28.03)",
+    "Código:",
+    "PGCOMP/IC0062",
+    "Nome:",
+    "ALGORITMOS DISTRIBUÍDOS I",
+    "Carga Horária Teórica:",
+    "45 h.",
+    "Carga Horária Prática:",
+    "0 h.",
+    "Carga Horária Total:",
+    "45 h.",
+    "Pré-Requisitos:",
+    "Co-Requisitos:",
+    "Equivalências:",
+    "( MATE62/20122 ) OU ( MATE62/20151 )",
+    "Excluir da Avaliação Institucional:",
+    "Não",
+    "Matriculável On-Line:",
+    "Sim",
+    "Horário Flexível da Turma:",
+    "Sim",
+    "Horário Flexível do Docente:",
+    "Sim",
+    "Obrigatoriedade de Nota Final:",
+    "Sim",
+    "Pode Criar Turma Sem Solicitação:",
+    "Sim",
+    "Necessita de Orientador:",
+    "Não",
+    "Exige Horário:",
+    "Sim",
+    "Permite CH Compartilhada:",
+    "Não",
+    "Permite Múltiplas Aprovações:",
+    "Sim",
+    "Quantidade Máxima de Matrículas:",
+    "30"
+  ]
+}

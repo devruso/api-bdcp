@@ -80,7 +80,7 @@ describe('Component import governance', () => {
     });
 
     it('should block SIGAA public import for non-admin users', async () => {
-        const teacher = await createUserAndGetToken('Teacher', 'teacher-import@test.com', 'teacher');
+        const teacher = await createUserAndGetToken('Teacher', 'teacher-import@ufba.br', 'teacher');
 
         const response = await supertest(app)
             .post('/api/components/import/sigaa-public')
@@ -98,7 +98,7 @@ describe('Component import governance', () => {
     });
 
     it('should return SIGAA import summary for admin users', async () => {
-        const admin = await createUserAndGetToken('Admin', 'admin-import@test.com', 'admin');
+        const admin = await createUserAndGetToken('Admin', 'admin-import@ufba.br', 'admin');
         const mockedSummary: ImportComponentsSummary = {
             source: 'sigaa-public',
             requested: 2,
@@ -106,6 +106,7 @@ describe('Component import governance', () => {
             skippedExisting: 1,
             failed: 0,
             failures: [],
+            failureCategories: {},
         };
 
         const importSpy = jest
@@ -139,7 +140,7 @@ describe('Component import governance', () => {
     });
 
     it('should return SIAC import summary for admin users', async () => {
-        const admin = await createUserAndGetToken('Admin Siac', 'admin-siac-import@test.com', 'admin');
+        const admin = await createUserAndGetToken('Admin Siac', 'admin-siac-import@ufba.br', 'admin');
         const mockedSummary: ImportComponentsSummary = {
             source: 'siac',
             requested: 5,
@@ -147,6 +148,7 @@ describe('Component import governance', () => {
             skippedExisting: 2,
             failed: 0,
             failures: [],
+            failureCategories: {},
         };
 
         const importSpy = jest

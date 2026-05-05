@@ -17,6 +17,8 @@ export interface IComponentInfoCrawler {
     detailUrl?: string;
     detailActionUrl?: string;
     detailActionPayload?: string;
+    detailActionPayloadCandidates?: string[];
+    detailRequestCookie?: string;
     coRequisites?: string[];
     equivalences?: string[];
     workloadExtension?: number;

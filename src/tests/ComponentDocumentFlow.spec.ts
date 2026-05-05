@@ -405,6 +405,8 @@ describe('Component document flow', () => {
         expect(documentXml).toContain('TEST123');
         expect(documentXml).toContain('Disciplina Teste');
         expect(documentXml).toContain('Ementa de teste');
+        expect(documentXml).not.toContain('IC045');
         expect(documentXml).not.toContain('Tópicos em Sistemas de Informação e Web I');
+        expect(documentXml).not.toContain('Assinatura do docente');
     });
 });

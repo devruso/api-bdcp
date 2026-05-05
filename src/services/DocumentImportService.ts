@@ -44,6 +44,16 @@ const cleanText = (value: string) =>
 
 const normalizeLine = (value: string) => cleanText(value).toUpperCase();
 
+const normalizeParagraphText = (value: string) =>
+    value
+        .split(/\r?\n/)
+        .map(cleanText)
+        .filter(Boolean)
+        .map((line) => line.replace(/^((\d+[.)-]?)|([A-Za-z][.)])|[-*•])\s+/u, ''))
+        .join(' ')
+        .replace(/\s{2,}/g, ' ')
+        .trim();
+
 const parseSemesterValue = (value: string) => {
     const semesterMatch = value.match(/SEMESTRE\s*(\d{4})\s*\.?\s*(\d)/i);
 
@@ -264,7 +274,7 @@ export class DocumentImportService {
 
             const content = lines.slice(start, end).join('\n');
             if (content) {
-                sections[key] = content;
+                sections[key] = key === 'syllabus' ? normalizeParagraphText(content) : content;
             }
         });
 

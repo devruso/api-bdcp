@@ -1,0 +1,179 @@
+{
+  "capturedAt": "2026-05-05",
+  "requiredUnits": [
+    "department-1114",
+    "department-2440",
+    "program-1820"
+  ],
+  "minimumPerUnitPerCycle": 4,
+  "entries": [
+    {
+      "cycle": "2026-05-05-cycle-1",
+      "unit": "department-1114",
+      "code": "MATF34",
+      "htmlFile": "2026-05-05T21-42-07-184Z__MATF34__detail-action-2.html",
+      "expectedPrerequeriments": "MATA88"
+    },
+    {
+      "cycle": "2026-05-05-cycle-1",
+      "unit": "department-1114",
+      "code": "MATC88",
+      "htmlFile": "2026-05-05T21-42-07-242Z__MATC88__detail-action-2.html",
+      "expectedPrerequeriments": "MATA88"
+    },
+    {
+      "cycle": "2026-05-05-cycle-1",
+      "unit": "department-1114",
+      "code": "MATA90",
+      "htmlFile": "2026-05-05T21-42-07-279Z__MATA90__detail-action-2.html",
+      "expectedPrerequeriments": "MATA88"
+    },
+    {
+      "cycle": "2026-05-05-cycle-1",
+      "unit": "department-1114",
+      "code": "MAT053",
+      "htmlFile": "2026-05-05T21-42-07-644Z__MAT053__detail-action-2.html",
+      "expectedPrerequeriments": "NAO_SE_APLICA"
+    },
+    {
+      "cycle": "2026-05-05-cycle-1",
+      "unit": "department-2440",
+      "code": "GMAT0004",
+      "htmlFile": "2026-05-05T21-42-24-324Z__GMAT0004__detail-action-2.html",
+      "expectedPrerequeriments": "GMAT0002, MATC68"
+    },
+    {
+      "cycle": "2026-05-05-cycle-1",
+      "unit": "department-2440",
+      "code": "GMAT0002",
+      "htmlFile": "2026-05-05T21-42-24-378Z__GMAT0002__detail-action-2.html",
+      "expectedPrerequeriments": "GMAT0002, MATC68"
+    },
+    {
+      "cycle": "2026-05-05-cycle-1",
+      "unit": "department-2440",
+      "code": "GMAT0006",
+      "htmlFile": "2026-05-05T21-42-24-698Z__GMAT0006__detail-action-2.html",
+      "expectedPrerequeriments": "NAO_SE_APLICA"
+    },
+    {
+      "cycle": "2026-05-05-cycle-1",
+      "unit": "department-2440",
+      "code": "MATC53",
+      "htmlFile": "2026-05-05T21-42-24-768Z__MATC53__detail-action-2.html",
+      "expectedPrerequeriments": "NAO_SE_APLICA"
+    },
+    {
+      "cycle": "2026-05-05-cycle-1",
+      "unit": "program-1820",
+      "code": "MATE93",
+      "htmlFile": "2026-05-05T21-42-33-472Z__MATE93__detail-action-2.html",
+      "expectedPrerequeriments": "NAO_SE_APLICA"
+    },
+    {
+      "cycle": "2026-05-05-cycle-1",
+      "unit": "program-1820",
+      "code": "MATA32",
+      "htmlFile": "2026-05-05T21-42-33-581Z__MATA32__detail-action-2.html",
+      "expectedPrerequeriments": "NAO_SE_APLICA"
+    },
+    {
+      "cycle": "2026-05-05-cycle-1",
+      "unit": "program-1820",
+      "code": "MATA35",
+      "htmlFile": "2026-05-05T21-42-33-618Z__MATA35__detail-action-2.html",
+      "expectedPrerequeriments": "NAO_SE_APLICA"
+    },
+    {
+      "cycle": "2026-05-05-cycle-1",
+      "unit": "program-1820",
+      "code": "MATD75",
+      "htmlFile": "2026-05-05T21-42-33-811Z__MATD75__detail-action-2.html",
+      "expectedPrerequeriments": "NAO_SE_APLICA"
+    },
+    {
+      "cycle": "2026-05-05-cycle-2",
+      "unit": "department-1114",
+      "code": "MAT053",
+      "htmlFile": "2026-05-05T21-46-53-931Z__MAT053__detail-action-2.html",
+      "expectedPrerequeriments": "NAO_SE_APLICA"
+    },
+    {
+      "cycle": "2026-05-05-cycle-2",
+      "unit": "department-1114",
+      "code": "MAT162",
+      "htmlFile": "2026-05-05T21-46-54-085Z__MAT162__detail-action-2.html",
+      "expectedPrerequeriments": "MATA55, MATA59"
+    },
+    {
+      "cycle": "2026-05-05-cycle-2",
+      "unit": "department-1114",
+      "code": "MATA52",
+      "htmlFile": "2026-05-05T21-46-53-984Z__MATA52__detail-action-2.html",
+      "expectedPrerequeriments": "NAO_SE_APLICA"
+    },
+    {
+      "cycle": "2026-05-05-cycle-2",
+      "unit": "department-1114",
+      "code": "MATC19",
+      "htmlFile": "2026-05-05T21-46-53-727Z__MATC19__detail-action-2.html",
+      "expectedPrerequeriments": "NAO_SE_APLICA"
+    },
+    {
+      "cycle": "2026-05-05-cycle-2",
+      "unit": "department-2440",
+      "code": "GMAT0006",
+      "htmlFile": "2026-05-05T21-47-09-831Z__GMAT0006__detail-action-2.html",
+      "expectedPrerequeriments": "NAO_SE_APLICA"
+    },
+    {
+      "cycle": "2026-05-05-cycle-2",
+      "unit": "department-2440",
+      "code": "GICC0005",
+      "htmlFile": "2026-05-05T21-47-09-913Z__GICC0005__detail-action-2.html",
+      "expectedPrerequeriments": "NAO_SE_APLICA"
+    },
+    {
+      "cycle": "2026-05-05-cycle-2",
+      "unit": "department-2440",
+      "code": "MATF54",
+      "htmlFile": "2026-05-05T21-47-09-975Z__MATF54__detail-action-2.html",
+      "expectedPrerequeriments": "NAO_SE_APLICA"
+    },
+    {
+      "cycle": "2026-05-05-cycle-2",
+      "unit": "department-2440",
+      "code": "GMAT0003",
+      "htmlFile": "2026-05-05T21-47-09-531Z__GMAT0003__detail-action-2.html",
+      "expectedPrerequeriments": "GMAT0004, MATC70"
+    },
+    {
+      "cycle": "2026-05-05-cycle-2",
+      "unit": "program-1820",
+      "code": "MATE93",
+      "htmlFile": "2026-05-05T21-47-18-083Z__MATE93__detail-action-2.html",
+      "expectedPrerequeriments": "NAO_SE_APLICA"
+    },
+    {
+      "cycle": "2026-05-05-cycle-2",
+      "unit": "program-1820",
+      "code": "MATA32",
+      "htmlFile": "2026-05-05T21-47-18-239Z__MATA32__detail-action-2.html",
+      "expectedPrerequeriments": "NAO_SE_APLICA"
+    },
+    {
+      "cycle": "2026-05-05-cycle-2",
+      "unit": "program-1820",
+      "code": "MATD75",
+      "htmlFile": "2026-05-05T21-47-19-004Z__MATD75__detail-action-2.html",
+      "expectedPrerequeriments": "NAO_SE_APLICA"
+    },
+    {
+      "cycle": "2026-05-05-cycle-2",
+      "unit": "program-1820",
+      "code": "PGCOMP001",
+      "htmlFile": "2026-05-05T21-47-19-059Z__PGCOMP001__detail-action-2.html",
+      "expectedPrerequeriments": "NAO_SE_APLICA"
+    }
+  ]
+}

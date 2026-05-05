@@ -758,6 +758,30 @@ componentRouter.delete('/:id', ensureAuthenticated, componentController.delete);
 *     responses:
 *       201:
 *         description: Insert components in the database using the crawler
+*         content:
+*           application/json:
+*             schema:
+*               type: object
+*               properties:
+*                 source:
+*                   type: string
+*                   enum: [siac]
+*                 requested:
+*                   type: integer
+*                 created:
+*                   type: integer
+*                 skippedExisting:
+*                   type: integer
+*                 failed:
+*                   type: integer
+*                 failures:
+*                   type: array
+*                   items:
+*                     type: string
+*                 failureCategories:
+*                   type: object
+*                   additionalProperties:
+*                     type: integer
 *       401:
 *         description: User is not authorized for import operation
 *       400:
@@ -797,6 +821,30 @@ componentRouter.post('/import', ensureAuthenticated, ensureAdminAuthenticated, c
 *     responses:
 *       201:
 *         description: Import summary with created, skipped and failed counters
+*         content:
+*           application/json:
+*             schema:
+*               type: object
+*               properties:
+*                 source:
+*                   type: string
+*                   enum: [sigaa-public]
+*                 requested:
+*                   type: integer
+*                 created:
+*                   type: integer
+*                 skippedExisting:
+*                   type: integer
+*                 failed:
+*                   type: integer
+*                 failures:
+*                   type: array
+*                   items:
+*                     type: string
+*                 failureCategories:
+*                   type: object
+*                   additionalProperties:
+*                     type: integer
 *       400:
 *         description: Invalid request payload
 *       401:

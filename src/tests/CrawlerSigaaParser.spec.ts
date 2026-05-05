@@ -18,7 +18,7 @@ describe('CrawlerService SIGAA parser', () => {
         expect(result).toEqual([]);
     });
 
-    it('should extract component rows from tabular SIGAA-like HTML', () => {
+    it('should extract component rows from tabular SIGAA-like HTML preserving row variants', () => {
         const html = `
             <table>
               <tr class="linhaPar">
@@ -42,7 +42,7 @@ describe('CrawlerService SIGAA parser', () => {
         const $ = cheerio.load(html);
         const result = (service as any).extractSigaaListRows($, 'department', AcademicLevel.GRADUATION);
 
-        expect(result).toHaveLength(2);
+        expect(result).toHaveLength(3);
         expect(result[0]).toEqual(
             expect.objectContaining({
                 code: 'MATA01',
@@ -56,6 +56,12 @@ describe('CrawlerService SIGAA parser', () => {
                 code: 'MATB02',
                 name: 'Algoritmos',
             })
+        );
+        expect(result[2]).toEqual(
+          expect.objectContaining({
+            code: 'MATA01',
+            name: 'Calculo I (duplicada)',
+          })
         );
     });
 

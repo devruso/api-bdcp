@@ -1,0 +1,77 @@
+{
+  "code": "MATA35",
+  "request": {
+    "method": "POST",
+    "url": "https://sigaa.ufba.br/sigaa/public/departamento/componentes.jsf;jsessionid=21FC63E67B0474FAB8E5B2BF55331AF2.sigaapl08",
+    "payload": "formComponenteDepartamento=formComponenteDepartamento&formComponenteDepartamento_SUBMIT=1&formComponenteDepartamento%3AformIdioma=formComponenteDepartamento%3AformIdioma&javax.faces.ViewState=j_id1&formComponenteDepartamento%3Aj_id_jsp_1418940761_13j_id_1=formComponenteDepartamento%3Aj_id_jsp_1418940761_13j_id_1&id=12679&publico=public",
+    "requestLabel": "detail-action-2"
+  },
+  "title": "SIGAA - Sistema Integrado de Gestão de Atividades Acadêmicas",
+  "htmlLength": 8157,
+  "bodyTextLength": 1092,
+  "hasPrereqLabel": true,
+  "hasSyllabusLabel": true,
+  "hasObjectiveLabel": false,
+  "hasListForm": false,
+  "forms": [
+    {
+      "id": "form",
+      "action": "/sigaa/public/componentes/resumo.jsf"
+    }
+  ],
+  "extractedDetail": {
+    "prerequeriments": "Co-Requisitos:",
+    "coRequisites": [],
+    "equivalences": [],
+    "syllabus": "/Descrição: Não aplicável. Referências: << Voltar SIGAA | STI/SUPAC | - | Copyright © 2006-2026 - UFBA - sigaapl08.intranet.ufba.br v4.13.8_28-20260406",
+    "learningAssessment": "Institucional: Não Aceita Criar Turma: Não Matriculável On-Line: Sim Horário Flexível da Turma: Sim Horário Flexível do Docente: Não Obrigatoriedade de Nota Final: Não Pode Criar Turma Sem Solicitação: Sim Necessita de Orientador: Sim Exige Horário: Não Permite CH Compartilhada: Não Permite Múltiplas Aprovações: Sim Quantidade Máxima de Matrículas: 30",
+    "workload": {
+      "theoretical": 0,
+      "practice": 0,
+      "internship": 0,
+      "extension": 0
+    }
+  },
+  "labelSamples": [
+    "Tipo do Componente Curricular:",
+    "ATIVIDADE",
+    "Tipo de Atividade:",
+    "ATIVIDADE COMPLEMENTAR",
+    "Forma de Participação:",
+    "ATIVIDADE DE ORIENTAÇÃO INDIVIDUAL",
+    "Unidade Responsável:",
+    "PROGRAMA DE PÓS-GRADUAÇÃO EM CIÊNCIA DA COMPUTAÇÃO (PGCOMP) (12.28.03)",
+    "Código:",
+    "MATA31/20151",
+    "Nome:",
+    "PESQUISA ORIENTADA",
+    "Carga Horária de Orientação:",
+    "0 h.",
+    "Carga Horária Dedicada do Docente:",
+    "0 h.",
+    "Carga Horária Total:",
+    "0 h.",
+    "Pré-Requisitos:",
+    "Co-Requisitos:",
+    "Equivalências:",
+    "Excluir da Avaliação Institucional:",
+    "Não",
+    "Aceita Criar Turma:",
+    "Não",
+    "Matriculável On-Line:",
+    "Sim",
+    "Horário Flexível da Turma:",
+    "Sim",
+    "Horário Flexível do Docente:",
+    "Não",
+    "Obrigatoriedade de Nota Final:",
+    "Não",
+    "Pode Criar Turma Sem Solicitação:",
+    "Sim",
+    "Necessita de Orientador:",
+    "Sim",
+    "Exige Horário:",
+    "Não",
+    "Permite CH Compartilhada:"
+  ]
+}
