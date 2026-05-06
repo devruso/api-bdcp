@@ -53,10 +53,11 @@ class ComponentController {
     }
 
     async importComponentsFromSigaaPublic(request: Request, response: Response) {
-        const { sourceType, sourceId, academicLevel } = request.body as {
+        const { sourceType, sourceId, academicLevel, sourceIdsByLevel } = request.body as {
             sourceType: 'department' | 'program';
             sourceId: string;
-            academicLevel: AcademicLevel;
+            academicLevel: AcademicLevel | 'all';
+            sourceIdsByLevel?: Partial<Record<AcademicLevel, string>>;
         };
         const authenticatedUserId = request.headers.authenticatedUserId as string;
         const crawlerService = new CrawlerService();
@@ -67,12 +68,63 @@ class ComponentController {
             });
         }
 
-        const importSummary = await crawlerService.importComponentsFromSigaaPublic(
-            authenticatedUserId,
-            sourceType,
-            sourceId,
-            academicLevel
-        );
+        if (academicLevel !== 'all' && !Object.values(AcademicLevel).includes(academicLevel as AcademicLevel)) {
+            return response.status(400).json({
+                message: 'academicLevel deve ser graduacao, mestrado, doutorado ou all.',
+            });
+        }
+
+        let importSummary;
+
+        if (academicLevel === 'all') {
+            const levels: AcademicLevel[] = [AcademicLevel.GRADUATION, AcademicLevel.MASTERS, AcademicLevel.DOCTORATE];
+            const combined = {
+                source: 'sigaa-public' as const,
+                requested: 0,
+                created: 0,
+                skippedExisting: 0,
+                reconciled: 0,
+                failed: 0,
+                failures: [] as string[],
+                failureCategories: {} as Record<string, number>,
+            };
+
+            for (const level of levels) {
+                const scopedSourceId = String(sourceIdsByLevel?.[level] || sourceId || '').trim();
+
+                if (!scopedSourceId) {
+                    continue;
+                }
+
+                const partial = await crawlerService.importComponentsFromSigaaPublic(
+                    authenticatedUserId,
+                    sourceType,
+                    scopedSourceId,
+                    level
+                );
+
+                combined.requested += partial.requested;
+                combined.created += partial.created;
+                combined.skippedExisting += partial.skippedExisting;
+                combined.reconciled += partial.reconciled || 0;
+                combined.failed += partial.failed;
+                combined.failures.push(...(partial.failures || []));
+
+                Object.entries(partial.failureCategories || {}).forEach(([key, count]) => {
+                    combined.failureCategories[key] = (combined.failureCategories[key] || 0) + count;
+                });
+            }
+
+            combined.failures = Array.from(new Set(combined.failures));
+            importSummary = combined;
+        } else {
+            importSummary = await crawlerService.importComponentsFromSigaaPublic(
+                authenticatedUserId,
+                sourceType,
+                sourceId,
+                academicLevel
+            );
+        }
 
         return response.status(201).json({
             ...importSummary,
@@ -80,6 +132,7 @@ class ComponentController {
                 sourceType,
                 sourceId,
                 academicLevel,
+                sourceIdsByLevel,
             },
         });
     }

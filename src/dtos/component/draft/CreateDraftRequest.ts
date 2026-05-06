@@ -45,6 +45,14 @@ export class CreateDraftRequestDto extends CreateComponentRequestDto {
     @IsOptional()
     @CustomIsString()
     declare public bibliography: string;
+
+    @IsOptional()
+    @CustomIsString()
+    declare public referencesBasic: string;
+
+    @IsOptional()
+    @CustomIsString()
+    declare public referencesComplementary: string;
     
     @IsOptional()
     @CustomIsString()

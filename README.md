@@ -43,6 +43,27 @@ npm run db:reset:dev
 
 This command drops and recreates schema `public`, then reapplies migrations.
 
+## Automatic import on startup (empty database)
+
+If you want the API to automatically import components when starting with an empty `components` table, enable the startup bootstrap vars in `.env`:
+
+```sh
+BOOTSTRAP_IMPORT_ON_EMPTY_DB=true
+BOOTSTRAP_IMPORT_SOURCE=sigaa-public
+BOOTSTRAP_ADMIN_EMAIL=jamilsonj@ufba.br
+BOOTSTRAP_ADMIN_NAME=Jamilson
+BOOTSTRAP_ADMIN_PASSWORD=Ementas@2026
+BOOTSTRAP_SIGAA_SOURCE_TYPE=department
+BOOTSTRAP_SIGAA_SOURCE_ID=1114
+BOOTSTRAP_SIGAA_ACADEMIC_LEVEL=graduacao
+```
+
+Notes:
+
+- Import runs only when `components` is empty.
+- The bootstrap user is created/promoted as `super_admin` automatically for the operation.
+- For SIAC source, set `BOOTSTRAP_IMPORT_SOURCE=siac` and provide `BOOTSTRAP_SIAC_CD_CURSO` plus `BOOTSTRAP_SIAC_NU_PER_CURSO_INICIAL`.
+
 ## SIGAA reconciliation for existing components
 
 To reconcile already imported components with richer SIGAA metadata (including prerequisites) without hardcoded course rules:
@@ -73,10 +94,9 @@ npm run siac:reconcile -- --cdCurso=112140 --nuPerCursoInicial=20111 --userEmail
 
 ## DOCX template for export
 
-- The API uses a generic DOCX template to generate exported documents.
-- Default file name: `UFBA_TEMPLATE.docx` in the API root folder.
-- Optional override: set `DOCX_TEMPLATE_PATH` in `.env` with an absolute path or a path relative to the API root.
-- Legacy compatibility: if `UFBA_TEMPLATE.docx` is not found, the API still attempts `IC045.docx`.
+- The API uses a canonical DOCX template to generate all official exported documents.
+- Required file name: `UFBA_TEMPLATE.docx` in the API root folder.
+- If the template is missing, export fails with explicit server error.
 
 ### Recommended placeholders for higher fidelity
 
@@ -110,9 +130,17 @@ Backend field mapping used in export:
 
 ## PDF export runtime
 
-- Preferred conversion: LibreOffice (headless) when available in the host/container.
-- Fallback conversion: Puppeteer + Chromium.
-- In Docker image, Chromium is installed and exposed via `PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser`.
+- Official PDF is generated strictly from the official DOCX (template-first) to preserve layout fidelity.
+- Required converter: LibreOffice (headless) available in host/container.
+- If LibreOffice is unavailable, PDF export returns error (no HTML fallback) to avoid fidelity drift.
+
+### Production/Container notes
+
+- Recommended runtime base image: Debian slim with LibreOffice installed.
+- Environment variables:
+	- `LIBREOFFICE_BIN` (default in Dockerfile: `/usr/bin/libreoffice`)
+	- `PDF_CONVERSION_TIMEOUT_MS` (default: `45000`)
+- Conversion runs with an isolated LibreOffice user profile per request to reduce cross-request interference and improve reproducibility.
 
 ## Run lint
 ```sh

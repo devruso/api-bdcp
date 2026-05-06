@@ -2,6 +2,7 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 
 import { ComponentStatus } from '../../../interfaces/ComponentStatus';
+import { splitBibliographySections } from '../../referenceSections';
 
 type WorkloadGroup = {
     theory?: number;
@@ -29,6 +30,8 @@ export interface GenerateHtmlData {
     syllabus: string;
     learningAssessment: string;
     bibliography: string;
+    referencesBasic?: string;
+    referencesComplementary?: string;
     approval?: {
         agreementNumber?: string;
         agreementDate?: Date;
@@ -105,6 +108,11 @@ export function generateHtml(data: GenerateHtmlData) {
     const approvalDate = data.approval?.agreementDate ? formatDate(data.approval.agreementDate) : 'Nao informada';
     const approvalNumber = fallback(data.approval?.agreementNumber, 'Nao informada');
     const approvalResponsible = fallback(data.approval?.approvedBy, 'Nao informado');
+    const legacySections = splitBibliographySections(data.bibliography);
+    const bibliographySections = {
+        basic: fallback(data.referencesBasic || legacySections.basic),
+        complementary: fallback(data.referencesComplementary || legacySections.complementary),
+    };
 
     return renderToStaticMarkup(
         <html>
@@ -388,17 +396,17 @@ export function generateHtml(data: GenerateHtmlData) {
                 <section className="references">
                     <div className="reference-box">
                         <div className="field-header">Referencias basicas</div>
-                        <div className="reference-content">{fallback(data.bibliography)}</div>
+                        <div className="reference-content">{bibliographySections.basic}</div>
                     </div>
                     <div className="reference-box">
                         <div className="field-header">Referencias complementares</div>
-                        <div className="reference-content">{fallback(data.bibliography)}</div>
+                        <div className="reference-content">{bibliographySections.complementary}</div>
                     </div>
                 </section>
 
                 <section className="section-title">Aprovacao</section>
                 <section className="approval">
-                    <div>Metadados da publicacao oficial registrados no BDCP.</div>
+                    <div>Metadados da publicacao oficial registrados no sistema institucional.</div>
                     <div className="approval-meta">
                         <div><strong>Responsavel pela publicacao:</strong> {approvalResponsible}</div>
                         <div><strong>Data de aprovacao:</strong> {approvalDate}</div>

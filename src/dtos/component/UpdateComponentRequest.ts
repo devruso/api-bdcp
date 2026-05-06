@@ -51,6 +51,14 @@ implements Partial<Omit<Component, 'id' | 'userId' | 'status' | 'logs' | 'relati
 
     @IsOptional()
     @CustomIsString()
+    public referencesBasic?: string;
+
+    @IsOptional()
+    @CustomIsString()
+    public referencesComplementary?: string;
+
+    @IsOptional()
+    @CustomIsString()
     public modality?: string;
 
     @IsOptional()

@@ -75,6 +75,12 @@ class Component {
     @Column({ default: '' })
         bibliography: string;
 
+    @Column({ default: '' })
+        referencesBasic: string;
+
+    @Column({ default: '' })
+        referencesComplementary: string;
+
     @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
         createdAt: Date;
 
@@ -144,6 +150,10 @@ class Component {
             this.syllabus = draft.syllabus;
         if (draft.bibliography != null)
             this.bibliography = draft.bibliography;
+        if (draft.referencesBasic != null)
+            this.referencesBasic = draft.referencesBasic;
+        if (draft.referencesComplementary != null)
+            this.referencesComplementary = draft.referencesComplementary;
         if (draft.learningAssessment != null)
             this.learningAssessment = draft.learningAssessment;
         if (draft.modality != null)

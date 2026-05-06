@@ -70,6 +70,12 @@ class ComponentDraft {
     @Column({ default: '' })
         bibliography?: string;
 
+    @Column({ default: '' })
+        referencesBasic?: string;
+
+    @Column({ default: '' })
+        referencesComplementary?: string;
+
     @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
         createdAt: Date;
 

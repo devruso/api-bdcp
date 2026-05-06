@@ -1,0 +1,143 @@
+import crypto from 'crypto';
+import { getCustomRepository } from 'typeorm';
+
+import { AcademicLevel } from '../interfaces/AcademicLevel';
+import { UserRole } from '../interfaces/UserRole';
+import { User } from '../entities/User';
+import { ComponentRepository } from '../repositories/ComponentRepository';
+import { UserRepository } from '../repositories/UserRepository';
+import { CrawlerService } from './CrawlerService';
+
+const AUTO_IMPORT_FLAG = 'true';
+
+type BootstrapSource = 'sigaa-public' | 'siac';
+
+const normalizeEmail = (email: string) => email.trim().toLowerCase();
+
+const isUfbaEmail = (email: string) => /@ufba\.br$/i.test(email);
+
+const parseBoolean = (rawValue?: string) => String(rawValue || '').trim().toLowerCase() === AUTO_IMPORT_FLAG;
+
+const getConfiguredSource = (): BootstrapSource => {
+    const rawSource = String(process.env.BOOTSTRAP_IMPORT_SOURCE || 'sigaa-public').trim().toLowerCase();
+    return rawSource === 'siac' ? 'siac' : 'sigaa-public';
+};
+
+const getConfiguredAcademicLevel = (): AcademicLevel | 'all' => {
+    const rawLevel = String(process.env.BOOTSTRAP_SIGAA_ACADEMIC_LEVEL || 'all')
+        .trim()
+        .toLowerCase();
+
+    if (rawLevel === 'all' || rawLevel === 'todos') {
+        return 'all';
+    }
+
+    if (Object.values(AcademicLevel).includes(rawLevel as AcademicLevel)) {
+        return rawLevel as AcademicLevel;
+    }
+
+    return 'all';
+};
+
+const getConfiguredSigaaSourceType = (): 'department' | 'program' => {
+    const rawType = String(process.env.BOOTSTRAP_SIGAA_SOURCE_TYPE || 'department').trim().toLowerCase();
+    return rawType === 'program' ? 'program' : 'department';
+};
+
+const getPasswordHash = (password: string) => crypto.createHmac('sha256', password).digest('hex');
+
+const ensureBootstrapSuperAdmin = async () => {
+    const userRepository = getCustomRepository(UserRepository);
+    const configuredEmail = process.env.BOOTSTRAP_ADMIN_EMAIL || process.env.SUPER_ADMIN_EMAIL;
+
+    if (!configuredEmail) {
+        throw new Error('BOOTSTRAP_ADMIN_EMAIL (or SUPER_ADMIN_EMAIL) is required for startup bootstrap import.');
+    }
+
+    const email = normalizeEmail(configuredEmail);
+
+    if (!isUfbaEmail(email)) {
+        throw new Error('Startup bootstrap requires an UFBA institutional e-mail for BOOTSTRAP_ADMIN_EMAIL.');
+    }
+
+    const name = String(process.env.BOOTSTRAP_ADMIN_NAME || 'Bootstrap Super Admin').trim();
+    const password = process.env.BOOTSTRAP_ADMIN_PASSWORD;
+    const existing = await userRepository.findOne({ where: { email } });
+
+    if (existing) {
+        existing.name = existing.name || name;
+        existing.role = UserRole.SUPER_ADMIN;
+        existing.isDeleted = false;
+        existing.isUserActive = true;
+
+        if (password) {
+            existing.password = getPasswordHash(password);
+        }
+
+        const saved = await userRepository.save(existing);
+        return saved.id;
+    }
+
+    const fallbackPassword = password || crypto.randomBytes(12).toString('base64url');
+    const created = await userRepository.save(
+        userRepository.create({
+            name,
+            email,
+            password: getPasswordHash(fallbackPassword),
+            role: UserRole.SUPER_ADMIN,
+            isDeleted: false,
+            isUserActive: true,
+        } as User)
+    );
+
+    return created.id;
+};
+
+export const runStartupBootstrapImportIfNeeded = async () => {
+    if (!parseBoolean(process.env.BOOTSTRAP_IMPORT_ON_EMPTY_DB)) {
+        return;
+    }
+
+    const componentRepository = getCustomRepository(ComponentRepository);
+    const componentCount = await componentRepository.count();
+
+    if (componentCount > 0) {
+        console.log(`[startup-bootstrap] skipped: components table already has ${componentCount} row(s).`);
+        return;
+    }
+
+    const source = getConfiguredSource();
+    const userId = await ensureBootstrapSuperAdmin();
+    const crawlerService = new CrawlerService();
+
+    console.log(`[startup-bootstrap] running source=${source} because components table is empty.`);
+
+    if (source === 'siac') {
+        const cdCurso = String(process.env.BOOTSTRAP_SIAC_CD_CURSO || '').trim();
+        const nuPerCursoInicial = String(process.env.BOOTSTRAP_SIAC_NU_PER_CURSO_INICIAL || '').trim();
+
+        if (!cdCurso || !nuPerCursoInicial) {
+            throw new Error('BOOTSTRAP_SIAC_CD_CURSO and BOOTSTRAP_SIAC_NU_PER_CURSO_INICIAL are required for source=siac.');
+        }
+
+        const summary = await crawlerService.importComponentsFromSiac(userId, cdCurso, nuPerCursoInicial);
+        console.log('[startup-bootstrap] import summary:', summary);
+        return;
+    }
+
+    const sourceType = getConfiguredSigaaSourceType();
+    const sourceId = String(process.env.BOOTSTRAP_SIGAA_SOURCE_ID || '').trim();
+
+    if (!sourceId) {
+        throw new Error('BOOTSTRAP_SIGAA_SOURCE_ID is required for source=sigaa-public.');
+    }
+
+    const summary = await crawlerService.importComponentsFromSigaaPublic(
+        userId,
+        sourceType,
+        sourceId,
+        getConfiguredAcademicLevel()
+    );
+
+    console.log('[startup-bootstrap] import summary:', summary);
+};

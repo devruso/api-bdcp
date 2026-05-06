@@ -1,16 +1,24 @@
-FROM node:20-alpine AS build
+FROM node:20-bookworm-slim AS build
 WORKDIR /app
 ADD package.json package-lock.json /app/
 RUN npm ci
 ADD . /app/
 RUN npx tsc
 
-FROM node:20-alpine
+FROM node:20-bookworm-slim
 ENV NODE_ENV production
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+ENV LIBREOFFICE_BIN=/usr/bin/libreoffice
+ENV PDF_CONVERSION_TIMEOUT_MS=45000
 WORKDIR /app
 
-RUN apk add --no-cache chromium nss freetype harfbuzz ca-certificates ttf-freefont
+RUN apt-get update && apt-get install -y --no-install-recommends \
+	libreoffice \
+	libreoffice-writer \
+	ca-certificates \
+	fonts-dejavu \
+	fonts-liberation \
+	fonts-noto-core \
+	&& rm -rf /var/lib/apt/lists/*
 
 ADD package.json package-lock.json /app/
 RUN npm ci --omit=dev

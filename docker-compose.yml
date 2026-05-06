@@ -21,7 +21,7 @@ services:
         depends_on:
             - api
     postgres:
-        image: postgres:latest
+        image: postgres:16
         ports:
             - 15432:5432
         environment:

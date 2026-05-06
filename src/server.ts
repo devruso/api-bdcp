@@ -1,5 +1,6 @@
 import { createConnection, getConnectionOptions } from 'typeorm';
 import { app } from './app';
+import { runStartupBootstrapImportIfNeeded } from './services/StartupBootstrapService';
 
 const PORT = process.env.PORT || 3333;
 const env = process.env.NODE_ENV || 'local';
@@ -12,6 +13,12 @@ getConnectionOptions()
     })
     .then(connection => {
         console.log(`DB connection is UP? ${connection.isConnected}`);
+
+        runStartupBootstrapImportIfNeeded()
+            .catch((error) => {
+                console.log('[startup-bootstrap] failed:', error);
+            });
+
         app.listen(PORT, () => {
             console.log(`Server running on PORT ${PORT}`);
         });

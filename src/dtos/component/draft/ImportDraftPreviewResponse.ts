@@ -18,6 +18,8 @@ export interface ImportDraftPreviewPayload {
     syllabus: string;
     learningAssessment: string;
     bibliography: string;
+    referencesBasic?: string;
+    referencesComplementary?: string;
     workload: ImportDraftPreviewWorkload;
 }
 

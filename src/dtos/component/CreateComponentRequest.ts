@@ -48,6 +48,14 @@ implements Omit<Component, 'id' | 'userId' | 'status' | 'logs' | 'relations' | '
     @CustomIsDefined()
     @CustomIsString()
     public bibliography: string;
+
+    @IsOptional()
+    @CustomIsString()
+    public referencesBasic: string;
+
+    @IsOptional()
+    @CustomIsString()
+    public referencesComplementary: string;
     
     @CustomIsDefined()
     @CustomIsString()
