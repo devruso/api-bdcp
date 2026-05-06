@@ -18,7 +18,12 @@ import {
 import { ComponentDraft } from '../entities/ComponentDraft';
 import { ComponentDraftRepository } from '../repositories/ComponentDraftRepository';
 import { AcademicLevel } from '../interfaces/AcademicLevel';
-import { composeBibliographySections, formatAbntReferenceBlock, splitBibliographySections } from '../helpers/referenceSections';
+import {
+    composeBibliographySections,
+    formatAbntReferenceBlock,
+    normalizeReferenceSections,
+    splitBibliographySections,
+} from '../helpers/referenceSections';
 import type { DocxToPdfConverter } from './export/DocxToPdfConverter';
 import { LibreOfficeDocxToPdfConverter } from './export/LibreOfficeDocxToPdfConverter';
 
@@ -112,8 +117,9 @@ export class ComponentService {
         const referencesComplementary = payload.referencesComplementary?.trim();
 
         if (referencesBasic !== undefined || referencesComplementary !== undefined) {
-            payload.referencesBasic = formatAbntReferenceBlock(referencesBasic ?? '');
-            payload.referencesComplementary = formatAbntReferenceBlock(referencesComplementary ?? '');
+            const normalizedSections = normalizeReferenceSections(referencesBasic ?? '', referencesComplementary ?? '');
+            payload.referencesBasic = normalizedSections.basic;
+            payload.referencesComplementary = normalizedSections.complementary;
             payload.bibliography = composeBibliographySections(payload.referencesBasic, payload.referencesComplementary);
 
             return payload;
@@ -122,8 +128,9 @@ export class ComponentService {
         if (bibliography !== undefined) {
             const sections = splitBibliographySections(bibliography);
             payload.bibliography = bibliography;
-            payload.referencesBasic = formatAbntReferenceBlock(sections.basic);
-            payload.referencesComplementary = formatAbntReferenceBlock(sections.complementary);
+            const normalizedSections = normalizeReferenceSections(sections.basic, sections.complementary);
+            payload.referencesBasic = normalizedSections.basic;
+            payload.referencesComplementary = normalizedSections.complementary;
         }
 
         return payload;

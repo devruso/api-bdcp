@@ -1,5 +1,6 @@
 import path from 'path';
 import supertest from 'supertest';
+import mammoth from 'mammoth';
 const AdmZip = require('adm-zip');
 import { UserController } from '../controllers/UserController';
 import { UserInviteService } from '../services/UserInviteService';
@@ -31,7 +32,7 @@ const createUserAndLogin = async () => {
         params: { inviteToken },
         body: {
             name: 'Test User',
-            email: 'test@gmail.com',
+            email: 'test@ufba.br',
             password: 'test123',
         },
     });
@@ -41,7 +42,7 @@ const createUserAndLogin = async () => {
 
     const loginResponse = await supertest(app)
         .post('/api/auth/login')
-        .send({ email: 'test@gmail.com', password: 'test123' });
+        .send({ email: 'test@ufba.br', password: 'test123' });
 
     return loginResponse.body.token as string;
 };
@@ -344,7 +345,7 @@ describe('Component document flow', () => {
                 methodology: 'Aulas expositivas',
                 objective: 'Validar exportacao',
                 syllabus: 'Ementa de teste',
-                bibliography: 'Bibliografia de teste',
+                bibliography: 'SILVA, Joao. Bibliografia de teste. 2020.',
                 modality: 'Presencial',
                 learningAssessment: 'Provas e trabalhos',
             });
@@ -443,6 +444,13 @@ describe('Component document flow', () => {
 
         const exportedDocZip = new AdmZip(docExportResponse.body as Buffer);
         const documentXml = exportedDocZip.readAsText('word/document.xml');
+        const invalidXmlControlChars = documentXml.match(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g) ?? [];
+        const invalidTabsTextPayload = /<w:tabs>[^<]/.test(documentXml);
+
+        expect(invalidXmlControlChars).toHaveLength(0);
+        expect(invalidTabsTextPayload).toBe(false);
+        expect(documentXml).toContain('<w:document');
+        expect(documentXml).toContain('<w:body');
 
         expect(documentXml).toContain('TEST123');
         expect(documentXml).toContain('Disciplina Teste');
@@ -450,5 +458,80 @@ describe('Component document flow', () => {
         expect(documentXml).not.toContain('IC045');
         expect(documentXml).not.toContain('Tópicos em Sistemas de Informação e Web I');
         expect(documentXml).not.toContain('Assinatura do docente');
+
+        const facultySignatureParagraphMatch = documentXml.match(/<w:p[\s\S]*?Docente\(s\) Responsável\(is\)[\s\S]*?<\/w:p>/);
+        const chiefSignatureLineMatch = documentXml.match(/Nome:\s*_+\s*Assinatura:\s*_+/);
+
+        expect(facultySignatureParagraphMatch).not.toBeNull();
+        expect(chiefSignatureLineMatch).not.toBeNull();
+
+        const paragraphNodes = Array
+            .from(documentXml.matchAll(/<w:p[\s\S]*?<\/w:p>/g) as IterableIterator<RegExpMatchArray>)
+            .map((match) => match[0]);
+        const decodeXml = (value: string) => value
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .replace(/&quot;/g, '"')
+            .replace(/&apos;/g, "'")
+            .replace(/&amp;/g, '&');
+        const paragraphTexts = paragraphNodes.map((paragraph) => Array
+            .from(paragraph.matchAll(/<w:t(?=[\s>])[^>]*>([\s\S]*?)<\/w:t>/g) as IterableIterator<RegExpMatchArray>)
+            .map((token) => decodeXml(token[1]))
+            .join('')
+            .replace(/\s+/g, ' ')
+            .trim());
+
+        const normalize = (value: string) => value
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/\s+/g, ' ')
+            .trim()
+            .toUpperCase();
+
+        const findExactIndex = (label: string) => paragraphTexts.findIndex((text) => normalize(text) === normalize(label));
+        const modalityHeaderIndex = findExactIndex('MODALIDADE/ SUBMODALIDADE');
+        const prereqHeaderIndex = findExactIndex('PRÉ-REQUISITO (POR CURSO)');
+        expect(modalityHeaderIndex).toBeGreaterThan(-1);
+        expect(prereqHeaderIndex).toBeGreaterThan(modalityHeaderIndex);
+
+        const modalityValue = paragraphTexts
+            .slice(modalityHeaderIndex + 1, prereqHeaderIndex)
+            .find((text) => text.length > 0);
+        expect(modalityValue).toBe('Presencial');
+
+        const isNumericOrEmpty = (value: string) => value === '' || /^\d+$/.test(value);
+        const findNumericRun = (start: number, end: number, size: number) => {
+            for (let index = start + 1; index <= end - size; index += 1) {
+                const window = paragraphTexts.slice(index, index + size);
+                if (window.every((item) => isNumericOrEmpty(item))) {
+                    return { index, values: window };
+                }
+            }
+            return { index: -1, values: [] as string[] };
+        };
+
+        const studentHeaderIndex = findExactIndex('CARGA HORÁRIA (estudante)');
+        const teacherHeaderIndex = findExactIndex('CARGA HORÁRIA (docente/turma)');
+        const ementaHeaderIndex = findExactIndex('EMENTA');
+
+        const studentRun = findNumericRun(studentHeaderIndex, teacherHeaderIndex, 7);
+        expect(studentRun.index).toBeGreaterThan(-1);
+        expect(studentRun.values).toEqual(['0', '0', '0', '0', '0', '60', '60']);
+
+        const teacherRun = findNumericRun(teacherHeaderIndex, ementaHeaderIndex, 7);
+        expect(teacherRun.index).toBeGreaterThan(-1);
+        expect(teacherRun.values).toEqual(['0', '0', '0', '0', '0', '0', '0']);
+
+        const moduleRun = findNumericRun(teacherRun.index + 6, ementaHeaderIndex, 6);
+        expect(moduleRun.index).toBeGreaterThan(-1);
+        expect(moduleRun.values).toHaveLength(6);
+        expect(moduleRun.values[0] === '' || moduleRun.values[0] === '0').toBe(true);
+        expect(moduleRun.values.slice(1)).toEqual(['0', '0', '0', '0', '0']);
+
+        const mammothExtract = await mammoth.extractRawText({ buffer: docExportResponse.body as Buffer });
+
+        expect(typeof mammothExtract.value).toBe('string');
+        expect(mammothExtract.value).toContain('TEST123');
+        expect(mammothExtract.value).toContain('Disciplina Teste');
     });
 });

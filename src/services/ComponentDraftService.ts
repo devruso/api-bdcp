@@ -16,6 +16,13 @@ import { UpdateComponentRequestDto } from '../dtos/component';
 import { ComponentLogRepository } from '../repositories/ComponentLogRepository';
 import { User } from '../entities/User';
 import { UserRepository } from '../repositories/UserRepository';
+import {
+    composeBibliographySections,
+    formatAbntReferenceBlock,
+    hasNonWebReferenceWithoutYear,
+    normalizeReferenceSections,
+    splitBibliographySections,
+} from '../helpers/referenceSections';
 
 export class ComponentDraftService {
 
@@ -36,6 +43,8 @@ export class ComponentDraftService {
         'objective',
         'syllabus',
         'bibliography',
+        'referencesBasic',
+        'referencesComplementary',
         'modality',
         'learningAssessment',
         'academicLevel',
@@ -118,6 +127,8 @@ export class ComponentDraftService {
             'methodology',
             'learningAssessment',
             'bibliography',
+            'referencesBasic',
+            'referencesComplementary',
             'prerequeriments',
         ];
 
@@ -180,6 +191,68 @@ export class ComponentDraftService {
         });
 
         return sanitized;
+    }
+
+    private syncReferenceFields<T extends {
+        bibliography?: string;
+        referencesBasic?: string;
+        referencesComplementary?: string;
+    }>(payload: T) {
+        const bibliography = payload.bibliography?.trim();
+        const referencesBasic = payload.referencesBasic?.trim();
+        const referencesComplementary = payload.referencesComplementary?.trim();
+
+        if (referencesBasic !== undefined || referencesComplementary !== undefined) {
+            const normalizedSections = normalizeReferenceSections(referencesBasic ?? '', referencesComplementary ?? '');
+            payload.referencesBasic = normalizedSections.basic;
+            payload.referencesComplementary = normalizedSections.complementary;
+            payload.bibliography = composeBibliographySections(payload.referencesBasic, payload.referencesComplementary);
+
+            return payload;
+        }
+
+        if (bibliography !== undefined) {
+            const sections = splitBibliographySections(bibliography);
+            payload.bibliography = bibliography;
+            const normalizedSections = normalizeReferenceSections(sections.basic, sections.complementary);
+            payload.referencesBasic = normalizedSections.basic;
+            payload.referencesComplementary = normalizedSections.complementary;
+        }
+
+        return payload;
+    }
+
+    private validateRequiredFieldsForOfficialPublication(draft: ComponentDraft) {
+        const requiredTextFields: Array<{ key: keyof ComponentDraft; label: string }> = [
+            { key: 'syllabus', label: 'Ementa' },
+            { key: 'objective', label: 'Objetivos' },
+            { key: 'program', label: 'Conteúdo programático' },
+            { key: 'methodology', label: 'Metodologia' },
+            { key: 'learningAssessment', label: 'Avaliação da aprendizagem' },
+        ];
+
+        const missing = requiredTextFields
+            .filter(({ key }) => !String(draft[key] || '').trim())
+            .map(({ label }) => label);
+
+        if (missing.length > 0) {
+            throw new AppError(`Publicação oficial bloqueada. Campos obrigatórios ausentes: ${missing.join(', ')}.`, 400);
+        }
+
+        const referencesBasic = formatAbntReferenceBlock(draft.referencesBasic || '').trim();
+        const referencesComplementary = formatAbntReferenceBlock(draft.referencesComplementary || '').trim();
+
+        if (!referencesBasic) {
+            throw new AppError('Publicação oficial bloqueada. Informe ao menos as referências básicas em formato ABNT.', 400);
+        }
+
+        if (hasNonWebReferenceWithoutYear(referencesBasic)) {
+            throw new AppError('Publicação oficial bloqueada. Referências básicas não web devem conter ano de publicação.', 400);
+        }
+
+        if (referencesComplementary && hasNonWebReferenceWithoutYear(referencesComplementary)) {
+            throw new AppError('Publicação oficial bloqueada. Referências complementares não web devem conter ano de publicação.', 400);
+        }
     }
 
     async getDrafts(options?: {
@@ -254,6 +327,7 @@ export class ComponentDraftService {
                 ),
                 userId: userId,
             };
+            this.syncReferenceFields(draftDto);
 
             const [ draftWorkload, componentWorkload ] = await Promise.all([
                 this.workloadService.create(draftDto.workload ?? {}),
@@ -326,6 +400,8 @@ export class ComponentDraftService {
                     nextCode ?? draftExists.code
                 );
             }
+
+            this.syncReferenceFields(sanitizedRequestDto);
 
             if(sanitizedRequestDto.workload != null) {
                 const workloadData = {
@@ -421,6 +497,8 @@ export class ComponentDraftService {
                 throw new AppError('Draft not found.', 404);
             }
 
+            this.validateRequiredFieldsForOfficialPublication(draftExists);
+
             const [ currentPublishedComponent, draftWorkload ] = await Promise.all([
                 this.componentRepository.findOne({
                     where: { id: draftExists.componentId },
@@ -462,7 +540,11 @@ export class ComponentDraftService {
 
             return updatedComponent;
         } catch (err) {
-            throw new AppError('An error has been occurred.', 400);
+            if (err instanceof AppError) {
+                throw err;
+            }
+
+            throw new AppError('Não foi possível concluir a publicação oficial da disciplina.', 400);
         }
     }
 
