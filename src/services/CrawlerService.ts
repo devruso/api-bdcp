@@ -413,23 +413,56 @@ export class CrawlerService {
             internship: this.sanitizeWorkloadValue(data.workload?.internship),
         };
 
+        const normalizeImportedNarrativeField = (rawValue: unknown) => {
+            const normalized = this.normalizeParagraphText(rawValue).replace(/\s+/g, ' ').trim();
+
+            if (!normalized) {
+                return '';
+            }
+
+            if (/^\/?descri[cç][aã]o\s*:\s*n[aã]o\s+definido/i.test(normalized)) {
+                return '';
+            }
+
+            if (/^ementa\s+n[aã]o\s+dispon[ií]vel\s+na\s+listagem\s+p[úu]blica\s+do\s+sigaa\.?$/i.test(normalized)) {
+                return '';
+            }
+
+            if (/^conte[úu]do\s+program[aá]tico\s+n[aã]o\s+dispon[ií]vel\s+na\s+listagem\s+p[úu]blica\s+do\s+sigaa\.?$/i.test(normalized)) {
+                return '';
+            }
+
+            if (/^institucional\s*:/i.test(normalized) && /quantidade\s+de\s+avalia[cç][õo]es/i.test(normalized)) {
+                return '';
+            }
+
+            return normalized;
+        };
+
+        const description = normalizeImportedNarrativeField(data.description)
+            || 'Conteúdo programático não informado pela fonte.';
+        const syllabus = normalizeImportedNarrativeField(data.syllabus);
+        const objective = normalizeImportedNarrativeField(data.objective);
+        const methodology = normalizeImportedNarrativeField(data.methodology)
+            || 'Não há Metodologia cadastrada';
+        const learningAssessment = normalizeImportedNarrativeField(data.learningAssessment)
+            || 'Não há Avaliação de Aprendizagem cadastrada';
+        const bibliography = normalizeImportedNarrativeField(data.bibliography);
+
         return {
             ...data,
             code,
             name,
             department: this.sanitizeTextField(data.department, 'Departamento SIGAA'),
             semester: this.sanitizeTextField(data.semester),
-            description: this.sanitizeTextField(data.description, 'Conteúdo programático não informado pela fonte.'),
-            objective: this.sanitizeTextField(data.objective),
-            syllabus: this.normalizeParagraphText(data.syllabus),
-            bibliography: this.sanitizeTextField(data.bibliography),
+            description,
+            objective,
+            syllabus,
+            bibliography,
             prerequeriments: this.normalizePrerequeriments(data.prerequeriments),
-            methodology: this.sanitizeTextField(data.methodology, 'Não há Metodologia cadastrada'),
+            methodology,
             modality: this.sanitizeTextField(data.modality, 'DISCIPLINA'),
-            learningAssessment: this.sanitizeTextField(
-                data.learningAssessment,
-                'Não há Avaliação de Aprendizagem cadastrada'
-            ),
+            learningAssessment,
             academicLevel: data.academicLevel ?? AcademicLevel.GRADUATION,
             coRequisites: this.normalizeRelationCodes(data.coRequisites),
             equivalences: this.normalizeRelationCodes(data.equivalences),
@@ -1567,6 +1600,7 @@ export class CrawlerService {
                         studentPractice: data.workload?.practice,
                         studentTheory: data.workload?.theoretical,
                         studentInternship: data.workload?.internship,
+                        studentExtension: data.workloadExtension ?? data.workload?.extension ?? 0,
                     }))
             );
 
@@ -1799,11 +1833,46 @@ export class CrawlerService {
         userId: string,
         sourceType: 'department' | 'program',
         sourceId: string,
-        academicLevel: AcademicLevel,
+        academicLevel: AcademicLevel | 'all',
         options?: {
             reconcileExisting?: boolean;
         }
     ): Promise<ImportComponentsSummary> {
+        const levels: AcademicLevel[] = academicLevel === 'all'
+            ? [AcademicLevel.GRADUATION, AcademicLevel.MASTERS, AcademicLevel.DOCTORATE]
+            : [academicLevel];
+
+        if (levels.length > 1) {
+            const combined: ImportComponentsSummary = {
+                source: 'sigaa-public',
+                requested: 0,
+                created: 0,
+                skippedExisting: 0,
+                reconciled: 0,
+                failed: 0,
+                failures: [],
+                failureCategories: {},
+            };
+
+            for (const level of levels) {
+                const partial = await this.importComponentsFromSigaaPublic(userId, sourceType, sourceId, level, options);
+                combined.requested += partial.requested;
+                combined.created += partial.created;
+                combined.skippedExisting += partial.skippedExisting;
+                combined.reconciled = (combined.reconciled || 0) + (partial.reconciled || 0);
+                combined.failed += partial.failed;
+                combined.failures.push(...(partial.failures || []));
+
+                Object.entries(partial.failureCategories || {}).forEach(([key, value]) => {
+                    combined.failureCategories[key] = (combined.failureCategories[key] || 0) + value;
+                });
+            }
+
+            combined.failures = Array.from(new Set(combined.failures));
+            return combined;
+        }
+
+        const level = levels[0];
         const shouldReconcileExisting = options?.reconcileExisting ?? true;
         const normalizedSourceId = String(sourceId).trim();
 
@@ -1811,7 +1880,7 @@ export class CrawlerService {
             throw new AppError('Invalid SIGAA source id.', 400);
         }
 
-        const sourceUrls = this.getSigaaSourceUrls(sourceType, normalizedSourceId, academicLevel);
+        const sourceUrls = this.getSigaaSourceUrls(sourceType, normalizedSourceId, level);
         let componentsInfo: Array<IComponentInfoCrawler> = [];
         let failed = 0;
         const failures: string[] = [];
@@ -1831,7 +1900,7 @@ export class CrawlerService {
                 const html = this.decodeHtmlBuffer(data);
                 const $ = cheerio.load(html);
 
-                componentsInfo = this.extractSigaaListRows($, sourceType, academicLevel, sourceCookie);
+                componentsInfo = this.extractSigaaListRows($, sourceType, level, sourceCookie);
 
                 if (componentsInfo.length > 0) {
                     break;
@@ -1846,7 +1915,7 @@ export class CrawlerService {
         }
 
         if (componentsInfo.length === 0) {
-            componentsInfo = await this.searchSigaaComponentsByUnit(sourceType, normalizedSourceId, academicLevel);
+            componentsInfo = await this.searchSigaaComponentsByUnit(sourceType, normalizedSourceId, level);
         }
 
         if (componentsInfo.length === 0) {

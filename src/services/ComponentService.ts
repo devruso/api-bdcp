@@ -1,12 +1,8 @@
 import { Brackets, getCustomRepository, Raw, Repository } from 'typeorm';
 import fs from 'fs';
-import os from 'os';
 import path from 'path';
-import { spawnSync } from 'child_process';
-import puppeteer from 'puppeteer';
 const AdmZip = require('adm-zip');
-const HTMLtoDOCX = require('html-to-docx');
-import { generateHtml } from '../helpers/templates/component';
+import type { GenerateHtmlData } from '../helpers/templates/component';
 import { Component } from '../entities/Component';
 import { ComponentRepository } from '../repositories/ComponentRepository';
 import { AppError } from '../errors/AppError';
@@ -22,12 +18,16 @@ import {
 import { ComponentDraft } from '../entities/ComponentDraft';
 import { ComponentDraftRepository } from '../repositories/ComponentDraftRepository';
 import { AcademicLevel } from '../interfaces/AcademicLevel';
+import { composeBibliographySections, formatAbntReferenceBlock, splitBibliographySections } from '../helpers/referenceSections';
+import type { DocxToPdfConverter } from './export/DocxToPdfConverter';
+import { LibreOfficeDocxToPdfConverter } from './export/LibreOfficeDocxToPdfConverter';
 
 export class ComponentService {
     private componentRepository: Repository<Component>;
     private componentLogRepository: Repository<ComponentLog>;
     private componentDraftRepository: Repository<ComponentDraft>;
     private workloadService: WorkloadService;
+    private readonly pdfConverter: DocxToPdfConverter;
 
     private readonly mutableComponentFields: Array<keyof UpdateComponentRequestDto> = [
         'code',
@@ -40,6 +40,8 @@ export class ComponentService {
         'objective',
         'syllabus',
         'bibliography',
+        'referencesBasic',
+        'referencesComplementary',
         'modality',
         'learningAssessment',
         'academicLevel',
@@ -47,7 +49,7 @@ export class ComponentService {
         'workload',
     ];
 
-    constructor() {
+    constructor(pdfConverter: DocxToPdfConverter = new LibreOfficeDocxToPdfConverter()) {
         this.componentRepository = getCustomRepository(ComponentRepository);
         this.componentLogRepository = getCustomRepository(
             ComponentLogRepository
@@ -56,6 +58,7 @@ export class ComponentService {
             ComponentDraftRepository
         );
         this.workloadService = new WorkloadService();
+        this.pdfConverter = pdfConverter;
     }
 
     private normalizeTemplateText(value: string | undefined, emptyText = 'Não se aplica') {
@@ -99,60 +102,774 @@ export class ComponentService {
         return sanitized;
     }
 
+    private syncReferenceFields<T extends {
+        bibliography?: string;
+        referencesBasic?: string;
+        referencesComplementary?: string;
+    }>(payload: T) {
+        const bibliography = payload.bibliography?.trim();
+        const referencesBasic = payload.referencesBasic?.trim();
+        const referencesComplementary = payload.referencesComplementary?.trim();
+
+        if (referencesBasic !== undefined || referencesComplementary !== undefined) {
+            payload.referencesBasic = formatAbntReferenceBlock(referencesBasic ?? '');
+            payload.referencesComplementary = formatAbntReferenceBlock(referencesComplementary ?? '');
+            payload.bibliography = composeBibliographySections(payload.referencesBasic, payload.referencesComplementary);
+
+            return payload;
+        }
+
+        if (bibliography !== undefined) {
+            const sections = splitBibliographySections(bibliography);
+            payload.bibliography = bibliography;
+            payload.referencesBasic = formatAbntReferenceBlock(sections.basic);
+            payload.referencesComplementary = formatAbntReferenceBlock(sections.complementary);
+        }
+
+        return payload;
+    }
+
     private accentInsensitiveSql(column: string) {
         return `translate(LOWER(${column}), 'áàâãäåéèêëíìîïóòôõöúùûüçñ', 'aaaaaaeeeeiiiiooooouuuucn')`;
     }
 
 
-    private async generateTemplateDocx(html: string, componentCode: string) {
-        const docxBuffer = await HTMLtoDOCX(html, null, {
-            title: `Plano de ensino-aprendizagem - ${componentCode}`,
-            creator: 'BDCP',
-            margins: {
-                top: 720,
-                right: 720,
-                bottom: 720,
-                left: 720,
-            },
-            table: {
-                row: {
-                    cantSplit: true,
-                },
-            },
-        });
-
-        return Buffer.isBuffer(docxBuffer) ? docxBuffer : Buffer.from(docxBuffer);
+    private decodeXmlText(value: string) {
+        return value
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .replace(/&quot;/g, '"')
+            .replace(/&apos;/g, "'")
+            .replace(/&amp;/g, '&');
     }
 
-    private convertDocxToPdf(docxBuffer: Buffer, fileBaseName: string) {
-        const tempDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'bdcp-export-'));
-        const docxPath = path.join(tempDirectory, `${fileBaseName}.docx`);
-        const pdfPath = path.join(tempDirectory, `${fileBaseName}.pdf`);
+    private encodeXmlText(value: string) {
+        const sanitized = String(value)
+            // Remove caracteres de controle inválidos em XML 1.0.
+            .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '')
+            // Remove pares substitutos inválidos para evitar XML corrompido.
+            .replace(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])/g, '')
+            .replace(/(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g, '');
 
-        fs.writeFileSync(docxPath, docxBuffer);
+        return sanitized
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&apos;');
+    }
 
-        const converters = [
-            'C:\\Program Files\\LibreOffice\\program\\soffice.exe',
-            'C:\\Program Files (x86)\\LibreOffice\\program\\soffice.exe',
-            'soffice',
-            'libreoffice',
+    private normalizeSectionText(value: string | undefined, emptyText = 'Não informado') {
+        const normalized = String(value || '').replace(/\s+/g, ' ').trim();
+
+        if (!normalized) {
+            return emptyText;
+        }
+
+        return normalized;
+    }
+
+    private normalizeMultilineSectionText(
+        value: string | undefined,
+        emptyText = 'Não informado',
+        options?: { indentParagraphs?: boolean }
+    ) {
+        const lines = String(value || '')
+            .split(/\r?\n/)
+            .map((line) => line.trimEnd());
+
+        if (lines.every((line) => line.trim().length === 0)) {
+            return emptyText;
+        }
+
+        if (options?.indentParagraphs) {
+            return lines
+                .map((line) => (line.trim().length > 0 ? `    ${line.trimStart()}` : ''))
+                .join('\n');
+        }
+
+        return lines.join('\n');
+    }
+
+    private ensurePreserveSpaceAttribute(attrs: string, payload: string) {
+        if (/\bxml:space\s*=\s*"preserve"/.test(attrs)) {
+            return attrs;
+        }
+
+        if (/\s|\n/.test(payload)) {
+            return `${attrs} xml:space="preserve"`;
+        }
+
+        return attrs;
+    }
+
+    private replaceParagraphText(paragraphXml: string, newText: string) {
+        const sanitizedParagraphXml = this.stripParagraphNumbering(paragraphXml);
+        let replaced = false;
+        const normalizedLines = String(newText || '')
+            .replace(/\r\n/g, '\n')
+            .replace(/\r/g, '\n')
+            .split('\n')
+            .map((line) => line.trimEnd());
+        const hasVisibleContent = normalizedLines.some((line) => line.trim().length > 0);
+        const encodedPayload = this.encodeXmlText(
+            hasVisibleContent ? normalizedLines.join('\n') : ''
+        );
+
+        if (!/<w:t(?=[\s>])/.test(sanitizedParagraphXml)) {
+            if (/<w:pPr[\s\S]*?<\/w:pPr>/.test(sanitizedParagraphXml)) {
+                return sanitizedParagraphXml.replace(
+                    /(<w:pPr[\s\S]*?<\/w:pPr>)/,
+                    `$1<w:r><w:t>${encodedPayload}</w:t></w:r>`
+                );
+            }
+
+            return sanitizedParagraphXml.replace(
+                /<w:p([^>]*)>/,
+                `<w:p$1><w:r><w:t>${encodedPayload}</w:t></w:r>`
+            );
+        }
+
+        return sanitizedParagraphXml.replace(/<w:t(?=[\s>])([^>]*)>[\s\S]*?<\/w:t>/g, (_match, attrs) => {
+            if (!replaced) {
+                replaced = true;
+                const nextAttrs = this.ensurePreserveSpaceAttribute(attrs, hasVisibleContent ? normalizedLines.join('\n') : '');
+                return `<w:t${nextAttrs}>${encodedPayload}</w:t>`;
+            }
+
+            return `<w:t${attrs}></w:t>`;
+        });
+    }
+
+    private getParagraphPlainText(paragraphXml: string) {
+        const texts = Array.from(paragraphXml.matchAll(/<w:t(?=[\s>])[^>]*>([\s\S]*?)<\/w:t>/g)).map((item) => this.decodeXmlText(item[1]));
+        return texts.join('').replace(/\s+/g, ' ').trim();
+    }
+
+    private stripParagraphDrawings(paragraphXml: string) {
+        return paragraphXml
+            .replace(/<w:drawing[\s\S]*?<\/w:drawing>/g, '')
+            .replace(/<w:pict[\s\S]*?<\/w:pict>/g, '');
+    }
+
+    private applyParagraphSpacing(
+        paragraphXml: string,
+        spacing: { before?: number; after?: number; line?: number; lineRule?: 'auto' | 'exact' | 'atLeast' }
+    ) {
+        const attrs = [
+            spacing.before !== undefined ? `w:before="${spacing.before}"` : '',
+            spacing.after !== undefined ? `w:after="${spacing.after}"` : '',
+            spacing.line !== undefined ? `w:line="${spacing.line}"` : '',
+            spacing.lineRule ? `w:lineRule="${spacing.lineRule}"` : '',
+        ]
+            .filter(Boolean)
+            .join(' ');
+
+        if (!attrs) {
+            return paragraphXml;
+        }
+
+        const spacingNode = `<w:spacing ${attrs}/>`;
+
+        if (!/<w:pPr[\s>]/.test(paragraphXml)) {
+            return paragraphXml.replace(/<w:p([^>]*)>/, `<w:p$1><w:pPr>${spacingNode}</w:pPr>`);
+        }
+
+        if (/<w:pPr[\s\S]*?<w:spacing[\s\S]*?\/>[\s\S]*?<\/w:pPr>/.test(paragraphXml)) {
+            return paragraphXml.replace(/<w:spacing[\s\S]*?\/>/, spacingNode);
+        }
+
+        if (/<w:pPr\s*\/>/.test(paragraphXml)) {
+            return paragraphXml.replace(/<w:pPr\s*\/>/, `<w:pPr>${spacingNode}</w:pPr>`);
+        }
+
+        return paragraphXml.replace(/<w:pPr([\s\S]*?)>/, `<w:pPr$1>${spacingNode}`);
+    }
+
+    private applyParagraphAlignment(paragraphXml: string, alignment: 'left' | 'center' | 'right' | 'both') {
+        const jcNode = `<w:jc w:val="${alignment}"/>`;
+
+        if (!/<w:pPr[\s>]/.test(paragraphXml)) {
+            return paragraphXml.replace(/<w:p([^>]*)>/, `<w:p$1><w:pPr>${jcNode}</w:pPr>`);
+        }
+
+        if (/<w:pPr[\s\S]*?<w:jc[\s\S]*?\/>[\s\S]*?<\/w:pPr>/.test(paragraphXml)) {
+            return paragraphXml.replace(/<w:jc[\s\S]*?\/>/, jcNode);
+        }
+
+        if (/<w:pPr\s*\/>/.test(paragraphXml)) {
+            return paragraphXml.replace(/<w:pPr\s*\/>/, `<w:pPr>${jcNode}</w:pPr>`);
+        }
+
+        return paragraphXml.replace(/<w:pPr([\s\S]*?)>/, `<w:pPr$1>${jcNode}`);
+    }
+
+    private stripParagraphNumbering(paragraphXml: string) {
+        return paragraphXml
+            .replace(/<w:numPr[\s\S]*?<\/w:numPr>/g, '')
+            .replace(/<w:pStyle\s+w:val="ListParagraph"\s*\/>/g, '');
+    }
+
+    private formatPrerequerimentsForTemplate(value: string | undefined) {
+        const normalized = this.normalizeTemplateText(value, 'Não se aplica');
+
+        if (normalized === 'Não se aplica') {
+            return normalized;
+        }
+
+        const items = normalized
+            .split(/[\n;,]+/)
+            .map((item) => item.trim())
+            .filter((item) => item.length > 0);
+
+        if (items.length === 0) {
+            return 'Não se aplica';
+        }
+
+        return items.join(', ');
+    }
+
+    private normalizeModalityForTemplate(value: string | undefined) {
+        return this.normalizeTemplateText(value, 'Não se aplica');
+    }
+
+    private normalizeWorkloadCellParagraph(paragraphXml: string) {
+        const withoutNumbering = this.stripParagraphNumbering(paragraphXml);
+        const centered = this.applyParagraphAlignment(withoutNumbering, 'center');
+
+        return this.applyParagraphSpacing(centered, {
+            before: 0,
+            after: 0,
+            line: 200,
+            lineRule: 'auto',
+        });
+    }
+
+    private extractParagraphProperties(paragraphXml: string) {
+        const match = paragraphXml.match(/<w:pPr[\s\S]*?<\/w:pPr>|<w:pPr\s*\/>/);
+        return match ? match[0] : undefined;
+    }
+
+    private applyParagraphProperties(paragraphXml: string, paragraphPropertiesXml?: string) {
+        if (!paragraphPropertiesXml) {
+            return paragraphXml;
+        }
+
+        if (/<w:pPr[\s\S]*?<\/w:pPr>|<w:pPr\s*\/>/.test(paragraphXml)) {
+            return paragraphXml.replace(/<w:pPr[\s\S]*?<\/w:pPr>|<w:pPr\s*\/>/, paragraphPropertiesXml);
+        }
+
+        return paragraphXml.replace(/<w:p([^>]*)>/, `<w:p$1>${paragraphPropertiesXml}`);
+    }
+
+    private fillDocxTemplateFromBase(data: GenerateHtmlData) {
+        const templatePath = path.resolve(process.cwd(), 'UFBA_TEMPLATE.docx');
+
+        if (!fs.existsSync(templatePath)) {
+            throw new AppError('UFBA_TEMPLATE.docx não encontrado para exportação.', 500);
+        }
+
+        const zip = new AdmZip(templatePath);
+        const documentXml = zip.readAsText('word/document.xml');
+        const paragraphs = Array.from(documentXml.matchAll(/<w:p[\s\S]*?<\/w:p>/g)) as RegExpMatchArray[];
+        const updatedParagraphs = paragraphs.map((match) => match[0]);
+        const texts = updatedParagraphs.map((paragraph) => this.getParagraphPlainText(paragraph));
+
+        const sectionHeadersRaw = [
+            'EMENTA',
+            'OBJETIVOS',
+            'OBJETIVO GERAL',
+            'OBJETIVOS ESPECÍFICOS',
+            'CONTEÚDO PROGRAMÁTICO',
+            'METODOLOGIA DE ENSINO-APRENDIZAGEM',
+            'AVALIAÇÃO DA APRENDIZAGEM',
+            'REFERÊNCIAS',
+            'REFERÊNCIAS BÁSICAS',
+            'REFERÊNCIAS COMPLEMENTARES',
+        ];
+        const tailMarkers = [
+            'Docente(s) Responsável(is)',
+            'Aprovado em reunião de Departamento',
+            'Assinatura do Chefe',
         ];
 
-        for (const converter of converters) {
-            const command = converter;
-            const args = ['--headless', '--convert-to', 'pdf', '--outdir', tempDirectory, docxPath];
-            const result = spawnSync(command, args, { stdio: 'ignore' });
+        const normalizeHeading = (value: string) => value
+            .toUpperCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/\s+/g, ' ')
+            .trim();
+        const sectionHeaders = new Set(sectionHeadersRaw.map((header) => normalizeHeading(header)));
+        const normalizedTailMarkers = tailMarkers.map((marker) => normalizeHeading(marker));
+        const indexOfExact = (target: string, fromIndex = 0) => texts.findIndex(
+            (text, index) => index >= fromIndex && normalizeHeading(text) === normalizeHeading(target)
+        );
+        const findNextHeadingIndex = (fromIndex: number) => {
+            for (let index = fromIndex + 1; index < texts.length; index += 1) {
+                const text = texts[index];
+                const normalizedText = normalizeHeading(text);
 
-            if (result.status === 0 && fs.existsSync(pdfPath)) {
-                const pdfBuffer = fs.readFileSync(pdfPath);
-                fs.rmSync(tempDirectory, { recursive: true, force: true });
+                if (sectionHeaders.has(normalizedText)) {
+                    return index;
+                }
 
-                return pdfBuffer;
+                if (normalizedTailMarkers.some((marker) => normalizedText.startsWith(marker))) {
+                    return index;
+                }
+            }
+
+            return texts.length;
+        };
+
+        const replaceIndex = (index: number, value: string) => {
+            if (index < 0 || index >= updatedParagraphs.length) {
+                return;
+            }
+
+            updatedParagraphs[index] = this.replaceParagraphText(updatedParagraphs[index], value);
+            texts[index] = value;
+        };
+
+        const clearIndex = (index: number) => {
+            replaceIndex(index, '');
+        };
+
+        const replaceSectionContent = (
+            heading: string,
+            value: string,
+            options?: {
+                preserveOnlyFirst?: boolean;
+                spacing?: { before?: number; after?: number; line?: number; lineRule?: 'auto' | 'exact' | 'atLeast' };
+                trailingSpacing?: { before?: number; after?: number; line?: number; lineRule?: 'auto' | 'exact' | 'atLeast' };
+            }
+        ) => {
+            const headingIndex = indexOfExact(heading);
+
+            if (headingIndex < 0) {
+                return;
+            }
+
+            const nextHeadingIndex = findNextHeadingIndex(headingIndex);
+            const contentIndexes: number[] = [];
+
+            for (let index = headingIndex + 1; index < nextHeadingIndex; index += 1) {
+                const text = texts[index];
+
+                if (sectionHeaders.has(normalizeHeading(text))) {
+                    continue;
+                }
+
+                contentIndexes.push(index);
+            }
+
+            if (contentIndexes.length === 0) {
+                return;
+            }
+
+            replaceIndex(contentIndexes[0], value);
+
+            if (options?.spacing) {
+                updatedParagraphs[contentIndexes[0]] = this.applyParagraphSpacing(
+                    updatedParagraphs[contentIndexes[0]],
+                    options.spacing
+                );
+            }
+
+            if (options?.preserveOnlyFirst !== false) {
+                for (let index = 1; index < contentIndexes.length; index += 1) {
+                    const trailingIndex = contentIndexes[index];
+                    clearIndex(trailingIndex);
+                    updatedParagraphs[trailingIndex] = this.stripParagraphNumbering(updatedParagraphs[trailingIndex]);
+
+                    if (options?.trailingSpacing) {
+                        updatedParagraphs[trailingIndex] = this.applyParagraphSpacing(
+                            updatedParagraphs[trailingIndex],
+                            options.trailingSpacing
+                        );
+                    }
+                }
+            }
+        };
+
+        const toReferenceLines = (value: string | undefined, emptyText: string) => {
+            const lines = String(value || '')
+                .split(/\r?\n/)
+                .map((line) => line.trim())
+                .filter((line) => line.length > 0);
+
+            if (lines.length === 0) {
+                return emptyText;
+            }
+
+            return lines.join('\n');
+        };
+
+        const bibliographySections = splitBibliographySections(data.bibliography);
+        const referencesBasic = toReferenceLines(formatAbntReferenceBlock(data.referencesBasic || bibliographySections.basic), 'Não informado');
+        const referencesComplementary = toReferenceLines(formatAbntReferenceBlock(data.referencesComplementary || bibliographySections.complementary), 'Não informado');
+
+        // Preenche semestre com o valor recebido da API/front-end, sem depender de exemplos do template.
+        const normalizedSemester = this.normalizeSectionText(data.semester, 'Não informado');
+        texts.forEach((text, index) => {
+            if (/^Semestre\s+\d{4}\.\d$/i.test(text)) {
+                replaceIndex(index, `Semestre ${normalizedSemester}`);
+            }
+        });
+
+        // Preenche valores de identificação (código, nome e departamento) por posição lógica dentro da seção.
+        const identificationStart = indexOfExact('DADOS DE IDENTIFICAÇÃO E ATRIBUTOS');
+        const studentWorkloadStart = indexOfExact('CARGA HORÁRIA (estudante)');
+        if (identificationStart >= 0 && studentWorkloadStart > identificationStart) {
+            const identificationLabels = new Set([
+                normalizeHeading('CÓDIGO'),
+                normalizeHeading('NOME'),
+                normalizeHeading('DEPARTAMENTO OU EQUIVALENTE'),
+            ]);
+            const identificationLabelIndexes: number[] = [];
+            const valueIndexes: number[] = [];
+
+            for (let index = identificationStart + 1; index < studentWorkloadStart; index += 1) {
+                const text = texts[index];
+
+                if (!text) {
+                    continue;
+                }
+
+                if (identificationLabels.has(normalizeHeading(text))) {
+                    identificationLabelIndexes.push(index);
+                    continue;
+                }
+
+                valueIndexes.push(index);
+            }
+
+            if (valueIndexes[0] !== undefined) {
+                replaceIndex(valueIndexes[0], this.normalizeSectionText(data.code));
+            }
+
+            if (valueIndexes[1] !== undefined) {
+                replaceIndex(valueIndexes[1], this.normalizeSectionText(data.name));
+            }
+
+            if (valueIndexes[2] !== undefined) {
+                replaceIndex(valueIndexes[2], this.normalizeSectionText(data.department));
+            }
+
+            identificationLabelIndexes.forEach((index) => {
+                updatedParagraphs[index] = this.applyParagraphAlignment(updatedParagraphs[index], 'center');
+                updatedParagraphs[index] = this.applyParagraphSpacing(updatedParagraphs[index], {
+                    before: 40,
+                    after: 40,
+                    line: 240,
+                    lineRule: 'auto',
+                });
+            });
+
+            valueIndexes.slice(0, 3).forEach((index) => {
+                updatedParagraphs[index] = this.applyParagraphAlignment(updatedParagraphs[index], 'center');
+                updatedParagraphs[index] = this.applyParagraphSpacing(updatedParagraphs[index], {
+                    before: 40,
+                    after: 40,
+                    line: 240,
+                    lineRule: 'auto',
+                });
+            });
+
+            const filledValueIndexes = valueIndexes.slice(0, 3);
+            if (identificationLabelIndexes.length > 0 && filledValueIndexes.length > 0) {
+                const firstIdentificationIndex = Math.min(...identificationLabelIndexes, ...filledValueIndexes);
+                const lastIdentificationIndex = Math.max(...identificationLabelIndexes, ...filledValueIndexes);
+                for (let index = firstIdentificationIndex; index <= lastIdentificationIndex; index += 1) {
+                    if (!texts[index]) {
+                        updatedParagraphs[index] = this.applyParagraphAlignment(updatedParagraphs[index], 'center');
+                        updatedParagraphs[index] = this.applyParagraphSpacing(updatedParagraphs[index], {
+                            before: 40,
+                            after: 40,
+                            line: 240,
+                            lineRule: 'auto',
+                        });
+                    }
+                }
             }
         }
 
-        fs.rmSync(tempDirectory, { recursive: true, force: true });
-        return null;
+        // Modalidade e pré-requisito em campos próprios do cabeçalho de carga horária.
+        if (studentWorkloadStart >= 0) {
+            const teacherWorkloadStart = indexOfExact('CARGA HORÁRIA (docente/turma)');
+            const workloadEnd = teacherWorkloadStart > studentWorkloadStart ? teacherWorkloadStart : texts.length;
+            const modalityHeaderIndex = indexOfExact('MODALIDADE/ SUBMODALIDADE');
+            const prereqHeaderIndex = indexOfExact('PRÉ-REQUISITO (POR CURSO)');
+            const disciplinaIndex = indexOfExact('DISCIPLINA');
+
+            const firstValueBetween = (start: number, end: number) => {
+                if (start < 0 || end <= start) {
+                    return -1;
+                }
+
+                for (let index = start + 1; index < end; index += 1) {
+                    const normalized = normalizeHeading(texts[index]);
+
+                    if (!sectionHeaders.has(normalized) && normalized.length > 0) {
+                        return index;
+                    }
+                }
+
+                // Fallback: quando a célula no template estiver vazia, usar a primeira posição disponível.
+                if (start + 1 < end) {
+                    return start + 1;
+                }
+
+                return -1;
+            };
+
+            const findPrereqTarget = (start: number, end: number) => {
+                if (start < 0 || end <= start) {
+                    return -1;
+                }
+
+                for (let index = start + 1; index < end; index += 1) {
+                    if (/^(n[aã]o\s+se\s+aplica|n\/a)$/i.test(texts[index])) {
+                        return index;
+                    }
+                }
+
+                for (let index = end - 1; index > start; index -= 1) {
+                    if (!texts[index]) {
+                        return index;
+                    }
+                }
+
+                return -1;
+            };
+
+            const modalityValueIndex = firstValueBetween(
+                modalityHeaderIndex,
+                prereqHeaderIndex > 0 ? prereqHeaderIndex : workloadEnd
+            );
+
+            const prereqValueIndex = findPrereqTarget(
+                prereqHeaderIndex,
+                teacherWorkloadStart > prereqHeaderIndex ? teacherWorkloadStart : (disciplinaIndex > 0 ? disciplinaIndex : workloadEnd)
+            );
+
+            if (modalityValueIndex >= 0) {
+                replaceIndex(modalityValueIndex, this.normalizeModalityForTemplate(data.modality));
+                updatedParagraphs[modalityValueIndex] = this.applyParagraphAlignment(updatedParagraphs[modalityValueIndex], 'center');
+            }
+
+            if (prereqValueIndex >= 0) {
+                replaceIndex(prereqValueIndex, this.formatPrerequerimentsForTemplate(data.prerequeriments));
+                updatedParagraphs[prereqValueIndex] = this.applyParagraphAlignment(updatedParagraphs[prereqValueIndex], 'center');
+                updatedParagraphs[prereqValueIndex] = this.applyParagraphSpacing(updatedParagraphs[prereqValueIndex], {
+                    before: 0,
+                    after: 0,
+                    line: 200,
+                    lineRule: 'auto',
+                });
+            }
+        }
+
+        // Carga horária: preenche células por ordem de colunas T, T/P, P, PP, Ext, E, TOTAL.
+        const toWorkloadNumber = (value?: number | null) => String(value ?? 0);
+        const sumValues = (...values: Array<number | null | undefined>) => values.reduce<number>(
+            (acc, current) => acc + (current ?? 0),
+            0
+        );
+
+        const buildWorkloadVector = (workload?: {
+            theory?: number | null;
+            theoryPractice?: number | null;
+            practice?: number | null;
+            practiceInternship?: number | null;
+            extension?: number | null;
+            internship?: number | null;
+        }, options?: { includeTotal?: boolean }) => {
+            const theory = workload?.theory ?? 0;
+            const theoryPractice = workload?.theoryPractice ?? 0;
+            const practice = workload?.practice ?? 0;
+            const practiceInternship = workload?.practiceInternship ?? 0;
+            const internship = workload?.internship ?? 0;
+            const extension = workload?.extension ?? 0;
+
+            // Compatibilidade com cargas legadas consolidadas:
+            // quando somente "theory" vier preenchido, tratamos como valor consolidado em E/TOTAL.
+            const hasOnlyTheory = theory > 0
+                && theoryPractice === 0
+                && practice === 0
+                && practiceInternship === 0
+                && extension === 0
+                && internship === 0;
+
+            const normalizedTheory = hasOnlyTheory ? 0 : theory;
+            const normalizedInternship = hasOnlyTheory ? theory : internship;
+            const total = sumValues(
+                normalizedTheory,
+                theoryPractice,
+                practice,
+                practiceInternship,
+                extension,
+                normalizedInternship
+            );
+
+            const values = [
+                toWorkloadNumber(normalizedTheory),
+                toWorkloadNumber(theoryPractice),
+                toWorkloadNumber(practice),
+                toWorkloadNumber(practiceInternship),
+                toWorkloadNumber(extension),
+                toWorkloadNumber(normalizedInternship),
+            ];
+
+            if (options?.includeTotal !== false) {
+                values.push(toWorkloadNumber(total));
+            }
+
+            return values;
+        };
+
+        if (studentWorkloadStart >= 0) {
+            const teacherWorkloadStart = indexOfExact('CARGA HORÁRIA (docente/turma)');
+            const textualSectionStart = indexOfExact('EMENTA');
+            const workloadVisualEnd = textualSectionStart > studentWorkloadStart ? textualSectionStart : texts.length;
+            for (let index = studentWorkloadStart; index < workloadVisualEnd; index += 1) {
+                updatedParagraphs[index] = this.stripParagraphNumbering(updatedParagraphs[index]);
+            }
+
+            const isWorkloadCellCandidate = (text: string) => text === '' || /^\d+$/.test(text);
+
+            const findNumericRunStart = (startIndex: number, endExclusive: number, size: number) => {
+                for (let index = startIndex + 1; index <= endExclusive - size; index += 1) {
+                    let matches = true;
+
+                    for (let offset = 0; offset < size; offset += 1) {
+                        if (!isWorkloadCellCandidate(texts[index + offset])) {
+                            matches = false;
+                            break;
+                        }
+                    }
+
+                    if (matches) {
+                        return index;
+                    }
+                }
+
+                return -1;
+            };
+
+            const totalHeaderIndexes = texts
+                .map((text, index) => ({ text, index }))
+                .filter((item) => normalizeHeading(item.text) === 'TOTAL')
+                .map((item) => item.index);
+
+            const studentTotalHeaderIndex = totalHeaderIndexes[0] ?? -1;
+            const teacherTotalHeaderIndex = totalHeaderIndexes[1] ?? -1;
+
+            const firstStudentNumericIndex = findNumericRunStart(
+                studentTotalHeaderIndex > 0 ? studentTotalHeaderIndex : studentWorkloadStart,
+                teacherWorkloadStart > 0 ? teacherWorkloadStart : workloadVisualEnd,
+                7
+            );
+
+            if (firstStudentNumericIndex > 0) {
+                const studentValues = buildWorkloadVector(data.workload?.student);
+                studentValues.forEach((value, offset) => {
+                    const targetIndex = firstStudentNumericIndex + offset;
+                    replaceIndex(targetIndex, value);
+                    updatedParagraphs[targetIndex] = this.normalizeWorkloadCellParagraph(updatedParagraphs[targetIndex]);
+                });
+
+                const teacherNumericStart = findNumericRunStart(
+                    teacherTotalHeaderIndex > 0 ? teacherTotalHeaderIndex : firstStudentNumericIndex + 6,
+                    workloadVisualEnd,
+                    7
+                );
+
+                const teacherValues = buildWorkloadVector(data.workload?.professor);
+                teacherValues.forEach((value, offset) => {
+                    const targetIndex = teacherNumericStart > 0 ? teacherNumericStart + offset : firstStudentNumericIndex + 34 + offset;
+                    replaceIndex(targetIndex, value);
+                    updatedParagraphs[targetIndex] = this.normalizeWorkloadCellParagraph(updatedParagraphs[targetIndex]);
+                });
+
+                const moduleNumericStart = findNumericRunStart(
+                    teacherNumericStart > 0 ? teacherNumericStart + 7 : firstStudentNumericIndex + 41,
+                    workloadVisualEnd,
+                    6
+                );
+
+                const moduleValues = buildWorkloadVector(data.workload?.module, { includeTotal: false });
+                moduleValues.forEach((value, offset) => {
+                    const targetIndex = moduleNumericStart > 0 ? moduleNumericStart + offset : firstStudentNumericIndex + 41 + offset;
+                    replaceIndex(targetIndex, value);
+                    updatedParagraphs[targetIndex] = this.normalizeWorkloadCellParagraph(updatedParagraphs[targetIndex]);
+                });
+
+                // O bloco de módulo no template vigente tem 6 colunas (sem TOTAL).
+                const moduleTrailingIndex = (moduleNumericStart > 0 ? moduleNumericStart : firstStudentNumericIndex + 41) + 6;
+                if (moduleTrailingIndex < workloadVisualEnd) {
+                    clearIndex(moduleTrailingIndex);
+                }
+            }
+        }
+
+        // Assinatura docente no mesmo local do template oficial.
+        const approvedBy = this.normalizeSectionText(data.approval?.approvedBy, 'Não informado');
+        const signatureLineIndex = texts.findIndex(
+            (text) => /^Nome:\s*/.test(text) && /Assinatura:/.test(text) && !/Nome:\s*_+/.test(text)
+        );
+        if (signatureLineIndex >= 0) {
+            replaceIndex(signatureLineIndex, `Nome: ${approvedBy} Assinatura: ____________________________________`);
+        }
+
+        const chiefSignatureLineIndex = texts.findIndex(
+            (text) => /^Nome:\s*_+/.test(text) && /Assinatura:/.test(text)
+        );
+        if (chiefSignatureLineIndex >= 0) {
+            replaceIndex(chiefSignatureLineIndex, 'Nome: ___________________________________________ Assinatura: ____________________________________');
+        }
+
+        const facultyHeaderIndex = texts.findIndex((text) => text.startsWith('Docente(s) Responsável(is)'));
+        if (facultyHeaderIndex >= 0) {
+            updatedParagraphs[facultyHeaderIndex] = this.stripParagraphDrawings(updatedParagraphs[facultyHeaderIndex]);
+        }
+
+        // Seções textuais principais.
+        replaceSectionContent('EMENTA', this.normalizeSectionText(data.syllabus));
+        const normalizedObjectives = this.normalizeMultilineSectionText(data.objective, 'Não informado', {
+            indentParagraphs: true,
+        });
+        replaceSectionContent('OBJETIVO GERAL', normalizedObjectives, {
+            spacing: { before: 0, after: 20, line: 252, lineRule: 'auto' },
+        });
+        replaceSectionContent('OBJETIVOS ESPECÍFICOS', normalizedObjectives, {
+            spacing: { before: 0, after: 20, line: 252, lineRule: 'auto' },
+        });
+        replaceSectionContent(
+            'CONTEÚDO PROGRAMÁTICO',
+            this.normalizeSectionText((data as unknown as { description?: string }).description || data.program),
+            { preserveOnlyFirst: true }
+        );
+        replaceSectionContent('METODOLOGIA DE ENSINO-APRENDIZAGEM', this.normalizeSectionText(data.methodology));
+        replaceSectionContent('AVALIAÇÃO DA APRENDIZAGEM', this.normalizeSectionText(data.learningAssessment));
+        replaceSectionContent('REFERÊNCIAS BÁSICAS', referencesBasic, {
+            spacing: { before: 60, after: 90, line: 276, lineRule: 'auto' },
+            trailingSpacing: { before: 0, after: 20, line: 228, lineRule: 'auto' },
+        });
+        replaceSectionContent('REFERÊNCIAS COMPLEMENTARES', referencesComplementary, {
+            spacing: { before: 40, after: 50, line: 228, lineRule: 'auto' },
+            trailingSpacing: { before: 0, after: 20, line: 228, lineRule: 'auto' },
+        });
+
+        let cursor = 0;
+        const nextDocumentXml = documentXml.replace(/<w:p[\s\S]*?<\/w:p>/g, () => {
+            const nextParagraph = updatedParagraphs[cursor];
+            cursor += 1;
+            return nextParagraph;
+        });
+
+        zip.updateFile('word/document.xml', Buffer.from(nextDocumentXml, 'utf-8'));
+
+        return zip.toBuffer();
     }
 
     private extractPrerequerimentCodes(value?: string) {
@@ -298,6 +1015,7 @@ export class ComponentService {
                 ),
                 userId: userId,
             };
+            this.syncReferenceFields(componentDto);
 
             const [ componentWorkload, draftWorkload ] = await Promise.all(
                 new Array(2)
@@ -386,6 +1104,8 @@ export class ComponentService {
                     nextCode ?? componentExists.code
                 );
             }
+
+            this.syncReferenceFields(sanitizedComponentDto);
 
             if (sanitizedComponentDto.workload != null) {
                 const workloadData = {
@@ -485,7 +1205,7 @@ export class ComponentService {
             ?.filter((log) => log.type === ComponentLogType.APPROVAL)
             .sort((left, right) => right.createdAt.getTime() - left.createdAt.getTime())[0];
 
-        const data: Parameters<typeof generateHtml>[0] = {
+        const data: GenerateHtmlData = {
             ...component,
             approval: latestApprovalLog
                 ? {
@@ -501,6 +1221,7 @@ export class ComponentService {
                         practice: workload.studentPractice,
                         theoryPractice: workload.studentTheoryPractice,
                         internship: workload.studentInternship,
+                        extension: workload.studentExtension,
                         practiceInternship:
                               workload.studentPracticeInternship,
                     },
@@ -509,6 +1230,7 @@ export class ComponentService {
                         practice: workload.teacherPractice,
                         theoryPractice: workload.teacherTheoryPractice,
                         internship: workload.teacherInternship,
+                        extension: workload.teacherExtension,
                         practiceInternship:
                               workload.teacherPracticeInternship,
                     },
@@ -517,6 +1239,7 @@ export class ComponentService {
                         practice: workload.modulePractice,
                         theoryPractice: workload.moduleTheoryPractice,
                         internship: workload.moduleInternship,
+                        extension: workload.moduleExtension,
                         practiceInternship: workload.modulePracticeInternship,
                     },
                 }
@@ -524,8 +1247,7 @@ export class ComponentService {
             exportMode: format === 'pdf' ? 'pdf' : 'docx',
         };
 
-        const html = generateHtml(data);
-        const templateDocx = await this.generateTemplateDocx(html, component.code);
+        const templateDocx = this.fillDocxTemplateFromBase(data);
 
         if (format === 'doc' || format === 'docx') {
             return {
@@ -536,7 +1258,10 @@ export class ComponentService {
             };
         }
 
-        const convertedPdf = this.convertDocxToPdf(templateDocx, component.code);
+        const convertedPdf = this.pdfConverter.convert({
+            docxBuffer: templateDocx,
+            fileBaseName: component.code,
+        });
 
         if (convertedPdf) {
             return {
@@ -546,32 +1271,9 @@ export class ComponentService {
             };
         }
 
-        const chromiumPath = process.env.PUPPETEER_EXECUTABLE_PATH;
-        const browser = await puppeteer.launch({
-            headless: true,
-            executablePath: chromiumPath || undefined,
-            args: [
-                '--no-sandbox',
-                '--disable-setuid-sandbox',
-                '--disable-dev-shm-usage',
-            ],
-        });
-        const page = await browser.newPage();
-        await page.setViewport({
-            width: 1560,
-            height: 1920,
-        });
-        await page.setContent(html, { waitUntil: 'domcontentloaded' });
-        const pdf = await page.pdf({
-            printBackground: true,
-        });
-
-        await browser.close();
-
-        return {
-            buffer: pdf,
-            contentType: 'application/pdf',
-            fileName: `${component.code}.pdf`,
-        };
+        throw new AppError(
+            'Nao foi possivel converter DOCX oficial para PDF. Instale o LibreOffice no ambiente para manter fidelidade total ao template Word.',
+            500
+        );
     }
 }

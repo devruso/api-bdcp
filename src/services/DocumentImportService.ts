@@ -6,6 +6,7 @@ import {
     ImportDraftPreviewPayload,
     ImportDraftPreviewResponseDto,
 } from '../dtos/component/draft/ImportDraftPreviewResponse';
+import { splitBibliographySections } from '../helpers/referenceSections';
 
 type ParsedDocument = {
     rawText: string;
@@ -77,6 +78,8 @@ const buildEmptyPayload = (): ImportDraftPreviewPayload => ({
     syllabus: '',
     learningAssessment: '',
     bibliography: '',
+    referencesBasic: '',
+    referencesComplementary: '',
     workload: {},
 });
 
@@ -122,6 +125,9 @@ export class DocumentImportService {
         suggestedDraft.methodology = extractedSections.methodology ?? '';
         suggestedDraft.learningAssessment = extractedSections.learningAssessment ?? '';
         suggestedDraft.bibliography = extractedSections.bibliography ?? '';
+        const referenceSections = splitBibliographySections(suggestedDraft.bibliography);
+        suggestedDraft.referencesBasic = referenceSections.basic;
+        suggestedDraft.referencesComplementary = referenceSections.complementary;
 
         suggestedDraft.workload = parsedDocument.html
             ? this.extractWorkloadFromHtml(parsedDocument.html, warnings)
@@ -304,6 +310,7 @@ export class DocumentImportService {
             values[`${prefix}TheoryPractice` as keyof typeof values] = numbers[1] ?? 0;
             values[`${prefix}Practice` as keyof typeof values] = numbers[2] ?? 0;
             values[`${prefix}PracticeInternship` as keyof typeof values] = numbers[3] ?? 0;
+            values[`${prefix}Extension` as keyof typeof values] = numbers[4] ?? 0;
             values[`${prefix}Internship` as keyof typeof values] = numbers[5] ?? numbers[4] ?? 0;
         };
 

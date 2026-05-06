@@ -24,6 +24,9 @@ class ComponentWorkload {
     @Column({ name: 'teacher_practice_internship', default: 0 })
         teacherPracticeInternship?: number;
 
+    @Column({ name: 'teacher_extension', default: 0 })
+        teacherExtension?: number;
+
     @Column({ name: 'student_theory', default: 0 })
         studentTheory?: number;
 
@@ -39,6 +42,9 @@ class ComponentWorkload {
     @Column({ name: 'student_practice_internship', default: 0 })
         studentPracticeInternship?: number;
 
+    @Column({ name: 'student_extension', default: 0 })
+        studentExtension?: number;
+
     @Column({ name: 'module_theory', default: 0 })
         moduleTheory?: number;
 
@@ -53,6 +59,9 @@ class ComponentWorkload {
 
     @Column({ name: 'module_practice_internship', default: 0 })
         modulePracticeInternship?: number;
+
+    @Column({ name: 'module_extension', default: 0 })
+        moduleExtension?: number;
 
     @OneToOne(() => Component, (component) => component.workload)
         component?: Component;

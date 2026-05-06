@@ -31,6 +31,11 @@ export class ComponentWorkloadDto implements Omit<ComponentWorkload, 'id'> {
     @IsOptional()
     @CustomIsNumber()
     @CustomMin(0)
+    public teacherExtension?: number;
+
+    @IsOptional()
+    @CustomIsNumber()
+    @CustomMin(0)
     public studentTheory?: number;
 
     @IsOptional()
@@ -56,6 +61,11 @@ export class ComponentWorkloadDto implements Omit<ComponentWorkload, 'id'> {
     @IsOptional()
     @CustomIsNumber()
     @CustomMin(0)
+    public studentExtension?: number;
+
+    @IsOptional()
+    @CustomIsNumber()
+    @CustomMin(0)
     public moduleTheory?: number;
 
     @IsOptional()
@@ -77,4 +87,9 @@ export class ComponentWorkloadDto implements Omit<ComponentWorkload, 'id'> {
     @CustomIsNumber()
     @CustomMin(0)
     public modulePracticeInternship?: number;
+
+    @IsOptional()
+    @CustomIsNumber()
+    @CustomMin(0)
+    public moduleExtension?: number;
 }

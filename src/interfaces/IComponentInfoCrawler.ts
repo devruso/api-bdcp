@@ -26,5 +26,6 @@ export interface IComponentInfoCrawler {
         theoretical: number;
         practice: number;
         internship: number;
+        extension?: number;
     }
 }
