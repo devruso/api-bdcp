@@ -7,6 +7,7 @@ import { AppError } from '../errors/AppError';
 import Mailer from '../middlewares/Mailer';
 import { UserRole } from '../interfaces/UserRole';
 import { assertUfbaInstitutionalEmail, normalizeEmail } from '../helpers/institutionalEmail';
+import { UserInviteService } from './UserInviteService';
 
 class UserService {
 
@@ -169,12 +170,24 @@ class UserService {
 
         const createdUser = await this.userRepository.save(user);
 
+        let emailDeliveryStatus: 'sent' | 'mock' | 'failed' | 'disabled' = 'disabled';
+        let emailDeliveryError: string | undefined;
+
         if (sendCredentialsByEmail) {
-            await Mailer.execute(
-                normalizedEmail,
-                'Acesso BDCP - Credenciais iniciais',
-                `Olá ${name.trim()},\n\nSeu acesso ao BDCP foi criado por ${adminUser.name}.\n\nE-mail: ${normalizedEmail}\nSenha provisória: ${temporaryPassword}\n\nAo entrar, altere a senha imediatamente.\n\nAtenciosamente,\nEquipe BDCP`
-            );
+            try {
+                const mailDelivery = await Mailer.execute(
+                    normalizedEmail,
+                    'Acesso BDCP - Credenciais iniciais',
+                    `Olá ${name.trim()},\n\nSeu acesso ao BDCP foi criado por ${adminUser.name}.\n\nE-mail: ${normalizedEmail}\nSenha provisória: ${temporaryPassword}\n\nAo entrar, altere a senha imediatamente.\n\nAtenciosamente,\nEquipe BDCP`
+                );
+
+                emailDeliveryStatus = mailDelivery.deliveryMode === 'mock' ? 'mock' : 'sent';
+            } catch (error) {
+                emailDeliveryStatus = 'failed';
+                emailDeliveryError = error instanceof Error
+                    ? error.message
+                    : 'Falha inesperada no envio de e-mail.';
+            }
         }
 
         return {
@@ -182,6 +195,49 @@ class UserService {
             name: createdUser.name,
             email: createdUser.email,
             temporaryPassword,
+            emailDeliveryStatus,
+            emailDeliveryError,
+        };
+    }
+
+    async sendInviteByEmail(
+        authenticatedUserId: string,
+        email: string,
+        registrationBaseUrl: string
+    ) {
+        const adminUser = await this.userRepository.findOne({
+            where: { id: authenticatedUserId, isDeleted: false },
+        });
+
+        if (!adminUser || !this.isAdminRole(adminUser.role)) {
+            throw new AppError('Only admin users can send invite by e-mail.', 401);
+        }
+
+        const normalizedEmail = normalizeEmail(email);
+
+        if (!assertUfbaInstitutionalEmail(normalizedEmail)) {
+            throw new AppError('Only UFBA institutional email addresses are allowed.', 400);
+        }
+
+        const normalizedBaseUrl = registrationBaseUrl.trim().replace(/\/+$/, '');
+
+        if (!/^https?:\/\//i.test(normalizedBaseUrl)) {
+            throw new AppError('Invalid registration base URL. Use a full URL, e.g. http://localhost:3000.', 400);
+        }
+
+        const token = new UserInviteService().generateUserInvite();
+        const inviteLink = `${normalizedBaseUrl}/cadastrar/${token}`;
+        const mailDelivery = await Mailer.execute(
+            normalizedEmail,
+            'Convite BDCP - Cadastro',
+            `Olá,\n\nVocê recebeu um convite para cadastro no BDCP.\n\nAcesse o link:\n${inviteLink}\n\nEste convite expira em 24 horas.\n\nAtenciosamente,\nEquipe BDCP`
+        );
+
+        return {
+            email: normalizedEmail,
+            token,
+            inviteLink,
+            emailDeliveryStatus: mailDelivery.deliveryMode,
         };
     }
 

@@ -1,17 +1,21 @@
 import nodemailer from 'nodemailer';
 
 class MailerService{
+    private hasMailerCredentials() {
+        return Boolean(process.env.MAILER_USER && process.env.MAILER_PASSWORD);
+    }
+
     async execute(to: string, subject: string, text: string){
         const isMailerMockEnabled = process.env.MAILER_MOCK === 'true';
 
-        if (isMailerMockEnabled) {
-            console.log('[MAILER_MOCK] Email sending skipped.');
-            console.log({ to, subject, text });
-            return;
-        }
+        if (isMailerMockEnabled || !this.hasMailerCredentials()) {
+            const fallbackReason = isMailerMockEnabled
+                ? 'MAILER_MOCK=true'
+                : 'MAILER_USER/MAILER_PASSWORD ausentes';
 
-        if (!process.env.MAILER_USER || !process.env.MAILER_PASSWORD) {
-            throw new Error('Mailer credentials are missing. Set MAILER_USER/MAILER_PASSWORD or enable MAILER_MOCK=true.');
+            console.log(`[MAILER_MOCK] Email sending skipped (${fallbackReason}).`);
+            console.log({ to, subject, text });
+            return { deliveryMode: 'mock' as const, fallbackReason };
         }
 
         const transporter = nodemailer.createTransport({
@@ -35,6 +39,8 @@ class MailerService{
         });
 
         console.log('Password Reset was requested. Message ID: ', mailSent.messageId);
+
+        return { deliveryMode: 'sent' as const };
     }
 
 }

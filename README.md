@@ -11,6 +11,28 @@ npm install
 ## Enviroments
 Make sure to create a `.env` in the root level on your local machine beforehand. Check the existing variables at `./.env.example`
 
+### Mailer (SMTP opcional em desenvolvimento)
+
+- O sistema funciona sem SMTP real em ambiente de desenvolvimento.
+- Quando `MAILER_MOCK=true`, o envio de e-mail é simulado (logado no backend) e o fluxo de convite/cadastro continua normalmente.
+- Mesmo com `MAILER_MOCK=false`, se `MAILER_USER`/`MAILER_PASSWORD` não estiverem definidos, o backend entra em fallback mock automaticamente.
+- Para envio real, defina `MAILER_USER` e `MAILER_PASSWORD` válidos e use `MAILER_MOCK=false`.
+
+### Convite por e-mail (admin)
+
+- Rota: `POST /api/users/invite-email`
+- Autorização: usuário autenticado com papel `admin` ou `super_admin`.
+- Payload:
+
+```json
+{
+	"email": "jamilsonj@ufba.br",
+	"registrationBaseUrl": "http://localhost:3000"
+}
+```
+
+- Resultado: gera token de convite, monta o link `/cadastrar/{token}` e envia por e-mail (ou mock/fallback quando SMTP não estiver ativo).
+
 ## Postgresql
 Run `npm run postgres:create` to create and run a docker image for a Postgres server.
 

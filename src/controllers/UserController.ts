@@ -1,5 +1,11 @@
 import { Request, Response } from 'express';
-import { CreateUserRequestDto, UpdateUserRequestDto, UpdateUserRoleRequestDto, UpdateUserSignatureRequestDto } from '../dtos/user';
+import {
+    CreateUserRequestDto,
+    SendInviteByEmailRequestDto,
+    UpdateUserRequestDto,
+    UpdateUserRoleRequestDto,
+    UpdateUserSignatureRequestDto,
+} from '../dtos/user';
 
 import { UserService } from '../services/UserService';
 import { UserInviteService } from '../services/UserInviteService';
@@ -74,6 +80,20 @@ class UserController {
         );
 
         return response.status(201).json(createdTeacher);
+    }
+
+    async sendInviteByEmail(request: Request, response: Response) {
+        const authenticatedUserId = request.headers.authenticatedUserId as string;
+        const { email, registrationBaseUrl } = request.body as SendInviteByEmailRequestDto;
+
+        const userService = new UserService();
+        const inviteDelivery = await userService.sendInviteByEmail(
+            authenticatedUserId,
+            email,
+            registrationBaseUrl
+        );
+
+        return response.status(201).json(inviteDelivery);
     }
 
     async updateEmail(request: Request, response: Response) {

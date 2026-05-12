@@ -3,6 +3,7 @@ import { UserController } from '../controllers/UserController';
 import {
 	CreateTeacherByAdminRequestDto,
 	CreateUserRequestDto,
+	SendInviteByEmailRequestDto,
 	UpdateUserRequestDto,
 	UpdateUserRoleRequestDto,
 	UpdateUserSignatureRequestDto,
@@ -102,6 +103,14 @@ userRouter.post(
 	ensureAdminAuthenticated,
 	makeValidateBody(CreateTeacherByAdminRequestDto),
 	userController.createTeacherByAdmin
+);
+
+userRouter.post(
+	'/invite-email',
+	ensureAuthenticated,
+	ensureAdminAuthenticated,
+	makeValidateBody(SendInviteByEmailRequestDto),
+	userController.sendInviteByEmail
 );
 
 /**
