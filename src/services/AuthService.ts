@@ -1,5 +1,5 @@
 import * as crypto from 'crypto';
-import { sign } from 'jsonwebtoken';
+import { JwtPayload, sign, verify } from 'jsonwebtoken';
 import { Repository, getCustomRepository } from 'typeorm';
 
 import { User } from '../entities/User';
@@ -13,6 +13,47 @@ class AuthService {
 
     constructor() {
         this.userRepository = getCustomRepository(UserRepository);
+    }
+
+    private getAccessTokenDeadline() {
+        return Number(process.env.JWT_DEADLINE || 3600);
+    }
+
+    private getRefreshTokenDeadline() {
+        return Number(process.env.JWT_REFRESH_DEADLINE || 86400);
+    }
+
+    private getRefreshSecret() {
+        return String(process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET);
+    }
+
+    private buildAccessToken(user: Pick<User, 'id' | 'name' | 'email'>) {
+        return sign(
+            { id: user.id, name: user.name, email: user.email, tokenType: 'access' },
+            String(process.env.JWT_SECRET),
+            { expiresIn: this.getAccessTokenDeadline() }
+        );
+    }
+
+    private buildRefreshToken(user: Pick<User, 'id' | 'email'>) {
+        return sign(
+            { id: user.id, email: user.email, tokenType: 'refresh' },
+            this.getRefreshSecret(),
+            { expiresIn: this.getRefreshTokenDeadline() }
+        );
+    }
+
+    private buildAuthResponse(user: Pick<User, 'id' | 'name' | 'email'>) {
+        const accessToken = this.buildAccessToken(user);
+        const refreshToken = this.buildRefreshToken(user);
+
+        return {
+            token: accessToken,
+            accessToken,
+            refreshToken,
+            expiresIn: this.getAccessTokenDeadline(),
+            refreshExpiresIn: this.getRefreshTokenDeadline(),
+        };
     }
 
     async login(email: string, password: string) {
@@ -39,7 +80,42 @@ class AuthService {
 
         const { id, name } = user;
 
-        return sign({ id, name, email }, String(process.env.JWT_SECRET), { expiresIn: Number(process.env.JWT_DEADLINE) });
+        return this.buildAuthResponse({ id, name, email: normalizedEmail });
+    }
+
+    async refreshSession(refreshToken: string) {
+        if (!refreshToken) {
+            throw new AppError('Refresh token missing.', 401);
+        }
+
+        let payload: JwtPayload;
+        let tokenType: string | undefined;
+
+        try {
+            payload = verify(refreshToken, this.getRefreshSecret()) as JwtPayload;
+            tokenType = typeof payload.tokenType === 'string' ? payload.tokenType : undefined;
+        } catch (error) {
+            try {
+                payload = verify(refreshToken, String(process.env.JWT_SECRET)) as JwtPayload;
+                tokenType = typeof payload.tokenType === 'string' ? payload.tokenType : 'access';
+            } catch {
+                throw new AppError('Refresh token invalid or expired.', 401);
+            }
+        }
+
+        const isAcceptedTokenType = tokenType === 'refresh' || tokenType === 'access' || tokenType === undefined;
+
+        if (!isAcceptedTokenType || typeof payload.id !== 'string') {
+            throw new AppError('Refresh token invalid or expired.', 401);
+        }
+
+        const user = await this.userRepository.findOne({ id: payload.id });
+
+        if (!user) {
+            throw new AppError('User does not exists!', 400);
+        }
+
+        return this.buildAuthResponse({ id: user.id, name: user.name, email: user.email });
     }
 
     async getCurrentUser(userId: string) {

@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { LoginRequestDto, ResetPasswordRequestDto } from '../dtos/auth';
+import { LoginRequestDto, RefreshTokenRequestDto, ResetPasswordRequestDto } from '../dtos/auth';
 import { AuthService } from '../services/AuthService';
 
 class AuthController {
@@ -7,9 +7,18 @@ class AuthController {
         const { email, password } = request.body as LoginRequestDto;
 
         const authService = new AuthService();
-        const token = await authService.login(email, password);
+        const session = await authService.login(email, password);
 
-        return response.status(201).json({ auth: true, token });
+        return response.status(201).json({ auth: true, ...session });
+    }
+
+    async refresh(request: Request, response: Response) {
+        const { refreshToken } = request.body as RefreshTokenRequestDto;
+
+        const authService = new AuthService();
+        const session = await authService.refreshSession(refreshToken);
+
+        return response.status(200).json({ auth: true, ...session });
     }
 
     async getCurrentUser(request: Request, response: Response) {

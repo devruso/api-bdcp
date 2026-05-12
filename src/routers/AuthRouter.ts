@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { AuthController } from '../controllers/AuthController';
-import { LoginRequestDto, ResetPasswordRequestDto } from '../dtos/auth';
+import { LoginRequestDto, RefreshTokenRequestDto, ResetPasswordRequestDto } from '../dtos/auth';
 import { ensureAuthenticated } from '../middlewares/EnsureAuthenticated';
 import { makeValidateBody } from '../middlewares/Validator';
 
@@ -83,6 +83,7 @@ authRouter.get('/user', ensureAuthenticated, authController.getCurrentUser);
 *         description: Internal Server Error
 */
 authRouter.post('/login', makeValidateBody(LoginRequestDto), authController.login);
+authRouter.post('/refresh', makeValidateBody(RefreshTokenRequestDto), authController.refresh);
 
 /**
 * @swagger
