@@ -1,6 +1,7 @@
 services:
     api:
         build: .
+        restart: unless-stopped
         ports:
             - 3333:3333
         env_file:
@@ -12,6 +13,7 @@ services:
             - postgres
     app:
         image: ementas-app
+        restart: unless-stopped
         build:
             context: ../ementas-app
             args:
@@ -22,6 +24,7 @@ services:
             - api
     postgres:
         image: postgres:16
+        restart: unless-stopped
         ports:
             - 15432:5432
         environment:
