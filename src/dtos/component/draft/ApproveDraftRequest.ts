@@ -7,7 +7,7 @@ export class ApproveDraftRequestDto {
     public agreementDate: Date;
 
     @CustomIsNotEmpty()
-    @CustomMatches(/^\d+$/)
+    @CustomMatches(/^[A-Za-z0-9À-ÿ./\-\s]+$/)
     public agreementNumber: string;
 
     @CustomIsNotEmpty()

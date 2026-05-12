@@ -1,6 +1,7 @@
 import path from 'path';
 import supertest from 'supertest';
 import mammoth from 'mammoth';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
 const AdmZip = require('adm-zip');
 import { UserController } from '../controllers/UserController';
 import { UserInviteService } from '../services/UserInviteService';
@@ -18,9 +19,26 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024;
 jest.setTimeout(30000);
 
 const binaryParser = (res: NodeJS.ReadableStream, callback: (err: Error | null, data: Buffer) => void) => {
-    const chunks: Buffer[] = [];
-    res.on('data', (chunk) => chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)));
-    res.on('end', () => callback(null, Buffer.concat(chunks)));
+    const chunks: Uint8Array[] = [];
+    res.on('data', (chunk: Buffer | Uint8Array | string) => {
+        if (typeof chunk === 'string') {
+            chunks.push(Uint8Array.from(Buffer.from(chunk)));
+            return;
+        }
+        chunks.push(Uint8Array.from(chunk));
+    });
+    res.on('end', () => {
+        const totalLength = chunks.reduce((sum, chunk) => sum + chunk.byteLength, 0);
+        const merged = new Uint8Array(totalLength);
+        let offset = 0;
+
+        for (const chunk of chunks) {
+            merged.set(chunk, offset);
+            offset += chunk.byteLength;
+        }
+
+        callback(null, Buffer.from(merged));
+    });
 };
 
 const createUserAndLogin = async () => {
@@ -533,5 +551,82 @@ describe('Component document flow', () => {
         expect(typeof mammothExtract.value).toBe('string');
         expect(mammothExtract.value).toContain('TEST123');
         expect(mammothExtract.value).toContain('Disciplina Teste');
+    });
+
+    it('should not allow publishing two different components with the same agreement number', async () => {
+        const createFirstResponse = await supertest(app)
+            .post('/api/components')
+            .set('Content-Type', 'application/json')
+            .set('Authorization', `Bearer ${token}`)
+            .send({
+                code: 'ATADUP1',
+                name: 'Disciplina ATA 1',
+                department: 'Departamento Teste',
+                program: 'Programa Teste 1',
+                semester: '2026.1',
+                prerequeriments: 'Nenhum',
+                methodology: 'Aulas expositivas',
+                objective: 'Objetivo 1',
+                syllabus: 'Ementa 1',
+                bibliography: 'SILVA, Joao. Referência 1. 2020.',
+                modality: 'Presencial',
+                learningAssessment: 'Provas',
+            });
+
+        const createSecondResponse = await supertest(app)
+            .post('/api/components')
+            .set('Content-Type', 'application/json')
+            .set('Authorization', `Bearer ${token}`)
+            .send({
+                code: 'ATADUP2',
+                name: 'Disciplina ATA 2',
+                department: 'Departamento Teste',
+                program: 'Programa Teste 2',
+                semester: '2026.1',
+                prerequeriments: 'Nenhum',
+                methodology: 'Aulas expositivas',
+                objective: 'Objetivo 2',
+                syllabus: 'Ementa 2',
+                bibliography: 'SOUZA, Maria. Referência 2. 2021.',
+                modality: 'Presencial',
+                learningAssessment: 'Seminários',
+            });
+
+        expect(createFirstResponse.statusCode).toBe(201);
+        expect(createSecondResponse.statusCode).toBe(201);
+
+        const firstComponentResponse = await supertest(app)
+            .get('/api/components/ATADUP1')
+            .set('Authorization', `Bearer ${token}`);
+
+        const secondComponentResponse = await supertest(app)
+            .get('/api/components/ATADUP2')
+            .set('Authorization', `Bearer ${token}`);
+
+        expect(firstComponentResponse.statusCode).toBe(200);
+        expect(secondComponentResponse.statusCode).toBe(200);
+
+        const firstApproveResponse = await supertest(app)
+            .post(`/api/component-drafts/${firstComponentResponse.body.draft.id}/approve`)
+            .set('Authorization', `Bearer ${token}`)
+            .send({
+                agreementNumber: 'ATA-999',
+                agreementDate: '2026-05-01T12:00:00.000Z',
+                signature: 'Assina123!',
+            });
+
+        expect(firstApproveResponse.statusCode).toBe(200);
+
+        const secondApproveResponse = await supertest(app)
+            .post(`/api/component-drafts/${secondComponentResponse.body.draft.id}/approve`)
+            .set('Authorization', `Bearer ${token}`)
+            .send({
+                agreementNumber: 'ATA-999',
+                agreementDate: '2026-05-02T12:00:00.000Z',
+                signature: 'Assina123!',
+            });
+
+        expect(secondApproveResponse.statusCode).toBe(409);
+        expect(secondApproveResponse.body.message).toBe('Número de ATA já utilizado em outra publicação oficial. Informe uma ATA/referência diferente.');
     });
 });

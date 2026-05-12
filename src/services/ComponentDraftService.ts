@@ -1,4 +1,4 @@
-import { Brackets, getCustomRepository, Repository, getConnection, Raw } from 'typeorm';
+import { Brackets, getCustomRepository, QueryFailedError, Repository, getConnection, Raw } from 'typeorm';
 import crypto from 'crypto';
 import { ComponentDraftRepository } from '../repositories/ComponentDraftRepository';
 import { AppError } from '../errors/AppError';
@@ -25,6 +25,8 @@ import {
 } from '../helpers/referenceSections';
 
 export class ComponentDraftService {
+
+    private readonly approvalAgreementNumberUniqueIndex = 'UQ_component_logs_approval_agreement_number_normalized';
 
     private componentDraftRepository : Repository<ComponentDraft>;
     private componentRepository: Repository<Component>;
@@ -247,12 +249,46 @@ export class ComponentDraftService {
         }
 
         if (hasNonWebReferenceWithoutYear(referencesBasic)) {
-            throw new AppError('Publicação oficial bloqueada. Referências básicas não web devem conter ano de publicação.', 400);
+            throw new AppError('Publicação oficial bloqueada. Referências básicas não web devem conter ano de publicação (ex.: SILVA, J. Título. Salvador: Editora X, 2020).', 400);
         }
 
         if (referencesComplementary && hasNonWebReferenceWithoutYear(referencesComplementary)) {
-            throw new AppError('Publicação oficial bloqueada. Referências complementares não web devem conter ano de publicação.', 400);
+            throw new AppError('Publicação oficial bloqueada. Referências complementares não web devem conter ano de publicação (ex.: SOUZA, M. Título. São Paulo: Editora Y, 2021).', 400);
         }
+    }
+
+    private async ensureAgreementNumberIsAvailable(agreementNumber: string) {
+        const existingApproval = await this.componentLogRepository.findOne({
+            where: {
+                type: ComponentLogType.APPROVAL,
+                agreementNumber: Raw(
+                    (alias) => `LOWER(BTRIM(${alias})) = LOWER(BTRIM(:agreementNumber))`,
+                    { agreementNumber }
+                ),
+            },
+        });
+
+        if (existingApproval) {
+            throw new AppError('Número de ATA já utilizado em outra publicação oficial. Informe uma ATA/referência diferente.', 409);
+        }
+    }
+
+    private isAgreementNumberUniqueViolation(error: unknown) {
+        if (!(error instanceof QueryFailedError)) {
+            return false;
+        }
+
+        const driverError = error.driverError as { code?: string; constraint?: string; message?: string };
+
+        if (driverError?.code !== '23505') {
+            return false;
+        }
+
+        if (driverError.constraint === this.approvalAgreementNumberUniqueIndex) {
+            return true;
+        }
+
+        return driverError.message?.includes(this.approvalAgreementNumberUniqueIndex) ?? false;
     }
 
     async getDrafts(options?: {
@@ -367,8 +403,6 @@ export class ComponentDraftService {
         requestDto: UpdateComponentRequestDto,
     ) {
         const sanitizedRequestDto = this.sanitizeDraftUpdateDto(requestDto);
-        const connection = getConnection();
-        const queryRunner = connection.createQueryRunner();
         const draftExists = await this.componentDraftRepository.findOne({
             where: { id: draftId },
             relations: [ 'workload' ],
@@ -413,37 +447,55 @@ export class ComponentDraftService {
                 delete sanitizedRequestDto.workload;
             }
 
-            await queryRunner.startTransaction();
+            const connection = getConnection();
+            const queryRunner = connection.createQueryRunner();
+            await queryRunner.connect();
 
-            const [ updatedDraft ] = await Promise.all([
-                queryRunner.manager.save(
-                    ComponentDraft,
-                    {
-                        ...draftExists,
-                        ...sanitizedRequestDto
-                    }
-                ),
-                queryRunner.manager.save(
-                    ComponentLog,
-                    {
-                        ...draftExists.generateDraftLog(
-                            ComponentLogType.DRAFT_UPDATE,
-                            userId
-                        ),
-                        description: this.buildDraftUpdateDescription(
-                            draftExists,
-                            sanitizedRequestDto,
-                            workloadPatch
-                        ),
-                    }
-                ),
-            ]); 
+            try {
+                await queryRunner.startTransaction();
 
-            await queryRunner.commitTransaction();
+                const [ updatedDraft ] = await Promise.all([
+                    queryRunner.manager.save(
+                        ComponentDraft,
+                        {
+                            ...draftExists,
+                            ...sanitizedRequestDto
+                        }
+                    ),
+                    queryRunner.manager.save(
+                        ComponentLog,
+                        {
+                            ...draftExists.generateDraftLog(
+                                ComponentLogType.DRAFT_UPDATE,
+                                userId
+                            ),
+                            description: this.buildDraftUpdateDescription(
+                                draftExists,
+                                sanitizedRequestDto,
+                                workloadPatch
+                            ),
+                        }
+                    ),
+                ]); 
 
-            return updatedDraft;
+                await queryRunner.commitTransaction();
+
+                return updatedDraft;
+            } catch (err) {
+                if (queryRunner.isTransactionActive) {
+                    await queryRunner.rollbackTransaction();
+                }
+
+                throw err;
+            } finally {
+                await queryRunner.release();
+            }
         }
         catch (err) {
+            if (err instanceof AppError) {
+                throw err;
+            }
+
             throw new AppError('An error has been occurred.', 400);
         }
     }
@@ -469,8 +521,12 @@ export class ComponentDraftService {
         userId: string
     ) {
         try {
-            const connection = getConnection();
-            const queryRunner = connection.createQueryRunner();
+            const normalizedAgreementNumber = approvalDto.agreementNumber.trim();
+
+            if (!normalizedAgreementNumber) {
+                throw new AppError('Informe a ATA ou referência de aprovação.', 400);
+            }
+
             const approver = await this.userRepository.findOne({ where: { id: userId, isDeleted: false } });
 
             if (!approver) {
@@ -498,6 +554,7 @@ export class ComponentDraftService {
             }
 
             this.validateRequiredFieldsForOfficialPublication(draftExists);
+            await this.ensureAgreementNumberIsAvailable(normalizedAgreementNumber);
 
             const [ currentPublishedComponent, draftWorkload ] = await Promise.all([
                 this.componentRepository.findOne({
@@ -509,37 +566,55 @@ export class ComponentDraftService {
             const component = currentPublishedComponent.publishDraft(draftExists);
             const versionCode = this.buildApprovalVersionCode(
                 approvalDto.agreementDate,
-                approvalDto.agreementNumber
+                normalizedAgreementNumber
             );
 
             const approvalLog = component.generateLog(
                 userId,
                 ComponentLogType.APPROVAL,
                 `Versao oficial ${versionCode} publicada por aprovacao formal com assinatura validada.`,
-                approvalDto.agreementNumber,
+                normalizedAgreementNumber,
                 approvalDto.agreementDate,
                 versionCode,
                 component.program,
                 component.syllabus,
             );
 
-            await queryRunner.startTransaction();
+            const connection = getConnection();
+            const queryRunner = connection.createQueryRunner();
+            await queryRunner.connect();
 
-            const [ updatedComponent ] = await Promise.all([
-                queryRunner.manager.save(Component, component),
-                queryRunner.manager.save(ComponentLog, approvalLog),
-                queryRunner.manager.save(ComponentWorkload, { ...draftWorkload, id: currentPublishedComponent.workloadId }),
-                queryRunner.manager.update(
-                    ComponentLog,
-                    { draftId } as Partial<ComponentLog>,
-                    { draftId: null, componentId: currentPublishedComponent.id }
-                )
-            ]); 
+            try {
+                await queryRunner.startTransaction();
 
-            await queryRunner.commitTransaction();
+                const [ updatedComponent ] = await Promise.all([
+                    queryRunner.manager.save(Component, component),
+                    queryRunner.manager.save(ComponentLog, approvalLog),
+                    queryRunner.manager.save(ComponentWorkload, { ...draftWorkload, id: currentPublishedComponent.workloadId }),
+                    queryRunner.manager.update(
+                        ComponentLog,
+                        { draftId } as Partial<ComponentLog>,
+                        { draftId: null, componentId: currentPublishedComponent.id }
+                    )
+                ]); 
 
-            return updatedComponent;
+                await queryRunner.commitTransaction();
+
+                return updatedComponent;
+            } catch (err) {
+                if (queryRunner.isTransactionActive) {
+                    await queryRunner.rollbackTransaction();
+                }
+
+                throw err;
+            } finally {
+                await queryRunner.release();
+            }
         } catch (err) {
+            if (this.isAgreementNumberUniqueViolation(err)) {
+                throw new AppError('Número de ATA já utilizado em outra publicação oficial. Informe uma ATA/referência diferente.', 409);
+            }
+
             if (err instanceof AppError) {
                 throw err;
             }

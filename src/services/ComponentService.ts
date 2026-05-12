@@ -337,7 +337,13 @@ export class ComponentService {
     }
 
     private normalizeModalityForTemplate(value: string | undefined) {
-        return this.normalizeTemplateText(value, 'Não se aplica');
+        const normalized = this.normalizeTemplateText(value, 'Não se aplica');
+
+        if (normalized === 'Não se aplica') {
+            return normalized;
+        }
+
+        return 'Disciplina Teórico /Prática';
     }
 
     private normalizeWorkloadCellParagraph(paragraphXml: string) {
@@ -1200,6 +1206,7 @@ export class ComponentService {
             .createQueryBuilder('components')
             .leftJoinAndSelect('components.workload', 'workload')
             .leftJoinAndSelect('components.logs', 'logs')
+            .leftJoinAndSelect('logs.user', 'logs_user')
             .where({ id })
             .getOne();
 
